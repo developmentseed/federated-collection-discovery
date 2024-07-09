@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import List, Optional, Tuple
 
@@ -9,10 +10,10 @@ from stac_pydantic.shared import BBox
 
 def check_bbox_overlap(bbox1, bbox2):
     return not (
-        bbox2[0] > bbox1[2]
-        or bbox2[2] < bbox1[0]
-        or bbox2[1] > bbox1[3]
-        or bbox2[3] < bbox1[1]
+        bbox2[0] > bbox1[2]  # xmax 1 < xmin 2
+        or bbox2[2] < bbox1[0]  # xmin 1 > xmax 2
+        or bbox2[1] > bbox1[3]  # ymax 1 < ymin 2
+        or bbox2[3] < bbox1[1]  # ymin 1 > ymax 2
     )
 
 
@@ -51,29 +52,18 @@ def check_datetime_overlap(
 
 def check_text_overlap(
     text: str,
-    collection: Collection,
+    text_fields: List[str],
 ) -> bool:
-    collection_slots = [collection.title, collection.description]
-    if collection.keywords:
-        collection_slots.extend(collection.keywords)
 
-    return any(text.lower() in x.lower() for x in collection_slots)
+    return any(text.lower() in x.lower() for x in text_fields)
 
 
+@dataclass
 class CatalogCollectionSearch(ABC):
-    def __init__(
-        self,
-        base_url: str,
-        bbox: Optional[BBox] = None,
-        datetime: Optional[DatetimeInterval] = None,
-        text: Optional[str] = None,
-    ):
-        self.base_url = base_url
-
-        # convert the datetime parameter to a tuple of datetime objects
-        self._datetime = datetime
-        self._bbox = bbox
-        self._text = text
+    base_url: str
+    bbox: Optional[BBox] = None
+    datetime: Optional[DatetimeInterval] = None
+    text: Optional[str] = None
 
     @abstractmethod
     def get_collections(self) -> List[Collection]:
@@ -94,8 +84,8 @@ class STACAPICollectionSearch(CatalogCollectionSearch):
         for collection in self.catalog.get_collections():
             # check bbox overlap
             bbox_overlap = (
-                check_bbox_overlap(self._bbox, collection.extent.spatial.bboxes[0])
-                if self._bbox
+                check_bbox_overlap(self.bbox, collection.extent.spatial.bboxes[0])
+                if self.bbox
                 else True
             )
 
@@ -106,16 +96,24 @@ class STACAPICollectionSearch(CatalogCollectionSearch):
             assert len(collection_temporal_extent) == 2
             temporal_overlap = (
                 check_datetime_overlap(
-                    self._datetime,
+                    self.datetime,
                     collection_temporal_extent,
                 )
-                if self._datetime
+                if self.datetime
                 else True
             )
 
-            # check text
+            # check text fields for overlap
+            text_fields = [collection.id]
+            if collection.keywords:
+                text_fields.extend(collection.keywords)
+            if collection.title:
+                text_fields.append(collection.title)
+            if collection.description:
+                text_fields.append(collection.description)
+
             text_overlap = (
-                check_text_overlap(self._text, collection) if self._text else True
+                check_text_overlap(self.text, text_fields) if self.text else True
             )
 
             if bbox_overlap and temporal_overlap and text_overlap:

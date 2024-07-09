@@ -18,7 +18,7 @@ class CatalogSearchService:
                         catalog_url=catalog.base_url,
                         id=collection.id,
                         title=collection.title or "no title",
-                        # description=collection.description,
+                        description=collection.description,
                         keywords=collection.keywords or [],
                     )
                 )

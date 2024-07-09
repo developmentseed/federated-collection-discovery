@@ -1,13 +1,15 @@
-from fastapi import Depends, FastAPI, Query
+from fastapi import FastAPI
 from typing import Optional
 
-from stac_fastapi.types.rfc3339 import DateTimeType, str_to_interval
+from stac_fastapi.types.rfc3339 import str_to_interval
 from stac_fastapi.types.search import str2bbox
 from stac_pydantic.shared import BBox
 
 from app.catalog_search import DatetimeInterval, STACAPICollectionSearch
 from app.catalog_search_service import CatalogSearchService
 from app.models import SearchResponse
+
+from app.config import Settings
 
 
 def _str2bbox(bbox_str: Optional[str] = None) -> Optional[BBox]:
@@ -17,20 +19,14 @@ def _str2bbox(bbox_str: Optional[str] = None) -> Optional[BBox]:
     return str2bbox(bbox_str)
 
 
-def _str_to_interval(datetime_str: Optional[str] = None) -> Optional[DateTimeType]:
+def _str_to_interval(datetime_str: Optional[str] = None) -> Optional[DatetimeInterval]:
     if datetime_str is None:
         return None
 
-    return str_to_interval(datetime_str)
+    return str_to_interval(datetime_str)  # type: ignore
 
 
 app = FastAPI()
-
-
-CATALOG_CONFIGS = [
-    (STACAPICollectionSearch, "https://cmr.earthdata.nasa.gov/stac/LPCLOUD"),
-    (STACAPICollectionSearch, "https://earth-search.aws.element84.com/v1/"),
-]
 
 
 @app.get(
@@ -38,21 +34,21 @@ CATALOG_CONFIGS = [
     response_model=SearchResponse,
 )
 def search_collections(
-    bbox: Optional[BBox] = Depends(_str2bbox),
-    datetime: Optional[DatetimeInterval] = Depends(_str_to_interval),
-    text: Optional[str] = Query(None),
+    bbox: Optional[str] = None,
+    datetime: Optional[str] = None,
+    text: Optional[str] = None,
 ):
-
+    settings = Settings()
     # Initialize the service with the catalog instances
     catalog_service = CatalogSearchService(
         catalogs=[
-            cls(
-                base_url=base_url,
-                bbox=bbox,
-                datetime=datetime,
+            STACAPICollectionSearch(
+                base_url=str(base_url),
+                bbox=_str2bbox(bbox),
+                datetime=_str_to_interval(datetime),
                 text=text,
             )
-            for cls, base_url in CATALOG_CONFIGS
+            for base_url in settings.stac_api_urls
         ]
     )
 
