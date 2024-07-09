@@ -1,5 +1,5 @@
-from fastapi import FastAPI
-from typing import Optional
+from fastapi import FastAPI, Query
+from typing import Annotated, Optional
 
 from stac_fastapi.types.rfc3339 import str_to_interval
 from stac_fastapi.types.search import str2bbox
@@ -34,9 +34,22 @@ app = FastAPI()
     response_model=SearchResponse,
 )
 def search_collections(
-    bbox: Optional[str] = None,
-    datetime: Optional[str] = None,
-    text: Optional[str] = None,
+    bbox: Annotated[
+        Optional[str],
+        Query(description="bounding box coordinates (xmin, xmax, ymin, ymax)"),
+    ] = None,
+    datetime: Annotated[
+        Optional[str],
+        Query(
+            description="datetime interval, e.g. 2021-02-01T00:00:00Z/.. or 2024-06-01T00:00:00/2024-06-30T23:59:59Z",
+        ),
+    ] = None,
+    text: Annotated[
+        Optional[str],
+        Query(
+            description="string to search for in collection IDs, titles, descriptions, and keywords",
+        ),
+    ] = None,
 ):
     settings = Settings()
     # Initialize the service with the catalog instances
