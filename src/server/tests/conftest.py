@@ -64,7 +64,9 @@ def mock_apis(monkeypatch):
                         "stac_version": "1.0.0",
                         "id": "collection-4",
                         "type": "Collection",
-                        "description": "Another appropriate STAC collection for testing",
+                        "description": (
+                            "Another appropriate STAC collection for testing"
+                        ),
                         "license": "proprietary",
                         "extent": {
                             "spatial": {"bbox": [[-120, 40, -110, 50]]},
@@ -83,7 +85,8 @@ def mock_apis(monkeypatch):
                 collections_url, status_code=200, json={"collections": collection_data}
             )
 
-            # Mock the root catalog response to include a link to the collections endpoint
+            # Mock the root catalog response to include a link to the collections
+            # endpoint
             catalog_root_response = {
                 "type": "Catalog",
                 "stac_version": "1.0.0",

@@ -34,4 +34,5 @@ jobs:
       run: poetry install --with dev
 
     - name: Run Tests
+      working-directory: src/server
       run: poetry run pytest
