@@ -1,25 +1,49 @@
-# cross-catalog-search
-
-Tool for searching for collections across multiple catalogs
-
 # Cross-Catalog Collection Search
 
-This project implements an application that searches through multiple geospatial metadata catalogs, such as STAC and NASA CMR, based on provided search parameters like bounding box (bbox), datetime, and free-text criteria.
+This project implements an application that searches through multiple
+geospatial metadata catalogs, such as STAC and NASA CMR, based on provided
+search parameters like bounding box (bbox), datetime, and free-text
+criteria.
 
 ## Table of Contents
 
 - [Prerequisites](#prerequisites)
-- [Setup Using Virtual Environment and Poetry](#setup-using-virtual-environment-and-poetry)
 - [Setup Using Docker](#setup-using-docker)
-- [Running the Application](#running-the-application)
+- [Setup Using Virtual Environment and Poetry](#setup-using-virtual-environment-and-poetry)
 - [API Endpoints](#api-endpoints)
-- [Contributing](#contributing)
 
 ## Prerequisites
 
 - Python 3.9 (or higher)
 - Node.js and npm (for the React frontend)
 - Docker and Docker Compose
+
+## Setup Using Docker
+
+Ensure Docker and Docker Compose are installed. Follow the steps below to
+build and start the containers:
+
+Build and start the services:
+
+```bash
+docker compose up --build
+```
+
+This will use the `CROSS_CATALOG_SEARCH_STAC_API_URLS` environment variable
+defined in [docker-compose.yaml](./docker-compose.yaml) to search across
+the NASA CMR STAC and the Earth Search STAC from E84.
+
+Stop the services:
+
+```bash
+docker compose down
+```
+
+Once the Docker containers are running, you can access the application at the
+same endpoints:
+
+- Backend (FastAPI): `http://localhost:8000`
+- TODO: Frontend (React): `http://localhost:3000`
 
 ## Setup Using Virtual Environment and Poetry
 
@@ -63,11 +87,13 @@ Add Poetry to your system's PATH:
   export PATH="$HOME/.local/bin:$PATH"
   ```
   
-  Add the above line to your shell configuration file (`~/.bashrc`, `~/.bash_profile`, or `~/.zshrc`) to make it permanent.
+  Add the above line to your shell configuration file (`~/.bashrc`,
+  `~/.bash_profile`, or `~/.zshrc`) to make it permanent.
 
 - **For Windows:**
 
-  Add the path to your `PATH` environment variable through the system environment variable settings.
+  Add the path to your `PATH` environment variable through the system environment
+  variable settings.
 
 ### 3. Install Dependencies
 
@@ -78,29 +104,10 @@ cd src/server
 poetry install
 ```
 
-## Setup Using Docker
+### 4. Run the Application
 
-### 4. Build and Run the Docker Containers
-
-Ensure Docker and Docker Compose are installed. Follow the steps below to build and start the containers:
-
-Build and start the services:
-
-```bash
-docker compose up --build
-```
-
-Stop the services:
-
-```bash
-docker compose down
-```
-
-## Running the Application
-
-**Local Environment (using venv and Poetry):**
-
-Navigate to the `src/server` directory, activate your virtual environment, and run the FastAPI server using Uvicorn:
+Navigate to the `src/server` directory, activate your virtual environment, and
+run the FastAPI server using Uvicorn:
 
 ```bash
 cd src/server
@@ -108,7 +115,7 @@ source venv/bin/activate  # or `venv\Scripts\activate` for Windows
 poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-TODO: Navigate to the `src/client` directory and start the React development server:
+Navigate to the `src/client` directory and start the React development server:
 
 ```bash
 cd src/client
@@ -117,13 +124,6 @@ npm start    # or `yarn start`
 ```
 
 Access the application:
-
-- Backend (FastAPI): `http://localhost:8000`
-- Frontend (React): `http://localhost:3000`
-
-**Docker:**
-
-Once the Docker containers are running, you can access the application at the same endpoints:
 
 - Backend (FastAPI): `http://localhost:8000`
 - Frontend (React): `http://localhost:3000`
@@ -142,10 +142,26 @@ Initiates a search for collections that match the specified criteria.
 - **Response:**
   - A JSON object containing an array of results.
 
-Example Request:
+Example Requests:
 
-```bash
-curl -X GET "http://localhost:8000/search?bbox=-180.0,-90.0,180.0,90.0&datetime=2020-01-01T00:00:00Z/2020-12-31T23:59:59Z&keywords=test&description=sample"
-```
+1. Look for collections with `'hls'` in one of the text fields and data from 2020:
 
-The arguments are meant to mirror `pystac_client.Client.search` so you can provide datetime strings in many formats.
+    ```bash
+    curl -X GET \
+      "http://localhost:8000/search?` \
+      `bbox=-180.0,-90.0,180.0,90.0&` \
+      `datetime=2020-01-01T00:00:00Z/2020-12-31T23:59:59Z&` \
+      `text=hls" | jq
+    ```
+
+2. Look for collections with `'elevation'` in one of the text fields that intersects
+a part of North America:
+
+    ```bash
+    curl -X GET \
+      "http://localhost:8000/search?` \
+      `bbox=-120,40,-110,50&` \
+      `text=elevation" | jq
+    ```
+
+The arguments are consistent with the STAC API Item Search spec.
