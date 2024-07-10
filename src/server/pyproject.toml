@@ -23,6 +23,19 @@ pre-commit = "^3.4.0"
 pytest = "^7.4.2"
 pytest-mock = "^3.14.0"
 
+[tool.isort]
+profile = "black"
+
+[tool.mypy]
+explicit_package_bases = true
+namespace_packages = true
+show_error_codes = true
+strict = true
+mypy_path = "src"
+
+[tool.ruff]
+select = ["E", "F", "I"]
+
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
