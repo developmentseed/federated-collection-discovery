@@ -11,15 +11,6 @@ class CatalogSearchService:
     def search_all(self) -> List[CollectionMetadata]:
         results = []
         for catalog in self.catalogs:
-            collections = catalog.get_collections()
-            for collection in collections:
-                results.append(
-                    CollectionMetadata(
-                        catalog_url=catalog.base_url,
-                        id=collection.id,
-                        title=collection.title or "no title",
-                        description=collection.description,
-                        keywords=collection.keywords or [],
-                    )
-                )
+            results.extend(catalog.get_collection_metadata())
+
         return results

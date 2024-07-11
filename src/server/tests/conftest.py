@@ -5,8 +5,8 @@ import requests_mock
 @pytest.fixture
 def mock_apis(monkeypatch):
     with requests_mock.Mocker() as m:
-        base_urls = ["https://stac1.net", "https://stac2.net"]
-        for base_url in base_urls:
+        base_urls = ["https://stac1.net", "https://stac2.net", "https://stac3.net"]
+        for i, base_url in enumerate(base_urls):
             collections_url = f"{base_url}/collections"
 
             if base_url == "https://stac1.net":
@@ -77,6 +77,8 @@ def mock_apis(monkeypatch):
                         "summaries": {},
                     },
                 ]
+            elif base_url == "https://stac3.net":
+                collection_data = []
             else:
                 raise ValueError(f"No collections defined for base_url {base_url}")
 
@@ -90,7 +92,7 @@ def mock_apis(monkeypatch):
             catalog_root_response = {
                 "type": "Catalog",
                 "stac_version": "1.0.0",
-                "id": f"root-catalog-{base_urls.index(base_url) + 1}",
+                "id": f"root-catalog-{i + 1}",
                 "description": f"Root catalog for {base_url}",
                 "links": [
                     {"rel": "self", "href": base_url, "type": "application/json"},
@@ -109,4 +111,5 @@ def mock_apis(monkeypatch):
             m.get(base_url, status_code=200, json=catalog_root_response)
 
         monkeypatch.setenv("CROSS_CATALOG_SEARCH_STAC_API_URLS", ",".join(base_urls))
+
         yield base_urls

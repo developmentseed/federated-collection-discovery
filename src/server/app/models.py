@@ -1,11 +1,14 @@
+from typing import Any, List, Optional
+
 from pydantic import BaseModel
-from typing import List, Optional
 
 
 class CollectionMetadata(BaseModel):
-    catalog_url: str
     id: str
+    catalog_url: str
     title: str
+    spatial_extent: Any
+    temporal_extent: Any
     description: Optional[str] = None
     keywords: Optional[List[str]] = []
 

@@ -3,9 +3,10 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import List, Optional, Tuple
 
-from pystac import Collection
 from pystac_client.client import Client
 from stac_pydantic.shared import BBox
+
+from app.models import CollectionMetadata
 
 
 def check_bbox_overlap(bbox1, bbox2):
@@ -54,7 +55,6 @@ def check_text_overlap(
     text: str,
     text_fields: List[str],
 ) -> bool:
-
     return any(text.lower() in x.lower() for x in text_fields)
 
 
@@ -66,12 +66,12 @@ class CatalogCollectionSearch(ABC):
     text: Optional[str] = None
 
     @abstractmethod
-    def get_collections(self) -> List[Collection]:
+    def get_collection_metadata(self) -> List[CollectionMetadata]:
         pass
 
 
 class STACAPICollectionSearch(CatalogCollectionSearch):
-    def get_collections(self) -> List[Collection]:
+    def get_collection_metadata(self) -> List[CollectionMetadata]:
         self.catalog = Client.open(self.base_url)
 
         # add /collections conformance class just in case it's missing...
@@ -90,10 +90,13 @@ class STACAPICollectionSearch(CatalogCollectionSearch):
             )
 
             # check temporal overlap
-            collection_temporal_extent = tuple(
-                collection.extent.temporal.intervals[0][:2]
+            collection_temporal_extent: Tuple[
+                Optional[datetime], Optional[datetime]
+            ] = (
+                ensure_utc(collection.extent.temporal.intervals[0][0]),
+                ensure_utc(collection.extent.temporal.intervals[0][1]),
             )
-            assert len(collection_temporal_extent) == 2
+
             temporal_overlap = (
                 check_datetime_overlap(
                     self.datetime,
@@ -117,6 +120,16 @@ class STACAPICollectionSearch(CatalogCollectionSearch):
             )
 
             if bbox_overlap and temporal_overlap and text_overlap:
-                results.append(collection)
+                extent_dict = collection.extent.to_dict()
+                collection_metadata = CollectionMetadata(
+                    catalog_url=self.base_url,
+                    id=collection.id,
+                    title=collection.title or "no title",
+                    spatial_extent=extent_dict["spatial"]["bbox"],
+                    temporal_extent=extent_dict["temporal"]["interval"],
+                    description=collection.description,
+                    keywords=collection.keywords or [],
+                )
+                results.append(collection_metadata)
 
         return results
