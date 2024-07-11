@@ -11,6 +11,7 @@ class CollectionMetadata(BaseModel):
     temporal_extent: Any
     description: Optional[str] = None
     keywords: Optional[List[str]] = []
+    hint: Optional[str] = None
 
 
 class SearchResponse(BaseModel):

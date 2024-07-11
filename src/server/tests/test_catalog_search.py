@@ -6,7 +6,7 @@
 
 from datetime import datetime
 
-from app.catalog_search import STACAPICollectionSearch
+from app.catalog_search import PYTHON, STACAPICollectionSearch
 
 
 def test_base(mock_apis):
@@ -57,3 +57,24 @@ def test_text(mock_apis):
         text="another",
     )
     assert len(text_search.get_collection_metadata()) == 1
+
+
+def test_hint(mock_apis):
+    # gather all collections
+    base_search = STACAPICollectionSearch(
+        base_url=mock_apis[0],
+        hint_lang=PYTHON,
+    )
+    results = base_search.get_collection_metadata()
+    assert len(results) == 2
+
+    expected_hint = (
+        "import pystac_client\n\n"
+        'catalog = pystac_client.Client.open("https://stac1.net")\n'
+        'search = catalog.search(collections="collection-1")'
+        "\nitem_collection = search.item_collection()"
+    )
+    for i, result in enumerate(results):
+        assert result.hint
+        if i == 0:
+            assert result.hint.strip() == expected_hint.strip()

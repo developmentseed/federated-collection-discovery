@@ -1,12 +1,16 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import List, Optional, Tuple
+from typing import List, Literal, Optional, Tuple
 
 from pystac_client.client import Client
 from stac_pydantic.shared import BBox
 
+from app.hint import generate_python_hint
 from app.models import CollectionMetadata
+from app.shared import DatetimeInterval
+
+PYTHON = "python"
 
 
 def check_bbox_overlap(bbox1, bbox2):
@@ -16,9 +20,6 @@ def check_bbox_overlap(bbox1, bbox2):
         or bbox2[1] > bbox1[3]  # ymax 1 < ymin 2
         or bbox2[3] < bbox1[1]  # ymin 1 > ymax 2
     )
-
-
-DatetimeInterval = Tuple[Optional[datetime], Optional[datetime]]
 
 
 def ensure_utc(dt: Optional[datetime]) -> Optional[datetime]:
@@ -64,6 +65,7 @@ class CatalogCollectionSearch(ABC):
     bbox: Optional[BBox] = None
     datetime: Optional[DatetimeInterval] = None
     text: Optional[str] = None
+    hint_lang: Optional[Literal["python"]] = None
 
     @abstractmethod
     def get_collection_metadata(self) -> List[CollectionMetadata]:
@@ -120,6 +122,14 @@ class STACAPICollectionSearch(CatalogCollectionSearch):
             )
 
             if bbox_overlap and temporal_overlap and text_overlap:
+                hint = None
+                if self.hint_lang == PYTHON:
+                    hint = generate_python_hint(
+                        base_url=self.base_url,
+                        collection_id=collection.id,
+                        bbox=self.bbox,
+                        datetime_interval=self.datetime,
+                    )
                 extent_dict = collection.extent.to_dict()
                 collection_metadata = CollectionMetadata(
                     catalog_url=self.base_url,
@@ -129,6 +139,7 @@ class STACAPICollectionSearch(CatalogCollectionSearch):
                     temporal_extent=extent_dict["temporal"]["interval"],
                     description=collection.description,
                     keywords=collection.keywords or [],
+                    hint=hint,
                 )
                 results.append(collection_metadata)
 
