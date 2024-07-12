@@ -1,12 +1,7 @@
-# test CMR
-
-# test STAC API with collection-search
-
-# test STAC catalog with nested catalogs
-
 from datetime import datetime
 
-from app.catalog_search import PYTHON, STACAPICollectionSearch
+from app.hint import PYTHON
+from app.stac_api_collection_search import STACAPICollectionSearch
 
 
 def test_base(mock_apis):
@@ -16,6 +11,13 @@ def test_base(mock_apis):
     )
 
     assert len(base_search.get_collection_metadata()) == 2
+
+
+def test_limit(mock_apis):
+    # gather all collections
+    base_search = STACAPICollectionSearch(base_url=mock_apis[0], limit=1)
+
+    assert len(base_search.get_collection_metadata()) == 1
 
 
 def test_bbox(mock_apis):

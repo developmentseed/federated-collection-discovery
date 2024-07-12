@@ -1,17 +1,12 @@
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import List, Literal, Optional, Tuple
+from typing import List, Optional, Tuple
 
-import httpx
 from pystac_client.client import Client
-from stac_pydantic.shared import BBox
 
-from app.hint import generate_python_hint
+from app.catalog_collection_search import CatalogCollectionSearch
+from app.hint import PYTHON, generate_pystac_client_hint
 from app.models import CollectionMetadata
 from app.shared import DatetimeInterval
-
-PYTHON = "python"
 
 
 def check_bbox_overlap(bbox1, bbox2):
@@ -60,19 +55,6 @@ def check_text_overlap(
     return any(text.lower() in x.lower() for x in text_fields)
 
 
-@dataclass
-class CatalogCollectionSearch(ABC):
-    base_url: str
-    bbox: Optional[BBox] = None
-    datetime: Optional[DatetimeInterval] = None
-    text: Optional[str] = None
-    hint_lang: Optional[Literal["python"]] = None
-
-    @abstractmethod
-    def get_collection_metadata(self) -> List[CollectionMetadata]:
-        pass
-
-
 class STACAPICollectionSearch(CatalogCollectionSearch):
     def get_collection_metadata(self) -> List[CollectionMetadata]:
         self.catalog = Client.open(self.base_url)
@@ -83,8 +65,14 @@ class STACAPICollectionSearch(CatalogCollectionSearch):
         # https://github.com/nasa/cmr-stac/issues/236
         # this makes it possible to iterate through all collections
         self.catalog.add_conforms_to("COLLECTIONS")
-        results = []
-        for collection in self.catalog.get_collections():
+        results: List[CollectionMetadata] = []
+        all_collections = self.catalog.get_collections()
+        while len(results) < self.limit:
+            try:
+                collection = next(all_collections)
+            except StopIteration:
+                break
+
             # check bbox overlap
             bbox_overlap = (
                 check_bbox_overlap(self.bbox, collection.extent.spatial.bboxes[0])
@@ -125,7 +113,7 @@ class STACAPICollectionSearch(CatalogCollectionSearch):
             if bbox_overlap and temporal_overlap and text_overlap:
                 hint = None
                 if self.hint_lang == PYTHON:
-                    hint = generate_python_hint(
+                    hint = generate_pystac_client_hint(
                         base_url=self.base_url,
                         collection_id=collection.id,
                         bbox=self.bbox,
@@ -143,46 +131,5 @@ class STACAPICollectionSearch(CatalogCollectionSearch):
                     hint=hint,
                 )
                 results.append(collection_metadata)
-
-        return results
-
-
-class CMRCollectionSearch(CatalogCollectionSearch):
-    def get_collection_metadata(self) -> List[CollectionMetadata]:
-        # query CMR using httpx or requests, format CollectionMetadata
-        request_url = self.base_url + "/search/collections.json?"
-        query_params = []
-        if self.bbox:
-            query_params.append(
-                f"bounding_box[]={','.join(str(coord) for coord in self.bbox)}"
-            )
-        if self.datetime:
-            datetime_str = ",".join(
-                dt.strftime("%Y-%m-%dT%H:%M:%SZ")  # type: ignore
-                for dt in self.datetime
-            )
-            query_params.append(f"temporal\\[\\]={datetime_str}")
-        if self.text:
-            query_params.append("keyword={text}")
-
-        request_url += "&".join(query_params)
-
-        response_json = httpx.get(request_url).json()
-
-        results = []
-        for collection in response_json["feed"]["entry"]:
-            boxes = collection.get("boxes")
-            bbox = tuple(" ".split(boxes)) if boxes else None
-            collection_metadata = CollectionMetadata(
-                catalog_url=self.base_url,
-                id=collection.get("id"),
-                title=collection.get("title"),
-                spatial_extent=[bbox],
-                temporal_extent=[[None, None]],
-                description=collection.get("summary"),
-                keywords=None,
-                hint=None,
-            )
-            results.append(collection_metadata)
 
         return results

@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from app.catalog_search import STACAPICollectionSearch
 from app.catalog_search_service import CatalogSearchService
+from app.stac_api_collection_search import STACAPICollectionSearch
 
 
 def test_search_all(mock_apis):
