@@ -62,3 +62,41 @@ def test_search_with_all_params(mock_apis, client):
     assert response.status_code == 200
     json_response = response.json()
     assert len(json_response["results"]) == 1
+
+
+def test_search_invalid_bbox(mock_apis, client):
+    # Invalid because it doesn't contain 4 values
+    bbox_errors = [
+        "-130,45,-125",
+        "45,-125,46",
+        "-130,45,-125,invalid",
+        "-130,45,-125,46,59",
+    ]
+
+    for bbox in bbox_errors:
+        response = client.get("/search", params={"bbox": bbox})
+        assert response.status_code == 400
+        assert response.json()["detail"] == "Invalid bbox"
+
+
+def test_search_invalid_datetime(mock_apis, client):
+    # Invalid datetime strings
+    bad_datetimes = [
+        "2024-01-01T00:00:00Z/tooSoon",  # Invalid "tooSoon" token
+        "20230101/20230102",  # Date without dashes and T tokens
+        "2021-30-30T00:00:00Z/2021-31-31T00:00:00Z",  # Invalid day/month values
+        "notADate/2023-01-01T00:00:00Z",
+        "2024-07-12T14:38:00Z",  # a single datetime
+    ]
+
+    for bad_datetime in bad_datetimes:
+        response = client.get("/search", params={"datetime": bad_datetime})
+        assert response.status_code == 400
+        # The actual message depends on str_to_interval implementation;
+        # adapted as "Invalid datetime" for demo purposes here.
+        assert "detail" in response.json()
+
+
+def test_search_bad_limit(mock_apis, client):
+    response = client.get("/search", params={"limit": -1})
+    assert response.status_code == 422

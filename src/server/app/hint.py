@@ -65,7 +65,8 @@ def generate_cmr_hint(
 
     formatted_hint = CMR_PYTHON_HINT.format(
         base_url=base_url,
-        short_name=short_name,
+        short_name=short_name.strip(),
         remainder=remainder,
     )
+    print(formatted_hint)
     return black.format_str(formatted_hint, mode=black.FileMode())

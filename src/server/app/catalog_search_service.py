@@ -1,14 +1,11 @@
-from typing import List, Union
+from typing import List
 
-from app.cmr_collection_search import CMRCollectionSearch
+from app.catalog_collection_search import CatalogCollectionSearch
 from app.models import CollectionMetadata
-from app.stac_api_collection_search import STACAPICollectionSearch
 
 
 class CatalogSearchService:
-    def __init__(
-        self, catalogs: List[Union[CMRCollectionSearch, STACAPICollectionSearch]]
-    ):
+    def __init__(self, catalogs: List[CatalogCollectionSearch]):
         self.catalogs = catalogs
 
     def search_all(self) -> List[CollectionMetadata]:

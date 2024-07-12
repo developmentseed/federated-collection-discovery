@@ -11,7 +11,8 @@ services:
       - ./src/server:/app
     environment:
       - PYTHONUNBUFFERED=1
-      - CROSS_CATALOG_SEARCH_STAC_API_URLS=https://earth-search.aws.element84.com/v1/,https://cmr.earthdata.nasa.gov/stac/LPCLOUD/
+      - CROSS_CATALOG_SEARCH_STAC_API_URLS=https://earth-search.aws.element84.com/v1/,https://stac.eoapi.dev
+      - CROSS_CATALOG_SEARCH_CMR_URLS=https://cmr.earthdata.nasa.gov/search/
 
   # client:
   #   build: ./src/client

@@ -40,7 +40,9 @@ class CMRCollectionSearch(CatalogCollectionSearch):
                 id=collection.get("id"),
                 title=collection.get("title"),
                 spatial_extent=[bbox],
-                temporal_extent=[[None, None]],
+                temporal_extent=[
+                    [collection.get("time_start"), collection.get("time_end")]
+                ],
                 description=collection.get("summary"),
                 keywords=None,
                 hint=hint,
