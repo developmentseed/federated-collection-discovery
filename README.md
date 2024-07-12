@@ -32,7 +32,7 @@ docker compose up --build
 This will use the `CROSS_CATALOG_SEARCH_STAC_API_URLS` and
 `CROSS_CATALOG_SEARCH_CMR_URLS` environment variables
 defined in [docker-compose.yaml](./docker-compose.yaml) to search across
-the Earth Search STAC from E84, the eoapi.dev STAC, and NASA's CMR.
+the Earth Search STAC (from E84), the eoapi.dev STAC, and NASA's CMR.
 
 Stop the services:
 
@@ -138,7 +138,8 @@ Initiates a search for collections that match the specified criteria.
 - **Method:** `GET`
 - **Parameters:**
   - `bbox` (query parameter, comma separated list of floats)
-  - `datetime` (query parameter, str)
+  - `datetime` (query parameter, datetime range separated by `/`, e.g.
+    `2024-06-01T00:00:00Z/2024-07-12T12:00:00Z`)
   - `text` (query parameter, str)
 - **Response:**
   - A JSON object containing an array of results.

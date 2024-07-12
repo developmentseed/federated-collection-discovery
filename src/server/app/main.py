@@ -65,7 +65,17 @@ def _str_to_interval(datetime_str: Optional[str]) -> Optional[DatetimeInterval]:
     return datetime_interval
 
 
-app = FastAPI()
+app = FastAPI(
+    title="Cross-catalog search API",
+    description="API for searching through multiple geospatial data catalogs. "
+    "Provides capabilities to filter collections based on bounding "
+    "box, datetime intervals, and keywords.",
+    version="0.1.0",
+    license_info={
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT",
+    },
+)
 
 
 @app.get(
