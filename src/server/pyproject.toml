@@ -17,6 +17,8 @@ uvicorn = "^0.30.1"
 requests-mock = "^1.12.1"
 pydantic-settings = "^2.3.4"
 black = "^24.4.2"
+httpx = "^0.27.0"
+python-cmr = "^0.11.0"
 
 [tool.poetry.group.dev.dependencies]
 jupyterlab = "^4.2.3"

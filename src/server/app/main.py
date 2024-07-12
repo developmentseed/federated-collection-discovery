@@ -1,15 +1,18 @@
-from fastapi import FastAPI, Query
 from typing import Annotated, Optional
 
+from fastapi import FastAPI, Query
 from stac_fastapi.types.rfc3339 import str_to_interval
 from stac_fastapi.types.search import str2bbox
 from stac_pydantic.shared import BBox
 
-from app.catalog_search import DatetimeInterval, STACAPICollectionSearch
+from app.catalog_search import (
+    CMRCollectionSearch,
+    DatetimeInterval,
+    STACAPICollectionSearch,
+)
 from app.catalog_search_service import CatalogSearchService
-from app.models import SearchResponse
-
 from app.config import Settings
+from app.models import SearchResponse
 
 
 def _str2bbox(bbox_str: Optional[str] = None) -> Optional[BBox]:
@@ -41,13 +44,17 @@ def search_collections(
     datetime: Annotated[
         Optional[str],
         Query(
-            description="datetime interval, e.g. 2021-02-01T00:00:00Z/.. or 2024-06-01T00:00:00/2024-06-30T23:59:59Z",
+            description="datetime interval, e.g. 2021-02-01T00:00:00Z/.. "
+            "or 2024-06-01T00:00:00/2024-06-30T23:59:59Z",
         ),
     ] = None,
     text: Annotated[
         Optional[str],
         Query(
-            description="string to search for in collection IDs, titles, descriptions, and keywords",
+            description=(
+                "string to search for in collection IDs, titles, "
+                "descriptions, and keywords"
+            ),
         ),
     ] = None,
 ):
@@ -62,6 +69,15 @@ def search_collections(
                 text=text,
             )
             for base_url in settings.stac_api_urls
+        ]
+        + [
+            CMRCollectionSearch(
+                base_url=str(base_url),
+                bbox=_str2bbox(bbox),
+                datetime=_str_to_interval(datetime),
+                text=text,
+            )
+            for base_url in settings.cmr_urls
         ]
     )
 

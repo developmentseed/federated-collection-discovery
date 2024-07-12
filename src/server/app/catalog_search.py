@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import List, Literal, Optional, Tuple
 
+import httpx
 from pystac_client.client import Client
 from stac_pydantic.shared import BBox
 
@@ -142,5 +143,46 @@ class STACAPICollectionSearch(CatalogCollectionSearch):
                     hint=hint,
                 )
                 results.append(collection_metadata)
+
+        return results
+
+
+class CMRCollectionSearch(CatalogCollectionSearch):
+    def get_collection_metadata(self) -> List[CollectionMetadata]:
+        # query CMR using httpx or requests, format CollectionMetadata
+        request_url = self.base_url + "/search/collections.json?"
+        query_params = []
+        if self.bbox:
+            query_params.append(
+                f"bounding_box[]={','.join(str(coord) for coord in self.bbox)}"
+            )
+        if self.datetime:
+            datetime_str = ",".join(
+                dt.strftime("%Y-%m-%dT%H:%M:%SZ")  # type: ignore
+                for dt in self.datetime
+            )
+            query_params.append(f"temporal\\[\\]={datetime_str}")
+        if self.text:
+            query_params.append("keyword={text}")
+
+        request_url += "&".join(query_params)
+
+        response_json = httpx.get(request_url).json()
+
+        results = []
+        for collection in response_json["feed"]["entry"]:
+            boxes = collection.get("boxes")
+            bbox = tuple(" ".split(boxes)) if boxes else None
+            collection_metadata = CollectionMetadata(
+                catalog_url=self.base_url,
+                id=collection.get("id"),
+                title=collection.get("title"),
+                spatial_extent=[bbox],
+                temporal_extent=[[None, None]],
+                description=collection.get("summary"),
+                keywords=None,
+                hint=None,
+            )
+            results.append(collection_metadata)
 
         return results
