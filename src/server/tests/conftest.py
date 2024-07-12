@@ -4,7 +4,7 @@ import requests_mock
 
 @pytest.fixture
 def mock_apis(monkeypatch):
-    with requests_mock.Mocker() as m:
+    with requests_mock.Mocker(real_http=True) as m:
         base_urls = ["https://stac1.net", "https://stac2.net", "https://stac3.net"]
         for i, base_url in enumerate(base_urls):
             collections_url = f"{base_url}/collections"
