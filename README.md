@@ -15,7 +15,7 @@ criteria.
 ## Prerequisites
 
 - Python 3.9 (or higher)
-- Node.js and npm (for the React frontend)
+- ~Node.js and npm (for the React frontend)~
 - Docker and Docker Compose
 
 ## Setup Using Docker
@@ -29,9 +29,10 @@ Build and start the services:
 docker compose up --build
 ```
 
-This will use the `CROSS_CATALOG_SEARCH_STAC_API_URLS` environment variable
+This will use the `CROSS_CATALOG_SEARCH_STAC_API_URLS` and
+`CROSS_CATALOG_SEARCH_CMR_URLS` environment variables
 defined in [docker-compose.yaml](./docker-compose.yaml) to search across
-the NASA CMR STAC and the Earth Search STAC from E84.
+the Earth Search STAC from E84, the eoapi.dev STAC, and NASA's CMR.
 
 Stop the services:
 
@@ -43,7 +44,7 @@ Once the Docker containers are running, you can access the application at the
 same endpoints:
 
 - Backend (FastAPI): `http://localhost:8000`
-- TODO: Frontend (React): `http://localhost:3000`
+- ~Frontend (React): `http://localhost:3000`~
 
 ## Setup Using Virtual Environment and Poetry
 
@@ -115,18 +116,18 @@ source venv/bin/activate  # or `venv\Scripts\activate` for Windows
 poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-Navigate to the `src/client` directory and start the React development server:
+~Navigate to the `src/client` directory and start the React development server:~
 
 ```bash
-cd src/client
-npm install  # or `yarn install`
-npm start    # or `yarn start`
+# cd src/client
+# npm install  # or `yarn install`
+# npm start    # or `yarn start`
 ```
 
 Access the application:
 
 - Backend (FastAPI): `http://localhost:8000`
-- Frontend (React): `http://localhost:3000`
+- ~Frontend (React): `http://localhost:3000`~
 
 ## API Endpoints
 
