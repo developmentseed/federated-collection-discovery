@@ -6,10 +6,43 @@ from pystac_client.client import Client
 from app.catalog_collection_search import CatalogCollectionSearch
 from app.hint import PYTHON, generate_pystac_client_hint
 from app.models import CollectionMetadata
-from app.shared import DatetimeInterval
+from app.shared import BBox, DatetimeInterval
 
 
-def check_bbox_overlap(bbox1, bbox2):
+def get_full_bounding_box(bboxes: List[BBox]):
+    """
+    Get the full bounding box that encompasses all the bounding boxes
+    provided in the list.
+
+    Parameters:
+    bboxes (list of lists): List of bounding boxes, where each bounding
+        box is represented as [xmin, ymin, xmax, ymax].
+
+    Returns:
+    list: A list containing coordinates representing the full bounding box.
+    """
+    # Initialize extreme values with None
+    _xmin, _ymin, _xmax, _ymax = None, None, None, None
+
+    # Iterate through the bounding boxes
+    for bbox in bboxes:
+        xmin, ymin, xmax, ymax = bbox
+
+        # Update extreme values if needed
+        if _xmin is None or xmin < _xmin:
+            _xmin = xmin
+        if _ymin is None or ymin < _ymin:
+            _ymin = ymin
+        if _xmax is None or xmax > _xmax:
+            _xmax = xmax
+        if _ymax is None or ymax > _ymax:
+            _ymax = ymax
+
+    # Return the full bounding box
+    return [_xmin, _ymin, _xmax, _ymax]
+
+
+def check_bbox_overlap(bbox1: BBox, bbox2: BBox):
     return not (
         bbox2[0] > bbox1[2]  # xmax 1 < xmin 2
         or bbox2[2] < bbox1[0]  # xmin 1 > xmax 2
@@ -74,8 +107,14 @@ class STACAPICollectionSearch(CatalogCollectionSearch):
                 break
 
             # check bbox overlap
+            # TODO: get min/max values from ALL bbox values
             bbox_overlap = (
-                check_bbox_overlap(self.bbox, collection.extent.spatial.bboxes[0])
+                check_bbox_overlap(
+                    self.bbox,
+                    get_full_bounding_box(
+                        collection.extent.spatial.bboxes  # type: ignore
+                    ),
+                )
                 if self.bbox
                 else True
             )

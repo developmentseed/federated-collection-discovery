@@ -2,10 +2,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List, Literal, Optional
 
-from stac_pydantic.shared import BBox
-
 from app.models import CollectionMetadata
-from app.shared import DatetimeInterval
+from app.shared import BBox, DatetimeInterval
 
 DEFAULT_LIMIT = 100
 
