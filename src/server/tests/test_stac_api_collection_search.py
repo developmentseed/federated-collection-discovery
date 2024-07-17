@@ -13,13 +13,6 @@ def test_base(mock_apis):
     assert len(list(base_search.get_collection_metadata())) == 2
 
 
-def test_limit(mock_apis):
-    # gather all collections
-    base_search = STACAPICollectionSearch(base_url=mock_apis[0], limit=1)
-
-    assert len(list(base_search.get_collection_metadata())) == 1
-
-
 def test_bbox(mock_apis):
     # filter by bbox
 

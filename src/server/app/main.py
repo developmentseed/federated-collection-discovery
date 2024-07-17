@@ -17,8 +17,6 @@ from app.config import Settings
 from app.models import SearchResponse
 from app.stac_api_collection_search import STACAPICollectionSearch
 
-invalid_bbox = HTTPException(status_code=400, detail="Invalid bbox")
-
 
 def str_to_bbox(bbox_str: Optional[str]) -> Optional[BBox]:
     """Convert string to BBox based on , delimiter."""
@@ -28,7 +26,9 @@ def str_to_bbox(bbox_str: Optional[str]) -> Optional[BBox]:
     try:
         x0, y0, x1, y1 = map(float, bbox_str.split(","))
     except ValueError:
-        raise invalid_bbox from None
+        raise HTTPException(
+            status_code=400, detail=f"This is an invalid bbox: {bbox_str}"
+        ) from None
 
     return x0, y0, x1, y1
 
@@ -50,7 +50,8 @@ def _str_to_interval(datetime_str: Optional[str]) -> Optional[DatetimeInterval]:
     if not is_datetime_interval(datetime_interval):
         raise HTTPException(
             status_code=400,
-            detail="You must provide a datetime range e.g. 2021-02-01T00:00:00Z/.. "
+            detail=f"This is an invalid datetime interval: {datetime_str}.\n"
+            "You must provide a datetime range e.g. 2021-02-01T00:00:00Z/.. "
             "or 2024-06-01T00:00:00/2024-06-30T23:59:59Z",
         )
 

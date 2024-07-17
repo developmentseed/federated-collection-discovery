@@ -83,7 +83,7 @@ def test_search_invalid_bbox(mock_apis, client):
     for bbox in bbox_errors:
         response = client.get("/search", params={"bbox": bbox})
         assert response.status_code == 400
-        assert response.json()["detail"] == "Invalid bbox"
+        assert response.json()["detail"] == f"This is an invalid bbox: {bbox}"
 
 
 def test_search_invalid_datetime(mock_apis, client):
