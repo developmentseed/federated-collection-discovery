@@ -17,4 +17,4 @@ class Settings(BaseSettings):  # type: ignore
     def parse_cmr_urls(cls, v):
         return v.split(",") if v else None
 
-    model_config = {"env_prefix": "CROSS_CATALOG_SEARCH_", "env_file": ".env"}
+    model_config = {"env_prefix": "FEDERATED_", "env_file": ".env"}

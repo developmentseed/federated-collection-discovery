@@ -27,7 +27,7 @@ def get_full_bounding_box(bboxes: Sequence[BBox]) -> BBox:
     return min(xmins), min(ymins), max(xmaxs), max(ymaxs)
 
 
-def check_bbox_overlap(bbox1: BBox, bbox2: BBox) -> bool:
+def bboxes_overlap(bbox1: BBox, bbox2: BBox) -> bool:
     xmin1, ymin1, xmax1, ymax1 = bbox1
     xmin2, ymin2, xmax2, ymax2 = bbox2
 
@@ -44,7 +44,7 @@ def ensure_utc(dt: Optional[datetime]) -> Optional[datetime]:
     return dt.astimezone(timezone.utc)
 
 
-def check_datetime_overlap(
+def datetime_intervals_overlap(
     interval1: DatetimeInterval,
     interval2: DatetimeInterval,
 ) -> bool:
@@ -58,7 +58,7 @@ def check_datetime_overlap(
     return (start2 or dtmin) <= (end1 or dtmax) and (start1 or dtmin) <= (end2 or dtmax)
 
 
-def check_text_overlap(
+def contains_ignorecase(
     text: str,
     text_fields: set[str],
 ) -> bool:
@@ -90,7 +90,7 @@ class STACAPICollectionSearch(CatalogCollectionSearch):
         )
 
     def spatially_overlaps(self, collection: Collection) -> bool:
-        return self.bbox is None or check_bbox_overlap(
+        return self.bbox is None or bboxes_overlap(
             self.bbox,
             get_full_bounding_box(collection.extent.spatial.bboxes),  # type: ignore
         )
@@ -98,7 +98,7 @@ class STACAPICollectionSearch(CatalogCollectionSearch):
     def temporally_overlaps(self, collection: Collection) -> bool:
         start, end = collection.extent.temporal.intervals[0]
 
-        return self.datetime is None or check_datetime_overlap(
+        return self.datetime is None or datetime_intervals_overlap(
             self.datetime, (ensure_utc(start), ensure_utc(end))
         )
 
@@ -114,7 +114,7 @@ class STACAPICollectionSearch(CatalogCollectionSearch):
             if text
         }
 
-        return not self.text or check_text_overlap(self.text, text_fields)
+        return not self.text or contains_ignorecase(self.text, text_fields)
 
     def collection_metadata(self, collection: Collection) -> CollectionMetadata:
         hint = (
