@@ -1,5 +1,6 @@
+import json
 from dataclasses import dataclass
-from typing import List
+from typing import Iterable, List, TypedDict
 
 from cmr import CollectionQuery
 
@@ -8,9 +9,19 @@ from app.hint import PYTHON, generate_cmr_hint
 from app.models import CollectionMetadata
 
 
+class CMRCollectionResult(TypedDict, total=False):
+    boxes: List[str]
+    short_name: str
+    id: str
+    title: str
+    time_start: str
+    time_end: str
+    summary: str
+
+
 @dataclass
 class CMRCollectionSearch(CatalogCollectionSearch):
-    def get_collection_metadata(self) -> List[CollectionMetadata]:
+    def get_collection_metadata(self) -> Iterable[CollectionMetadata]:
         collection_search = CollectionQuery(mode=self.base_url)
         if self.bbox:
             collection_search = collection_search.bounding_box(*self.bbox)
@@ -21,32 +32,59 @@ class CMRCollectionSearch(CatalogCollectionSearch):
         if self.text:
             collection_search = collection_search.keyword(self.text)
 
-        results = []
-        for collection in collection_search.get(limit=self.limit):
-            boxes = collection.get("boxes")
-            bbox = tuple(boxes[0].split(" ")) if boxes else None
+        return (
+            self.collection_metadata(collection)
+            for collection in collection_search.get()
+        )
 
-            hint = None
-            if self.hint_lang == PYTHON:
-                hint = generate_cmr_hint(
-                    base_url=self.base_url,
-                    short_name=collection.get("short_name"),
-                    bbox=self.bbox,
-                    datetime_interval=self.datetime,
-                )
+    def collection_metadata(
+        self, collection: CMRCollectionResult
+    ) -> CollectionMetadata:
+        # parse the output of the CMR search
+        boxes = collection.get("boxes")
+        bbox = tuple(boxes[0].split(" ")) if boxes else None
 
-            collection_metadata = CollectionMetadata(
-                catalog_url=self.base_url,
-                id=collection.get("id"),
-                title=collection.get("title"),
-                spatial_extent=[bbox],
-                temporal_extent=[
-                    [collection.get("time_start"), collection.get("time_end")]
-                ],
-                description=collection.get("summary"),
-                keywords=None,
-                hint=hint,
+        short_name = collection.get("short_name")
+        if not short_name:
+            raise ValueError(
+                "This CMR collection does not have a short name:\n "
+                f"{json.dumps(collection, indent=2)}"
             )
-            results.append(collection_metadata)
 
-        return results
+        collection_id = collection.get("id")
+        if not collection_id:
+            raise ValueError(
+                "This CMR collection does not have an id:\n "
+                f"{json.dumps(collection, indent=2)}"
+            )
+
+        title = collection.get("title")
+        if not title:
+            raise ValueError(
+                "This CMR collection does not have a title:\n "
+                f"{json.dumps(collection, indent=2)}"
+            )
+
+        hint = (
+            generate_cmr_hint(
+                base_url=self.base_url,
+                short_name=short_name,
+                bbox=self.bbox,
+                datetime_interval=self.datetime,
+            )
+            if self.hint_lang == PYTHON
+            else None
+        )
+
+        return CollectionMetadata(
+            catalog_url=self.base_url,
+            id=collection_id,
+            title=title,
+            spatial_extent=[bbox],
+            temporal_extent=[
+                [collection.get("time_start"), collection.get("time_end")]
+            ],
+            description=collection.get("summary"),
+            keywords=None,
+            hint=hint,
+        )

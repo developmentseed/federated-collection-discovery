@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Literal, Optional
+from typing import Iterable, Literal, Optional
 
 from app.models import CollectionMetadata
 from app.shared import BBox, DatetimeInterval

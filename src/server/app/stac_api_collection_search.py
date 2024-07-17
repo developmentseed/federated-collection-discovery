@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
-from typing import List, Optional, Tuple
+from typing import Iterable, Optional, Sequence
 
+from pystac import Collection
 from pystac_client.client import Client
 
 from app.catalog_collection_search import CatalogCollectionSearch
@@ -59,7 +60,7 @@ def check_datetime_overlap(
 
 def check_text_overlap(
     text: str,
-    text_fields: List[str],
+    text_fields: set[str],
 ) -> bool:
     return any(text.lower() in x.lower() for x in text_fields)
 

@@ -10,14 +10,14 @@ def test_base(mock_apis):
         base_url=mock_apis[0],
     )
 
-    assert len(base_search.get_collection_metadata()) == 2
+    assert len(list(base_search.get_collection_metadata())) == 2
 
 
 def test_limit(mock_apis):
     # gather all collections
     base_search = STACAPICollectionSearch(base_url=mock_apis[0], limit=1)
 
-    assert len(base_search.get_collection_metadata()) == 1
+    assert len(list(base_search.get_collection_metadata())) == 1
 
 
 def test_bbox(mock_apis):
@@ -29,7 +29,7 @@ def test_bbox(mock_apis):
         bbox=(-115, 45, -114, 46),
     )
 
-    assert len(bbox_search.get_collection_metadata()) == 2
+    assert len(list(bbox_search.get_collection_metadata())) == 2
 
     # the second STAC has one collection with a limited bbox
     bbox_search = STACAPICollectionSearch(
@@ -37,7 +37,7 @@ def test_bbox(mock_apis):
         bbox=(-130, 45, -125, 46),
     )
 
-    assert len(bbox_search.get_collection_metadata()) == 1
+    assert len(list(bbox_search.get_collection_metadata())) == 1
 
 
 def test_datetime(mock_apis):
@@ -49,7 +49,7 @@ def test_datetime(mock_apis):
             datetime(year=2020, month=1, day=2, hour=12),
         ),
     )
-    assert len(datetime_search.get_collection_metadata()) == 1
+    assert len(list(datetime_search.get_collection_metadata())) == 1
 
 
 def test_text(mock_apis):
@@ -58,7 +58,7 @@ def test_text(mock_apis):
         base_url=mock_apis[0],
         text="another",
     )
-    assert len(text_search.get_collection_metadata()) == 1
+    assert len(list(text_search.get_collection_metadata())) == 1
 
 
 def test_hint(mock_apis):
@@ -67,7 +67,7 @@ def test_hint(mock_apis):
         base_url=mock_apis[0],
         hint_lang=PYTHON,
     )
-    results = base_search.get_collection_metadata()
+    results = list(base_search.get_collection_metadata())
     assert len(results) == 2
 
     expected_hint = (
