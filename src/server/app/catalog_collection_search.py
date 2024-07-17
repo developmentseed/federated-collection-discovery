@@ -14,7 +14,6 @@ class CatalogCollectionSearch(ABC):
     base_url: str
     bbox: Optional[BBox] = None
     datetime: Optional[DatetimeInterval] = None
-    limit: int = DEFAULT_LIMIT
     text: Optional[str] = None
     hint_lang: Optional[Literal["python"]] = None
 

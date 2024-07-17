@@ -1,3 +1,4 @@
+import itertools
 from datetime import datetime
 from functools import lru_cache
 from typing import Annotated, List, Literal, Optional
@@ -5,7 +6,6 @@ from typing import Annotated, List, Literal, Optional
 from fastapi import Depends, FastAPI, HTTPException, Query
 from pydantic import PositiveInt
 from stac_fastapi.types.rfc3339 import str_to_interval
-from stac_pydantic.shared import BBox
 
 from app.catalog_collection_search import (
     CatalogCollectionSearch,
@@ -15,6 +15,7 @@ from app.catalog_collection_search import (
 from app.cmr_collection_search import CMRCollectionSearch
 from app.config import Settings
 from app.models import SearchResponse
+from app.shared import BBox
 from app.stac_api_collection_search import STACAPICollectionSearch
 
 
@@ -113,20 +114,15 @@ def search_collections(
 ):
     catalogs: List[CatalogCollectionSearch] = []
 
-    search_args = {
-        "bbox": str_to_bbox(bbox),
-        "datetime": _str_to_interval(datetime),
-        "text": text,
-        "limit": limit,
-        "hint_lang": hint_lang,
-    }
-
     if settings.stac_api_urls:
         catalogs.extend(
             [
                 STACAPICollectionSearch(
                     base_url=str(base_url),
-                    **search_args,
+                    bbox=str_to_bbox(bbox),
+                    datetime=_str_to_interval(datetime),
+                    text=text,
+                    hint_lang=hint_lang,
                 )
                 for base_url in settings.stac_api_urls
             ]
@@ -135,11 +131,17 @@ def search_collections(
     if settings.cmr_urls:
         catalogs.extend(
             [
-                CMRCollectionSearch(base_url=str(base_url), **search_args)
+                CMRCollectionSearch(
+                    base_url=str(base_url),
+                    bbox=str_to_bbox(bbox),
+                    datetime=_str_to_interval(datetime),
+                    text=text,
+                    hint_lang=hint_lang,
+                )
                 for base_url in settings.cmr_urls
             ]
         )
 
     results = search_all(catalogs)
 
-    return {"results": results}
+    return {"results": itertools.islice(results, limit)}

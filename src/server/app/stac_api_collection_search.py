@@ -50,8 +50,6 @@ def datetime_intervals_overlap(
 ) -> bool:
     start1, end1 = map(ensure_utc, interval1)
     start2, end2 = map(ensure_utc, interval2)
-    start1, end1 = map(ensure_utc, interval1)
-    start2, end2 = map(ensure_utc, interval2)
     dtmin = datetime.min.replace(tzinfo=timezone.utc)
     dtmax = datetime.max.replace(tzinfo=timezone.utc)
 
