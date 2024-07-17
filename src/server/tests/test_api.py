@@ -1,11 +1,18 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from app.main import app  # Modify to import your FastAPI app from the correct module
+from app.config import Settings
+from app.main import app, get_settings
 
 
 @pytest.fixture
 def client(mock_apis):
+    # override the default settings with our mocked api endpoints
+    def get_settings_override():
+        return Settings(stac_api_urls=",".join(mock_apis))
+
+    app.dependency_overrides[get_settings] = get_settings_override
+
     return TestClient(app)
 
 

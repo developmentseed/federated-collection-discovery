@@ -1,7 +1,8 @@
 from datetime import datetime
+from functools import lru_cache
 from typing import Annotated, List, Literal, Optional
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query
 from pydantic import PositiveInt
 from stac_fastapi.types.rfc3339 import str_to_interval
 from stac_pydantic.shared import BBox
@@ -69,11 +70,17 @@ app = FastAPI(
 )
 
 
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
+
+
 @app.get(
     "/search",
     response_model=SearchResponse,
 )
 def search_collections(
+    settings: Annotated[Settings, Depends(get_settings)],
     bbox: Annotated[
         Optional[str],
         Query(description="bounding box coordinates (xmin, xmax, ymin, ymax)"),
@@ -103,8 +110,6 @@ def search_collections(
         Query(description=("limit for number of returned collection records")),
     ] = 100,
 ):
-    settings = Settings()
-
     catalogs: List[CatalogCollectionSearch] = []
 
     search_args = {

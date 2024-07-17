@@ -3,7 +3,7 @@ import requests_mock
 
 
 @pytest.fixture
-def mock_apis(monkeypatch):
+def mock_apis():
     with requests_mock.Mocker(real_http=True) as m:
         base_urls = ["https://stac1.net", "https://stac2.net", "https://stac3.net"]
         for i, base_url in enumerate(base_urls):
@@ -109,7 +109,5 @@ def mock_apis(monkeypatch):
                 ],
             }
             m.get(base_url, status_code=200, json=catalog_root_response)
-
-        monkeypatch.setenv("CROSS_CATALOG_SEARCH_STAC_API_URLS", ",".join(base_urls))
 
         yield base_urls
