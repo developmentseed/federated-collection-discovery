@@ -1,3 +1,4 @@
+import itertools
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Iterable, Literal, Optional
@@ -20,3 +21,11 @@ class CatalogCollectionSearch(ABC):
     @abstractmethod
     def get_collection_metadata(self) -> Iterable[CollectionMetadata]:
         pass
+
+
+def search_all(
+    catalogs: Iterable[CatalogCollectionSearch],
+) -> Iterable[CollectionMetadata]:
+    return itertools.chain.from_iterable(
+        catalog.get_collection_metadata() for catalog in catalogs
+    )

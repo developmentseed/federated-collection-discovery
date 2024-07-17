@@ -6,8 +6,11 @@ from pydantic import PositiveInt
 from stac_fastapi.types.rfc3339 import str_to_interval
 from stac_pydantic.shared import BBox
 
-from app.catalog_collection_search import CatalogCollectionSearch, DatetimeInterval
-from app.catalog_search_service import CatalogSearchService
+from app.catalog_collection_search import (
+    CatalogCollectionSearch,
+    DatetimeInterval,
+    search_all,
+)
 from app.cmr_collection_search import CMRCollectionSearch
 from app.config import Settings
 from app.models import SearchResponse
@@ -131,8 +134,6 @@ def search_collections(
             ]
         )
 
-    catalog_service = CatalogSearchService(catalogs=catalogs)
-
-    results = catalog_service.search_all()
+    results = search_all(catalogs)
 
     return {"results": results}
