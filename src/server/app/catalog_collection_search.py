@@ -18,5 +18,5 @@ class CatalogCollectionSearch(ABC):
     hint_lang: Optional[Literal["python"]] = None
 
     @abstractmethod
-    def get_collection_metadata(self) -> List[CollectionMetadata]:
+    def get_collection_metadata(self) -> Iterable[CollectionMetadata]:
         pass

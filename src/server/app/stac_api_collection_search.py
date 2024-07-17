@@ -9,46 +9,28 @@ from app.models import CollectionMetadata
 from app.shared import BBox, DatetimeInterval
 
 
-def get_full_bounding_box(bboxes: List[BBox]):
+def get_full_bounding_box(bboxes: Sequence[BBox]) -> BBox:
     """
     Get the full bounding box that encompasses all the bounding boxes
-    provided in the list.
+    provided.
 
     Parameters:
-    bboxes (list of lists): List of bounding boxes, where each bounding
-        box is represented as [xmin, ymin, xmax, ymax].
+    bboxes (sequence of tuples): Sequence of bounding boxes, where each bounding
+        box is represented as a tuple of (xmin, ymin, xmax, ymax).
 
     Returns:
-    list: A list containing coordinates representing the full bounding box.
+    full_bbox: BBox containing coordinates representing the full bounding box.
     """
-    # Initialize extreme values with None
-    _xmin, _ymin, _xmax, _ymax = None, None, None, None
+    xmins, ymins, xmaxs, ymaxs = zip(*bboxes)
 
-    # Iterate through the bounding boxes
-    for bbox in bboxes:
-        xmin, ymin, xmax, ymax = bbox
-
-        # Update extreme values if needed
-        if _xmin is None or xmin < _xmin:
-            _xmin = xmin
-        if _ymin is None or ymin < _ymin:
-            _ymin = ymin
-        if _xmax is None or xmax > _xmax:
-            _xmax = xmax
-        if _ymax is None or ymax > _ymax:
-            _ymax = ymax
-
-    # Return the full bounding box
-    return [_xmin, _ymin, _xmax, _ymax]
+    return min(xmins), min(ymins), max(xmaxs), max(ymaxs)
 
 
-def check_bbox_overlap(bbox1: BBox, bbox2: BBox):
-    return not (
-        bbox2[0] > bbox1[2]  # xmax 1 < xmin 2
-        or bbox2[2] < bbox1[0]  # xmin 1 > xmax 2
-        or bbox2[1] > bbox1[3]  # ymax 1 < ymin 2
-        or bbox2[3] < bbox1[1]  # ymin 1 > ymax 2
-    )
+def check_bbox_overlap(bbox1: BBox, bbox2: BBox) -> bool:
+    xmin1, ymin1, xmax1, ymax1 = bbox1
+    xmin2, ymin2, xmax2, ymax2 = bbox2
+
+    return xmin1 <= xmax2 and xmin2 <= xmax1 and ymin1 <= ymax2 and ymin2 <= ymax1
 
 
 def ensure_utc(dt: Optional[datetime]) -> Optional[datetime]:
@@ -67,18 +49,12 @@ def check_datetime_overlap(
 ) -> bool:
     start1, end1 = map(ensure_utc, interval1)
     start2, end2 = map(ensure_utc, interval2)
+    start1, end1 = map(ensure_utc, interval1)
+    start2, end2 = map(ensure_utc, interval2)
+    dtmin = datetime.min.replace(tzinfo=timezone.utc)
+    dtmax = datetime.max.replace(tzinfo=timezone.utc)
 
-    # Handle None values which denote open intervals
-    if start1 is None:
-        start1 = datetime.min.replace(tzinfo=timezone.utc)
-    if end1 is None:
-        end1 = datetime.max.replace(tzinfo=timezone.utc)
-    if start2 is None:
-        start2 = datetime.min.replace(tzinfo=timezone.utc)
-    if end2 is None:
-        end2 = datetime.max.replace(tzinfo=timezone.utc)
-
-    return not (start2 > end1 or end2 < start1)
+    return (start2 or dtmin) <= (end1 or dtmax) and (start1 or dtmin) <= (end2 or dtmax)
 
 
 def check_text_overlap(
@@ -89,86 +65,77 @@ def check_text_overlap(
 
 
 class STACAPICollectionSearch(CatalogCollectionSearch):
-    def get_collection_metadata(self) -> List[CollectionMetadata]:
-        self.catalog = Client.open(self.base_url)
+    def get_collection_metadata(self) -> Iterable[CollectionMetadata]:
+        catalog = Client.open(self.base_url)
 
         # add /collections conformance class just in case it's missing...
         # https://github.com/stac-utils/pystac-client/issues/320
         # cmr-stac is still missing this conformance class
         # https://github.com/nasa/cmr-stac/issues/236
         # this makes it possible to iterate through all collections
-        self.catalog.add_conforms_to("COLLECTIONS")
-        results: List[CollectionMetadata] = []
-        all_collections = self.catalog.get_collections()
-        while len(results) < self.limit:
-            try:
-                collection = next(all_collections)
-            except StopIteration:
-                break
+        catalog.add_conforms_to("COLLECTIONS")
 
-            # check bbox overlap
-            # TODO: get min/max values from ALL bbox values
-            bbox_overlap = (
-                check_bbox_overlap(
-                    self.bbox,
-                    get_full_bounding_box(
-                        collection.extent.spatial.bboxes  # type: ignore
-                    ),
-                )
-                if self.bbox
-                else True
+        return (
+            self.collection_metadata(collection)
+            for collection in catalog.get_collections()
+            if self.overlaps(collection)
+        )
+
+    def overlaps(self, collection: Collection) -> bool:
+        return (
+            self.spatially_overlaps(collection)
+            and self.temporally_overlaps(collection)
+            and self.textually_overlaps(collection)
+        )
+
+    def spatially_overlaps(self, collection: Collection) -> bool:
+        return self.bbox is None or check_bbox_overlap(
+            self.bbox,
+            get_full_bounding_box(collection.extent.spatial.bboxes),  # type: ignore
+        )
+
+    def temporally_overlaps(self, collection: Collection) -> bool:
+        start, end = collection.extent.temporal.intervals[0]
+
+        return self.datetime is None or check_datetime_overlap(
+            self.datetime, (ensure_utc(start), ensure_utc(end))
+        )
+
+    def textually_overlaps(self, collection: Collection) -> bool:
+        text_fields: set[str] = {
+            text
+            for text in [
+                collection.id,
+                collection.title,
+                collection.description,
+                *(collection.keywords or []),
+            ]
+            if text
+        }
+
+        return not self.text or check_text_overlap(self.text, text_fields)
+
+    def collection_metadata(self, collection: Collection) -> CollectionMetadata:
+        hint = (
+            generate_pystac_client_hint(
+                base_url=self.base_url,
+                collection_id=collection.id,
+                bbox=self.bbox,
+                datetime_interval=self.datetime,
             )
+            if self.hint_lang == PYTHON
+            else None
+        )
 
-            # check temporal overlap
-            collection_temporal_extent: Tuple[
-                Optional[datetime], Optional[datetime]
-            ] = (
-                ensure_utc(collection.extent.temporal.intervals[0][0]),
-                ensure_utc(collection.extent.temporal.intervals[0][1]),
-            )
+        extent_dict = collection.extent.to_dict()
 
-            temporal_overlap = (
-                check_datetime_overlap(
-                    self.datetime,
-                    collection_temporal_extent,
-                )
-                if self.datetime
-                else True
-            )
-
-            # check text fields for overlap
-            text_fields = [collection.id]
-            if collection.keywords:
-                text_fields.extend(collection.keywords)
-            if collection.title:
-                text_fields.append(collection.title)
-            if collection.description:
-                text_fields.append(collection.description)
-
-            text_overlap = (
-                check_text_overlap(self.text, text_fields) if self.text else True
-            )
-
-            if bbox_overlap and temporal_overlap and text_overlap:
-                hint = None
-                if self.hint_lang == PYTHON:
-                    hint = generate_pystac_client_hint(
-                        base_url=self.base_url,
-                        collection_id=collection.id,
-                        bbox=self.bbox,
-                        datetime_interval=self.datetime,
-                    )
-                extent_dict = collection.extent.to_dict()
-                collection_metadata = CollectionMetadata(
-                    catalog_url=self.base_url,
-                    id=collection.id,
-                    title=collection.title or "no title",
-                    spatial_extent=extent_dict["spatial"]["bbox"],
-                    temporal_extent=extent_dict["temporal"]["interval"],
-                    description=collection.description,
-                    keywords=collection.keywords or [],
-                    hint=hint,
-                )
-                results.append(collection_metadata)
-
-        return results
+        return CollectionMetadata(
+            catalog_url=self.base_url,
+            id=collection.id,
+            title=collection.title or "no title",
+            spatial_extent=extent_dict["spatial"]["bbox"],
+            temporal_extent=extent_dict["temporal"]["interval"],
+            description=collection.description,
+            keywords=collection.keywords or [],
+            hint=hint,
+        )

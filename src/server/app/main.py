@@ -22,31 +22,19 @@ def str_to_bbox(bbox_str: Optional[str]) -> Optional[BBox]:
         return None
 
     try:
-        t = tuple(float(v) for v in bbox_str.split(","))
+        x0, y0, x1, y1 = map(float, bbox_str.split(","))
     except ValueError:
-        raise invalid_bbox
-    if not len(t) == 4:
-        raise invalid_bbox
+        raise invalid_bbox from None
 
-    return t
+    return x0, y0, x1, y1
 
 
 def is_datetime_interval(obj) -> bool:
-    # Step 1: Check if obj is a tuple
-    if not isinstance(obj, tuple):
-        return False
-
-    # Step 2: Check if tuple has exactly two elements
-    if len(obj) != 2:
-        return False
-
-    # Step 3: Check if each element is either a datetime or None
-    for element in obj:
-        if not (element is None or isinstance(element, datetime)):
-            return False
-
-    # If all checks pass, return True
-    return True
+    return (
+        isinstance(obj, tuple)
+        and len(obj) == 2
+        and all(isinstance(elem, datetime) or elem is None for elem in obj)
+    )
 
 
 def _str_to_interval(datetime_str: Optional[str]) -> Optional[DatetimeInterval]:
