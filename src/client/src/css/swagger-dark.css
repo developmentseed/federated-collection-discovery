@@ -1,0 +1,68 @@
+/* General text colors */
+.swagger-dark .swagger-ui {
+  color: #edf2f7; /* Light text color for better contrast on dark backgrounds */
+  filter: invert(88%) hue-rotate(180deg); /* Maintain the invert filter */
+}
+
+/* Top bar style */
+.swagger-dark .topbar {
+  background-color: #1a202c;
+  color: #edf2f7;
+}
+
+/* Operation block summary */
+.swagger-dark .opblock-summary {
+  background-color: #2d3748;
+  border: 1px solid #4a5568; /* Subtle border for definition */
+}
+
+/* Operation summary description */
+.swagger-dark .opblock-summary-description {
+  color: #a0aec0; /* Lighter shade for descriptions */
+}
+
+/* Adjust color for method types */
+.swagger-dark .opblock-summary-method {
+  color: #63b3ed; /* Light blue to match dark mode theme */
+}
+
+/* Summary method tab border and background */
+.swagger-dark .opblock-summary .btn {
+  background-color: #2d3748; /* Match summary background */
+  border: 1px solid #4a5568; /* Consistent border color */
+  color: #edf2f7; /* Ensure text is visible */
+}
+
+/* Adjustments for TextBox inside the modal */
+.swagger-dark .opblock .opblock-body .textbox {
+  background-color: #2d3748;
+  color: #edf2f7; /* Ensure the text color contrasts well */
+}
+
+/* Hover state for operation summary */
+.swagger-dark .swagger-ui .opblock-summary:hover {
+  background-color: #2d3748; /* Slightly darker on hover */
+}
+
+/* General input and textarea styling */
+.swagger-dark .swagger-ui input,
+.swagger-dark .swagger-ui textarea {
+  background-color: #2d3748;
+  color: #edf2f7;
+}
+
+/* Button styling */
+.swagger-dark .swagger-ui .btn {
+  background-color: #2b6cb0; /* Blue background for buttons */
+  color: #ffffff; /* White text on buttons */
+}
+
+/* Adjust hover state for buttons */
+.swagger-dark .swagger-ui .btn:hover {
+  background-color: #2c5282; /* Darker blue on hover */
+}
+
+/* Specific text color adjustment for .nostyle class */
+.swagger-dark .swagger-ui .nostyle span {
+  color: #a0aec0; /* Light gray color for contrast against dark background */
+}

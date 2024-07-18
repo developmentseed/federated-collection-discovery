@@ -34,7 +34,7 @@ def generate_pystac_client_hint(
     # Prepare datetime line if datetime is provided, otherwise use an empty string
     if datetime_interval:
         datetime_string = "/".join(
-            dt.strftime("%Y-%m-%dT%H:%M:%SZ")  # type: ignore
+            dt.strftime("%Y-%m-%dT%H:%M:%SZ") if dt else ".."  # type: ignore
             for dt in datetime_interval
         )
         remainder += f'datetime="{datetime_string}",'

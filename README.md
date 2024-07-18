@@ -1,5 +1,7 @@
 # Federated Collection Discovery
 
+![federated collection discovery logo is a modified version of the proposed Fediverse logo but with a geographic theme](src/client/src/assets/logo.svg)
+
 This project implements an application that searches through multiple
 geospatial metadata catalogs, such as STAC and NASA CMR, based on provided
 search parameters like bounding box (bbox), datetime, and free-text
@@ -15,7 +17,7 @@ criteria.
 ## Prerequisites
 
 - Python 3.9 (or higher)
-- ~Node.js and npm (for the React frontend)~
+- Node.js and yarn (for the React frontend)
 - Docker and Docker Compose
 
 ## Setup Using Docker
@@ -44,7 +46,7 @@ Once the Docker containers are running, you can access the application at the
 same endpoints:
 
 - Backend (FastAPI): `http://localhost:8000`
-- ~Frontend (React): `http://localhost:3000`~
+- Frontend (React): `http://localhost:3000`
 
 ## Setup Using Virtual Environment and Poetry
 
@@ -116,18 +118,18 @@ source venv/bin/activate  # or `venv\Scripts\activate` for Windows
 poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-~Navigate to the `src/client` directory and start the React development server:~
+Navigate to the `src/client` directory and start the React development server:
 
 ```bash
-# cd src/client
-# npm install  # or `yarn install`
-# npm start    # or `yarn start`
+cd src/client
+npm install  # or `yarn install`
+npm start    # or `yarn start`
 ```
 
 Access the application:
 
 - Backend (FastAPI): `http://localhost:8000`
-- ~Frontend (React): `http://localhost:3000`~
+- Frontend (React): `http://localhost:3000`
 
 ## API Endpoints
 

@@ -68,8 +68,8 @@ def get_settings() -> Settings:
 
 
 app = FastAPI(
-    title="Cross-catalog search API",
-    description="API for searching through multiple geospatial data catalogs. "
+    title="Federated Collection Discovery API",
+    description="API for discovering collections in a set of APIs. "
     "Provides capabilities to filter collections based on bounding "
     "box, datetime intervals, and keywords.",
     version="0.1.0",
