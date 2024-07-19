@@ -62,6 +62,45 @@ def test_cmr_hint_with_datetime_interval():
 
     assert hint.strip() == expected_hint.strip()
 
+    hint = generate_cmr_hint(
+        base_url="https://cmr3.net",
+        short_name="dataset-3",
+        datetime_interval=(
+            None,
+            datetime(2023, 12, 31, 23, 59, 59),
+        ),
+    )
+    expected_hint = black.format_str(
+        (
+            "from cmr import GranuleQuery\n\n"
+            'search = GranuleQuery(mode="https://cmr3.net").short_name("dataset-3")'
+            '.temporal(None,"2023-12-31T23:59:59Z")\n'
+            "granules = search.get()"
+        ),
+        mode=black.FileMode(),
+    )
+
+    assert hint.strip() == expected_hint.strip()
+
+    hint = generate_cmr_hint(
+        base_url="https://cmr3.net",
+        short_name="dataset-3",
+        datetime_interval=(
+            datetime(2023, 1, 1, 0, 0, 0),
+            None,
+        ),
+    )
+    expected_hint = black.format_str(
+        (
+            "from cmr import GranuleQuery\n\n"
+            'search = GranuleQuery(mode="https://cmr3.net").short_name("dataset-3")'
+            '.temporal("2023-01-01T00:00:00Z",None)\n'
+            "granules = search.get()"
+        ),
+        mode=black.FileMode(),
+    )
+    assert hint.strip() == expected_hint.strip()
+
 
 def test_cmr_hint_with_bbox_and_datetime_interval():
     hint = generate_cmr_hint(

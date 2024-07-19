@@ -59,7 +59,8 @@ def generate_cmr_hint(
 
     if datetime_interval:
         datetime_strings = [
-            f'"{dt.strftime("%Y-%m-%dT%H:%M:%SZ")}"' for dt in datetime_interval if dt
+            f'"{dt.strftime("%Y-%m-%dT%H:%M:%SZ")}"' if dt else "None"
+            for dt in datetime_interval
         ]
         remainder += f".temporal({','.join(datetime_strings)})"
 
