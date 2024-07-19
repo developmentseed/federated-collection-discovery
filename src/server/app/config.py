@@ -11,10 +11,10 @@ class Settings(BaseSettings):  # type: ignore
 
     @field_validator("stac_api_urls")
     def parse_stac_api_urls(cls, v):
-        return v.split(",") if v else None
+        return v.split(",") if v else []
 
     @field_validator("cmr_urls")
     def parse_cmr_urls(cls, v):
-        return v.split(",") if v else None
+        return v.split(",") if v else []
 
     model_config = {"env_prefix": "FEDERATED_", "env_file": ".env"}

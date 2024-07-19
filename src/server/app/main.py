@@ -112,36 +112,28 @@ def search_collections(
         Query(description=("limit for number of returned collection records")),
     ] = 100,
 ):
-    catalogs: List[CatalogCollectionSearch] = []
-
-    if settings.stac_api_urls:
-        catalogs.extend(
-            [
-                STACAPICollectionSearch(
-                    base_url=str(base_url),
-                    bbox=str_to_bbox(bbox),
-                    datetime=_str_to_interval(datetime),
-                    text=text,
-                    hint_lang=hint_lang,
-                )
-                for base_url in settings.stac_api_urls
-            ]
+    parsed_bbox = str_to_bbox(bbox)
+    datetime_interval = _str_to_interval(datetime)
+    catalogs = [
+        STACAPICollectionSearch(
+            base_url=base_url,
+            bbox=parsed_bbox,
+            datetime=datetime_interval,
+            text=text,
+            hint_lang=hint_lang,
         )
-
-    if settings.cmr_urls:
-        catalogs.extend(
-            [
-                CMRCollectionSearch(
-                    base_url=str(base_url),
-                    bbox=str_to_bbox(bbox),
-                    datetime=_str_to_interval(datetime),
-                    text=text,
-                    hint_lang=hint_lang,
-                )
-                for base_url in settings.cmr_urls
-            ]
+        for base_url in settings.stac_api_urls
+    ] + [
+        CMRCollectionSearch(
+            base_url=base_url,
+            bbox=parsed_bbox,
+            datetime=datetime_interval,
+            text=text,
+            hint_lang=hint_lang,
         )
+        for base_url in settings.cmr_urls
+    ]
 
     results = search_all(catalogs)
 
-    return {"results": itertools.islice(results, limit)}
+    return SearchResponse(results=itertools.islice(results, limit))
