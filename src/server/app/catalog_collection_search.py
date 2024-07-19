@@ -21,6 +21,10 @@ class CatalogCollectionSearch(ABC):
     def get_collection_metadata(self) -> Iterable[CollectionMetadata]:
         pass
 
+    @abstractmethod
+    def check_health(self) -> str:
+        pass
+
 
 def search_all(
     catalogs: Iterable[CatalogCollectionSearch],

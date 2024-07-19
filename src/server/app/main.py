@@ -1,13 +1,14 @@
 import itertools
 from datetime import datetime
 from functools import lru_cache
-from typing import Annotated, Any, Literal, Optional
+from typing import Annotated, Any, List, Literal, Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Query
 from pydantic import PositiveInt
 from stac_fastapi.types.rfc3339 import str_to_interval
 
 from app.catalog_collection_search import (
+    CatalogCollectionSearch,
     DatetimeInterval,
     search_all,
 )
@@ -58,6 +59,11 @@ def _str_to_interval(datetime_str: Optional[str]) -> Optional[DatetimeInterval]:
     return datetime_interval
 
 
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
+
+
 app = FastAPI(
     title="Cross-catalog search API",
     description="API for searching through multiple geospatial data catalogs. "
@@ -69,11 +75,6 @@ app = FastAPI(
         "url": "https://opensource.org/licenses/MIT",
     },
 )
-
-
-@lru_cache
-def get_settings() -> Settings:
-    return Settings()
 
 
 @app.get(
@@ -136,3 +137,19 @@ def search_collections(
     results = search_all(catalogs)
 
     return SearchResponse(results=itertools.islice(results, limit))
+
+
+@app.get("/health")
+def health(settings: Annotated[Settings, Depends(get_settings)]):
+    statuses = {}
+    base_api_searches: List[CatalogCollectionSearch] = []
+    for stac_api_url in settings.stac_api_urls:
+        base_api_searches.append(STACAPICollectionSearch(base_url=stac_api_url))
+
+    for cmr_url in settings.cmr_urls:
+        base_api_searches.append(CMRCollectionSearch(base_url=cmr_url))
+
+    for catalog in base_api_searches:
+        statuses[catalog.base_url] = catalog.check_health()
+
+    return statuses

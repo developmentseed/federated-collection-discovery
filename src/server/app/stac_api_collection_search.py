@@ -3,6 +3,7 @@ from typing import Iterable, Optional, Sequence
 
 from pystac import Collection
 from pystac_client.client import Client
+from pystac_client.exceptions import APIError
 
 from app.catalog_collection_search import CatalogCollectionSearch
 from app.hint import PYTHON, generate_pystac_client_hint
@@ -64,6 +65,19 @@ def contains_ignorecase(
 
 
 class STACAPICollectionSearch(CatalogCollectionSearch):
+    def check_health(self) -> str:
+        try:
+            catalog = Client.open(self.base_url)
+
+            return (
+                "healthy"
+                if catalog.conforms_to("CORE")
+                else "does not conform to the 'core' conformance class"
+            )
+
+        except APIError:
+            return "cannot be opened by pystac_client"
+
     def get_collection_metadata(self) -> Iterable[CollectionMetadata]:
         catalog = Client.open(self.base_url)
 

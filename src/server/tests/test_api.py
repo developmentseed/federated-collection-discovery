@@ -107,3 +107,21 @@ def test_search_invalid_datetime(mock_apis, client):
 def test_search_bad_limit(mock_apis, client):
     response = client.get("/search", params={"limit": -1})
     assert response.status_code == 422
+
+
+def test_health():
+    bad_stac_api_url = "http://fake-stac.net"
+    bad_cmr_url = "http://fake-cmr.gov/"
+    app.dependency_overrides[get_settings] = lambda: Settings(
+        stac_api_urls=bad_stac_api_url,
+        cmr_urls=bad_cmr_url,
+    )
+
+    with TestClient(app) as client:
+        status_response = client.get("/health").json()
+
+    assert status_response[bad_stac_api_url] == "cannot be opened by pystac_client"
+    assert status_response[bad_cmr_url] == "cannot be opened by Python CMR client"
+
+    # Clean up overrides after test
+    app.dependency_overrides = {}

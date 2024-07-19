@@ -26,6 +26,7 @@ pytest = "^7.4.2"
 pytest-mock = "^3.14.0"
 requests-mock = "^1.12.1"
 ruff = "^0.5.2"
+types-requests = "^2.32.0.20240712"
 
 [tool.isort]
 profile = "black"

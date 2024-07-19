@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import Iterable, List, TypedDict
 
 from cmr import CollectionQuery
+from requests.exceptions import ConnectionError
 
 from app.catalog_collection_search import CatalogCollectionSearch
 from app.hint import PYTHON, generate_cmr_hint
@@ -21,6 +22,13 @@ class CMRCollectionResult(TypedDict, total=False):
 
 @dataclass
 class CMRCollectionSearch(CatalogCollectionSearch):
+    def check_health(self) -> str:
+        try:
+            collection_search = CollectionQuery(mode=self.base_url)
+            return "healthy" if collection_search.hits() else "no collections"
+        except ConnectionError:
+            return "cannot be opened by Python CMR client"
+
     def get_collection_metadata(self) -> Iterable[CollectionMetadata]:
         collection_search = CollectionQuery(mode=self.base_url)
         if self.bbox:
