@@ -2,8 +2,8 @@ from datetime import datetime
 
 from cmr import CMR_OPS
 
-from app.catalog_collection_search import search_all
 from app.cmr_collection_search import CMRCollectionSearch
+from app.collection_search import search_all
 from app.stac_api_collection_search import STACAPICollectionSearch
 
 

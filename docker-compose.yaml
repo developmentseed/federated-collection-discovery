@@ -2,7 +2,7 @@ services:
   server:
     build: 
       context: ./src/server
-    container_name: cross-catalog-search-server
+    container_name: federated-collection-discovery-server
     ports:
       - "8000:8000"
     volumes:

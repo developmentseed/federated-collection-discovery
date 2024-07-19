@@ -8,7 +8,7 @@ from app.shared import BBox, DatetimeInterval
 
 
 @dataclass
-class CatalogCollectionSearch(ABC):
+class CollectionSearch(ABC):
     base_url: str
     bbox: Optional[BBox] = None
     datetime: Optional[DatetimeInterval] = None
@@ -25,7 +25,7 @@ class CatalogCollectionSearch(ABC):
 
 
 def search_all(
-    catalogs: Iterable[CatalogCollectionSearch],
+    catalogs: Iterable[CollectionSearch],
 ) -> Iterable[CollectionMetadata]:
     return itertools.chain.from_iterable(
         catalog.get_collection_metadata() for catalog in catalogs

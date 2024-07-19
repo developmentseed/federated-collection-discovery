@@ -4,15 +4,16 @@ from functools import lru_cache
 from typing import Annotated, Any, List, Literal, Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import PositiveInt
 from stac_fastapi.types.rfc3339 import str_to_interval
 
-from app.catalog_collection_search import (
-    CatalogCollectionSearch,
+from app.cmr_collection_search import CMRCollectionSearch
+from app.collection_search import (
+    CollectionSearch,
     DatetimeInterval,
     search_all,
 )
-from app.cmr_collection_search import CMRCollectionSearch
 from app.config import Settings
 from app.models import SearchResponse
 from app.shared import BBox
@@ -76,6 +77,14 @@ app = FastAPI(
         "name": "MIT License",
         "url": "https://opensource.org/licenses/MIT",
     },
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -144,7 +153,7 @@ def search_collections(
 @app.get("/health")
 def health(settings: Annotated[Settings, Depends(get_settings)]):
     statuses = {}
-    base_api_searches: List[CatalogCollectionSearch] = []
+    base_api_searches: List[CollectionSearch] = []
     for stac_api_url in settings.stac_api_urls:
         base_api_searches.append(STACAPICollectionSearch(base_url=stac_api_url))
 

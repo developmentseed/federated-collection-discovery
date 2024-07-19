@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "cross-catalog-search"
+name = "federated-collection-discovery"
 version = "0.1.0"
-description = "An application for searching across multiple geospatial metadata catalogs."
+description = "An application for discovering collections from multiple STAC APIs and/or CMRs"
 authors = ["Henry Rodman <henry@developmentseed.org>"]
 packages = [
     { include = "app" },

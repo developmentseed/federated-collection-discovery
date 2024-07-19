@@ -1,4 +1,4 @@
-# Cross-Catalog Collection Search
+# Federated Collection Discovery
 
 This project implements an application that searches through multiple
 geospatial metadata catalogs, such as STAC and NASA CMR, based on provided
@@ -29,8 +29,8 @@ Build and start the services:
 docker compose up --build
 ```
 
-This will use the `CROSS_CATALOG_SEARCH_STAC_API_URLS` and
-`CROSS_CATALOG_SEARCH_CMR_URLS` environment variables
+This will use the `FEDERATED_STAC_API_URLS` and
+`FEDERATED_CMR_URLS` environment variables
 defined in [docker-compose.yaml](./docker-compose.yaml) to search across
 the Earth Search STAC (from E84), the eoapi.dev STAC, and NASA's CMR.
 

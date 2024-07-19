@@ -5,7 +5,7 @@ from pystac import Collection
 from pystac_client.client import Client
 from pystac_client.exceptions import APIError
 
-from app.catalog_collection_search import CatalogCollectionSearch
+from app.collection_search import CollectionSearch
 from app.hint import PYTHON, generate_pystac_client_hint
 from app.models import CollectionMetadata
 from app.shared import BBox, DatetimeInterval
@@ -64,7 +64,7 @@ def contains_ignorecase(
     return any(text.lower() in x.lower() for x in text_fields)
 
 
-class STACAPICollectionSearch(CatalogCollectionSearch):
+class STACAPICollectionSearch(CollectionSearch):
     def check_health(self) -> str:
         try:
             catalog = Client.open(self.base_url)

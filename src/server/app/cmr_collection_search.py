@@ -5,7 +5,7 @@ from typing import Iterable, List, TypedDict
 from cmr import CollectionQuery
 from requests.exceptions import ConnectionError
 
-from app.catalog_collection_search import CatalogCollectionSearch
+from app.collection_search import CollectionSearch
 from app.hint import PYTHON, generate_cmr_hint
 from app.models import CollectionMetadata
 
@@ -21,7 +21,7 @@ class CMRCollectionResult(TypedDict, total=False):
 
 
 @dataclass
-class CMRCollectionSearch(CatalogCollectionSearch):
+class CMRCollectionSearch(CollectionSearch):
     def check_health(self) -> str:
         try:
             collection_search = CollectionQuery(mode=self.base_url)
