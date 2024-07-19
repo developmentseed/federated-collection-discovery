@@ -1,0 +1,24 @@
+services:
+  server:
+    build: 
+      context: ./src/server
+    container_name: federated-collection-discovery-server
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src/server:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+      - FEDERATED_STAC_API_URLS=https://earth-search.aws.element84.com/v1/,https://stac.eoapi.dev
+      - FEDERATED_CMR_URLS=https://cmr.earthdata.nasa.gov/search/
+
+  # client:
+  #   build: ./src/client
+  #   container_name: cross-catalog-search-client
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - ./src/client:/app
+  #   environment:
+  #     - CHOKIDAR_USEPOLLING=true
+

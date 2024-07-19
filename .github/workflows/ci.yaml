@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v4
+    
+    - name: Install Poetry
+      uses: Gr1N/setup-poetry@v9
+      with:
+        poetry-version: "1.8.0"
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      env:
+        POETRY_VIRTUALENVS_IN_PROJECT: "true"
+      with:
+        python-version: "3.10"
+        cache: poetry
+        cache-dependency-path: src/server/poetry.lock
+
+    - name: Install dependencies including dev dependencies
+      working-directory: src/server
+      run: poetry install --with dev
+
+    - name: Run Tests
+      working-directory: src/server
+      run: poetry run pytest
