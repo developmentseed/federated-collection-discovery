@@ -1,3 +1,6 @@
+### VisualStudioCode ###
+.vscode/
+
 # Created by https://www.toptal.com/developers/gitignore/api/python
 # Edit at https://www.toptal.com/developers/gitignore?templates=python
 
@@ -328,7 +331,8 @@ dist
 .LSOverride
 
 # Icon must end with two \r
-Icon
+Icon
+
 
 # Thumbnails
 ._*
