@@ -1,14 +1,13 @@
 import itertools
 from datetime import datetime
 from functools import lru_cache
-from typing import Annotated, List, Literal, Optional
+from typing import Annotated, Any, Literal, Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Query
 from pydantic import PositiveInt
 from stac_fastapi.types.rfc3339 import str_to_interval
 
 from app.catalog_collection_search import (
-    CatalogCollectionSearch,
     DatetimeInterval,
     search_all,
 )
@@ -34,7 +33,7 @@ def str_to_bbox(bbox_str: Optional[str]) -> Optional[BBox]:
     return x0, y0, x1, y1
 
 
-def is_datetime_interval(obj) -> bool:
+def is_datetime_interval(obj: Any) -> bool:
     return (
         isinstance(obj, tuple)
         and len(obj) == 2
