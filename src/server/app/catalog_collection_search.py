@@ -6,8 +6,6 @@ from typing import Iterable, Literal, Optional
 from app.models import CollectionMetadata
 from app.shared import BBox, DatetimeInterval
 
-DEFAULT_LIMIT = 100
-
 
 @dataclass
 class CatalogCollectionSearch(ABC):

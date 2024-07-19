@@ -18,6 +18,8 @@ from app.models import SearchResponse
 from app.shared import BBox
 from app.stac_api_collection_search import STACAPICollectionSearch
 
+DEFAULT_LIMIT = 100
+
 
 def str_to_bbox(bbox_str: Optional[str]) -> Optional[BBox]:
     """Convert string to BBox based on , delimiter."""
@@ -110,7 +112,7 @@ def search_collections(
     limit: Annotated[
         PositiveInt,
         Query(description=("limit for number of returned collection records")),
-    ] = 100,
+    ] = DEFAULT_LIMIT,
 ):
     parsed_bbox = str_to_bbox(bbox)
     datetime_interval = _str_to_interval(datetime)
