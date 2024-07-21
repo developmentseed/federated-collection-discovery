@@ -9,7 +9,7 @@ services:
       - ./src/server:/app
     environment:
       - PYTHONUNBUFFERED=1
-      - FEDERATED_STAC_API_URLS=https://stac.maap-project.org/,https://dev.asdi-catalog.org/,https://cmr.earthdata.nasa.gov/stac/LPCLOUD/
+      - FEDERATED_STAC_API_URLS=https://stac.maap-project.org/,https://openveda.cloud/api/stac/,https://catalogue.dataspace.copernicus.eu/stac
       # - FEDERATED_CMR_URLS=https://cmr.earthdata.nasa.gov/search/
 
   client:
