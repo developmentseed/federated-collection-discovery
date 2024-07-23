@@ -6,7 +6,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./src/server:/app
+      - ./src/server/app:/app/app
     environment:
       - PYTHONUNBUFFERED=1
       - FEDERATED_STAC_API_URLS=https://stac.maap-project.org/,https://openveda.cloud/api/stac/,https://catalogue.dataspace.copernicus.eu/stac
@@ -24,4 +24,3 @@ services:
       - REACT_APP_API_URL=http://localhost:8000
     depends_on:
       - server
-
