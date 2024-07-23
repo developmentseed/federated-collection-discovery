@@ -1,5 +1,6 @@
 from datetime import datetime
 
+import pytest
 from cmr import CMR_OPS
 
 from app.cmr_collection_search import CMRCollectionSearch
@@ -7,11 +8,13 @@ from app.collection_search import search_all
 from app.stac_api_collection_search import STACAPICollectionSearch
 
 
-def test_search_all(mock_apis):
-    actual_metadata = search_all(
+@pytest.mark.asyncio
+async def test_search_all(executor, mock_apis):
+    actual_metadata = await search_all(
+        executor,
         catalogs=[
             STACAPICollectionSearch(base_url=mock_api_url) for mock_api_url in mock_apis
-        ]
+        ],
     )
 
     assert (
@@ -19,12 +22,14 @@ def test_search_all(mock_apis):
     )  # all of the mocked collections in conftest.py
 
 
-def test_search_bbox(mock_apis):
-    actual_metadata = search_all(
+@pytest.mark.asyncio
+async def test_search_bbox(executor, mock_apis):
+    actual_metadata = await search_all(
+        executor,
         catalogs=[
             STACAPICollectionSearch(base_url=mock_api_url, bbox=(-100, 10, -90, 20))
             for mock_api_url in mock_apis
-        ]
+        ],
     )
 
     assert (
@@ -32,8 +37,10 @@ def test_search_bbox(mock_apis):
     )  # all but one of the mocked collections in conftest.py
 
 
-def test_search_datetime(mock_apis):
-    actual_metadata = search_all(
+@pytest.mark.asyncio
+async def test_search_datetime(executor, mock_apis):
+    actual_metadata = await search_all(
+        executor,
         catalogs=[
             STACAPICollectionSearch(
                 base_url=mock_api_url,
@@ -44,7 +51,7 @@ def test_search_datetime(mock_apis):
                 ),
             )
             for mock_api_url in mock_apis
-        ]
+        ],
     )
 
     assert (
@@ -52,9 +59,10 @@ def test_search_datetime(mock_apis):
     )  # all but one of the mocked collections in conftest.py
 
 
-def test_search_all_no_collections(mock_apis):
-    actual_metadata = search_all(
-        catalogs=[STACAPICollectionSearch(base_url=mock_apis[-1])]
+@pytest.mark.asyncio
+async def test_search_all_no_collections(executor, mock_apis):
+    actual_metadata = await search_all(
+        executor, catalogs=[STACAPICollectionSearch(base_url=mock_apis[-1])]
     )
 
     expected_metadata = []
@@ -62,11 +70,13 @@ def test_search_all_no_collections(mock_apis):
     assert list(actual_metadata) == expected_metadata
 
 
-def test_stac_api_and_cmr(mock_apis):
+@pytest.mark.asyncio
+async def test_stac_api_and_cmr(executor, mock_apis):
     # test a search that should only yield results from CMR
     text = "hls"
     actual_metadata = list(
-        search_all(
+        await search_all(
+            executor,
             catalogs=[
                 STACAPICollectionSearch(
                     base_url=mock_api_url,
@@ -79,7 +89,7 @@ def test_stac_api_and_cmr(mock_apis):
                     base_url=CMR_OPS,
                     text=text,
                 )
-            ]
+            ],
         )
     )
 
@@ -90,7 +100,8 @@ def test_stac_api_and_cmr(mock_apis):
     # test a search that should only yield results from the STAC APIs
     text = "awesome"
     actual_metadata = list(
-        search_all(
+        await search_all(
+            executor,
             catalogs=[
                 STACAPICollectionSearch(
                     base_url=mock_api_url,
@@ -103,7 +114,7 @@ def test_stac_api_and_cmr(mock_apis):
                     base_url=CMR_OPS,
                     text=text,
                 )
-            ]
+            ],
         )
     )
 
