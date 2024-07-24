@@ -9,7 +9,6 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.9"
-fastapi = "^0.111.0"
 pystac-client = "^0.8.2"
 stac-fastapi-types = "^3.0.0a1"
 uvicorn = "^0.30.1"
@@ -18,6 +17,7 @@ pydantic-settings = "^2.3.4"
 black = "^24.4.2"
 httpx = "^0.27.0"
 python-cmr = "^0.11.0"
+fastapi = "^0.111.1"
 
 [tool.poetry.group.dev.dependencies]
 jupyterlab = "^4.2.3"
