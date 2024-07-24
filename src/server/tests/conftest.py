@@ -1,3 +1,5 @@
+from concurrent.futures import ThreadPoolExecutor
+
 import pytest
 import requests_mock
 
@@ -111,3 +113,16 @@ def mock_apis():
             m.get(base_url, status_code=200, json=catalog_root_response)
 
         yield base_urls
+
+
+@pytest.fixture(scope="module")
+def executor():
+    """Fixture to provide a ThreadPoolExecutor instance."""
+    ex = ThreadPoolExecutor()
+    yield ex
+    ex.shutdown()
+
+
+@pytest.fixture
+def anyio_backend():
+    return "asyncio"

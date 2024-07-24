@@ -1,5 +1,6 @@
 import itertools
 from abc import ABC, abstractmethod
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Iterable, Literal, Optional
 
@@ -24,9 +25,10 @@ class CollectionSearch(ABC):
         pass
 
 
-def search_all(
+async def search_all(
+    executor: ThreadPoolExecutor,
     catalogs: Iterable[CollectionSearch],
 ) -> Iterable[CollectionMetadata]:
     return itertools.chain.from_iterable(
-        catalog.get_collection_metadata() for catalog in catalogs
+        executor.map(lambda catalog: catalog.get_collection_metadata(), catalogs)
     )
