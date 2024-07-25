@@ -66,24 +66,3 @@ EXPOSE 8000
 ENTRYPOINT /docker-entrypoint.sh $0 $@
 CMD ["poetry", "run", "uvicorn", "app.main:app", "--host=0.0.0.0", "--port=8000", "--reload"]
 
-
-# 'production' stage uses the clean 'python-base' stage and copyies
-# in only our runtime deps that were installed in the 'builder-base'
-#
-# if we want to deploy to a Lambda, we could update this to build from
-# the Lambda Python base image
-FROM python-base AS production
-ENV FASTAPI_ENV=production
-
-COPY --from=builder-base $VENV_PATH $VENV_PATH
-COPY ./docker/gunicorn_conf.py /gunicorn_conf.py
-
-COPY ./docker/docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
-
-WORKDIR /work
-COPY ./app ./app/
-
-EXPOSE 8000
-ENTRYPOINT /docker-entrypoint.sh $0 $@
-CMD ["gunicorn", "--worker-class uvicorn.workers.UvicornWorker",  "--config /gunicorn_conf.py", "app.main:app"]
