@@ -3,6 +3,7 @@ name = "federated-collection-discovery"
 version = "0.1.0"
 description = "An application for discovering collections from multiple STAC APIs and/or CMRs"
 authors = ["Henry Rodman <henry@developmentseed.org>"]
+
 packages = [
     { include = "app" },
 ]
@@ -18,6 +19,7 @@ black = "^24.4.2"
 httpx = "^0.27.0"
 python-cmr = "^0.11.0"
 fastapi = "^0.111.1"
+gunicorn = "^22.0.0"
 
 [tool.poetry.group.dev.dependencies]
 jupyterlab = "^4.2.3"
