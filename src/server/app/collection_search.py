@@ -2,9 +2,9 @@ import itertools
 from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from typing import Iterable, Literal, Optional
+from typing import Iterable, Literal, Optional, Union
 
-from app.models import CollectionMetadata
+from app.models import CollectionMetadata, FederatedSearchError
 from app.shared import BBox, DatetimeInterval
 
 
@@ -17,7 +17,9 @@ class CollectionSearch(ABC):
     hint_lang: Optional[Literal["python"]] = None
 
     @abstractmethod
-    def get_collection_metadata(self) -> Iterable[CollectionMetadata]:
+    def get_collection_metadata(
+        self,
+    ) -> Iterable[Union[CollectionMetadata, FederatedSearchError]]:
         pass
 
     @abstractmethod
@@ -28,7 +30,7 @@ class CollectionSearch(ABC):
 async def search_all(
     executor: ThreadPoolExecutor,
     catalogs: Iterable[CollectionSearch],
-) -> Iterable[CollectionMetadata]:
+) -> Iterable[Union[CollectionMetadata, FederatedSearchError]]:
     return itertools.chain.from_iterable(
         executor.map(lambda catalog: catalog.get_collection_metadata(), catalogs)
     )

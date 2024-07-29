@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import Iterable, Optional, Sequence
+from typing import Iterable, Optional, Sequence, Union
 
 from pystac import Collection
 from pystac_client.client import Client
@@ -7,7 +7,7 @@ from pystac_client.exceptions import APIError
 
 from app.collection_search import CollectionSearch
 from app.hint import PYTHON, generate_pystac_client_hint
-from app.models import CollectionMetadata
+from app.models import CollectionMetadata, FederatedSearchError
 from app.shared import BBox, DatetimeInterval
 
 
@@ -78,21 +78,28 @@ class STACAPICollectionSearch(CollectionSearch):
         except APIError:
             return "cannot be opened by pystac_client"
 
-    def get_collection_metadata(self) -> Iterable[CollectionMetadata]:
-        catalog = Client.open(self.base_url)
+    def get_collection_metadata(
+        self,
+    ) -> Iterable[Union[CollectionMetadata, FederatedSearchError]]:
+        try:
+            catalog = Client.open(self.base_url)
 
-        # add /collections conformance class just in case it's missing...
-        # https://github.com/stac-utils/pystac-client/issues/320
-        # cmr-stac is still missing this conformance class
-        # https://github.com/nasa/cmr-stac/issues/236
-        # this makes it possible to iterate through all collections
-        catalog.add_conforms_to("COLLECTIONS")
+            # add /collections conformance class just in case it's missing...
+            # https://github.com/stac-utils/pystac-client/issues/320
+            # cmr-stac is still missing this conformance class
+            # https://github.com/nasa/cmr-stac/issues/236
+            # this makes it possible to iterate through all collections
+            catalog.add_conforms_to("COLLECTIONS")
 
-        return (
-            self.collection_metadata(collection)
-            for collection in catalog.get_collections()
-            if self.overlaps(collection)
-        )
+            return (
+                self.collection_metadata(collection)
+                for collection in catalog.get_collections()
+                if self.overlaps(collection)
+            )
+        except APIError as e:
+            return [
+                FederatedSearchError(catalog_url=self.base_url, error_message=str(e))
+            ]
 
     def overlaps(self, collection: Collection) -> bool:
         return (

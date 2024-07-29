@@ -15,5 +15,11 @@ class CollectionMetadata(BaseModel):
     hint: Optional[str] = None
 
 
+class FederatedSearchError(BaseModel):
+    catalog_url: str
+    error_message: str
+
+
 class SearchResponse(BaseModel):
     results: Iterable[CollectionMetadata]
+    errors: List[FederatedSearchError]
