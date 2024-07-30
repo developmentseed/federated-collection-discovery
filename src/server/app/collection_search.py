@@ -13,7 +13,7 @@ class CollectionSearch(ABC):
     base_url: str
     bbox: Optional[BBox] = None
     datetime: Optional[DatetimeInterval] = None
-    text: Optional[str] = None
+    q: Optional[str] = None
     hint_lang: Optional[Literal["python"]] = None
 
     @abstractmethod

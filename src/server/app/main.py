@@ -147,7 +147,7 @@ async def search_collections(
             base_url=base_url,
             bbox=parsed_bbox,
             datetime=datetime_interval,
-            text=text,
+            q=text,
             hint_lang=hint_lang,
         )
         for base_url in settings.stac_api_urls
@@ -156,7 +156,7 @@ async def search_collections(
             base_url=base_url,
             bbox=parsed_bbox,
             datetime=datetime_interval,
-            text=text,
+            q=text,
             hint_lang=hint_lang,
         )
         for base_url in settings.cmr_urls

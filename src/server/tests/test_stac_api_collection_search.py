@@ -50,7 +50,7 @@ def test_text(mock_apis):
     # filter by free-text search
     text_search = STACAPICollectionSearch(
         base_url=mock_apis[0],
-        text="another",
+        q="another",
     )
     assert len(list(text_search.get_collection_metadata())) == 1
 
