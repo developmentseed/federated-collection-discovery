@@ -112,6 +112,9 @@ def mock_apis():
             }
             m.get(base_url, status_code=200, json=catalog_root_response)
 
+        # create an API endpoint that will result in an error
+        base_urls += ["http://fake-stac.net"]
+
         yield base_urls
 
 

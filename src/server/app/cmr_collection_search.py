@@ -1,13 +1,13 @@
 import json
 from dataclasses import dataclass
-from typing import Iterable, List, TypedDict
+from typing import Iterable, List, TypedDict, Union
 
 from cmr import CollectionQuery
-from requests.exceptions import ConnectionError
+from requests.exceptions import RequestException
 
 from app.collection_search import CollectionSearch
 from app.hint import PYTHON, generate_cmr_hint
-from app.models import CollectionMetadata
+from app.models import CollectionMetadata, FederatedSearchError
 
 
 class CMRCollectionResult(TypedDict, total=False):
@@ -26,24 +26,31 @@ class CMRCollectionSearch(CollectionSearch):
         try:
             collection_search = CollectionQuery(mode=self.base_url)
             return "healthy" if collection_search.hits() else "no collections"
-        except ConnectionError:
+        except RequestException:
             return "cannot be opened by Python CMR client"
 
-    def get_collection_metadata(self) -> Iterable[CollectionMetadata]:
-        collection_search = CollectionQuery(mode=self.base_url)
-        if self.bbox:
-            collection_search = collection_search.bounding_box(*self.bbox)
+    def get_collection_metadata(
+        self,
+    ) -> Iterable[Union[CollectionMetadata, FederatedSearchError]]:
+        try:
+            collection_search = CollectionQuery(mode=self.base_url)
+            if self.bbox:
+                collection_search = collection_search.bounding_box(*self.bbox)
 
-        if self.datetime:
-            collection_search = collection_search.temporal(*self.datetime)
+            if self.datetime:
+                collection_search = collection_search.temporal(*self.datetime)
 
-        if self.text:
-            collection_search = collection_search.keyword(self.text)
+            if self.text:
+                collection_search = collection_search.keyword(self.text)
 
-        return (
-            self.collection_metadata(collection)
-            for collection in collection_search.get()
-        )
+            return (
+                self.collection_metadata(collection)
+                for collection in collection_search.get()
+            )
+        except RequestException as e:
+            return [
+                FederatedSearchError(catalog_url=self.base_url, error_message=str(e))
+            ]
 
     def collection_metadata(
         self, collection: CMRCollectionResult

@@ -5,6 +5,7 @@ from cmr import CMR_OPS
 
 from app.cmr_collection_search import CMRCollectionSearch
 from app.collection_search import search_all
+from app.models import CollectionMetadata
 from app.stac_api_collection_search import STACAPICollectionSearch
 
 
@@ -18,7 +19,7 @@ async def test_search_all(executor, mock_apis):
     )
 
     assert (
-        len(list(actual_metadata)) == 4
+        len(list(actual_metadata)) == 5
     )  # all of the mocked collections in conftest.py
 
 
@@ -33,7 +34,7 @@ async def test_search_bbox(executor, mock_apis):
     )
 
     assert (
-        len(list(actual_metadata)) == 3
+        len(list(actual_metadata)) == 4
     )  # all but one of the mocked collections in conftest.py
 
 
@@ -55,14 +56,14 @@ async def test_search_datetime(executor, mock_apis):
     )
 
     assert (
-        len(list(actual_metadata)) == 2
+        len(list(actual_metadata)) == 3
     )  # all but one of the mocked collections in conftest.py
 
 
 @pytest.mark.asyncio
 async def test_search_all_no_collections(executor, mock_apis):
     actual_metadata = await search_all(
-        executor, catalogs=[STACAPICollectionSearch(base_url=mock_apis[-1])]
+        executor, catalogs=[STACAPICollectionSearch(base_url=mock_apis[-2])]
     )
 
     expected_metadata = []
@@ -95,7 +96,8 @@ async def test_stac_api_and_cmr(executor, mock_apis):
 
     assert len(actual_metadata) > 1
     for result in actual_metadata:
-        assert result.catalog_url == CMR_OPS
+        if isinstance(result, CollectionMetadata):
+            assert result.catalog_url == CMR_OPS
 
     # test a search that should only yield results from the STAC APIs
     text = "awesome"

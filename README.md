@@ -34,7 +34,7 @@ docker compose up --build
 This will use the `FEDERATED_STAC_API_URLS` and
 `FEDERATED_CMR_URLS` environment variables
 defined in [docker-compose.yaml](./docker-compose.yaml) to search across
-the Earth Search STAC (from E84), the eoapi.dev STAC, and NASA's CMR.
+NASA's MAAP STAC API and VEDA STAC API, and ESA's STAC API.
 
 Stop the services:
 

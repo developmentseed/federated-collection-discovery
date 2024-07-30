@@ -13,7 +13,7 @@ from stac_fastapi.types.rfc3339 import str_to_interval
 from app.cmr_collection_search import CMRCollectionSearch
 from app.collection_search import CollectionSearch, search_all
 from app.config import Settings
-from app.models import SearchResponse
+from app.models import CollectionMetadata, FederatedSearchError, SearchResponse
 from app.shared import BBox, DatetimeInterval
 from app.stac_api_collection_search import STACAPICollectionSearch
 
@@ -162,9 +162,16 @@ async def search_collections(
         for base_url in settings.cmr_urls
     ]
 
-    results = await search_all(executor, catalogs)
+    search_results = await search_all(executor, catalogs)
+    results = []
+    errors = []
+    for search_result in itertools.islice(search_results, limit):
+        if isinstance(search_result, CollectionMetadata):
+            results.append(search_result)
+        if isinstance(search_result, FederatedSearchError):
+            errors.append(search_result)
 
-    return SearchResponse(results=itertools.islice(results, limit))
+    return SearchResponse(results=results, errors=errors)
 
 
 @app.get("/health")

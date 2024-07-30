@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from app.hint import PYTHON
+from app.models import CollectionMetadata, FederatedSearchError
 from app.stac_api_collection_search import STACAPICollectionSearch
 
 
@@ -70,6 +71,19 @@ def test_hint(mock_apis):
         "\nitem_collection = search.item_collection()"
     )
     for i, result in enumerate(results):
+        assert isinstance(result, CollectionMetadata)
         assert result.hint
         if i == 0:
             assert result.hint.strip() == expected_hint.strip()
+
+
+def test_api_error():
+    # a search against an API that doesn't exist
+    base_search = STACAPICollectionSearch(
+        base_url="http://nope",
+    )
+
+    assert all(
+        isinstance(result, FederatedSearchError)
+        for result in base_search.get_collection_metadata()
+    )
