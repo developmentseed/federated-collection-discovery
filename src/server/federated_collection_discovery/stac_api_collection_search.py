@@ -135,7 +135,7 @@ class STACAPICollectionSearch(CollectionSearch):
             if text
         }
 
-        return not self.text or contains_ignorecase(self.text, text_fields)
+        return not self.q or contains_ignorecase(self.q, text_fields)
 
     def collection_metadata(self, collection: Collection) -> CollectionMetadata:
         hint = (

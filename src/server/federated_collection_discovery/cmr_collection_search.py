@@ -43,8 +43,8 @@ class CMRCollectionSearch(CollectionSearch):
             if self.datetime:
                 collection_search = collection_search.temporal(*self.datetime)
 
-            if self.text:
-                collection_search = collection_search.keyword(self.text)
+            if self.q:
+                collection_search = collection_search.keyword(self.q)
 
             return (
                 self.collection_metadata(collection)
