@@ -91,9 +91,11 @@ class STACAPICollectionSearch(CollectionSearch):
             # this makes it possible to iterate through all collections
             catalog.add_conforms_to("COLLECTIONS")
 
-            for collection in catalog.get_collections():
-                if self.overlaps(collection):
-                    yield self.collection_metadata(collection)
+            yield from (
+                self.collection_metadata(collection)
+                for collection in catalog.get_collections()
+                if self.overlaps(collection)
+            )
 
         except APIError as e:
             yield FederatedSearchError(catalog_url=self.base_url, error_message=str(e))

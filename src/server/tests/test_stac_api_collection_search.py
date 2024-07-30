@@ -83,6 +83,7 @@ def test_api_error():
         base_url="http://nope",
     )
 
-    results = list(base_search.get_collection_metadata())
-    for result in results:
-        assert isinstance(result, FederatedSearchError)
+    assert all(
+        isinstance(result, FederatedSearchError)
+        for result in base_search.get_collection_metadata()
+    )
