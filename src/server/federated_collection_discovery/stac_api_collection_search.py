@@ -6,6 +6,7 @@ from pystac_client.client import Client
 from pystac_client.exceptions import APIError
 
 from federated_collection_discovery.collection_search import CollectionSearch
+from federated_collection_discovery.free_text import apply_regex, parse_query_for_ogc
 from federated_collection_discovery.hint import PYTHON, generate_pystac_client_hint
 from federated_collection_discovery.models import (
     CollectionMetadata,
@@ -60,11 +61,12 @@ def datetime_intervals_overlap(
     return (start2 or dtmin) <= (end1 or dtmax) and (start1 or dtmin) <= (end2 or dtmax)
 
 
-def contains_ignorecase(
-    text: str,
+def matches_regex(
+    q: str,
     text_fields: set[str],
 ) -> bool:
-    return any(text.lower() in x.lower() for x in text_fields)
+    regex = parse_query_for_ogc(q)
+    return any(apply_regex(regex, text_field) for text_field in text_fields)
 
 
 class STACAPICollectionSearch(CollectionSearch):
@@ -135,7 +137,7 @@ class STACAPICollectionSearch(CollectionSearch):
             if text
         }
 
-        return not self.q or contains_ignorecase(self.q, text_fields)
+        return not self.q or matches_regex(self.q, text_fields)
 
     def collection_metadata(self, collection: Collection) -> CollectionMetadata:
         hint = (
