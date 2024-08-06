@@ -62,19 +62,16 @@ jobs:
 
       - name: Set tag version
         id: tag
-        # https://stackoverflow.com/questions/58177786/get-the-current-pushed-tag-in-github-actions
-        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+        run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
       - name: Set module version
         working-directory: src/server
         id: module
-        # https://stackoverflow.com/questions/58177786/get-the-current-pushed-tag-in-github-actions
-        run: echo ::set-output name=version::$(poetry version -s)
+        run: echo "version=$(poetry version -s)" >> $GITHUB_ENV
 
       - name: Build and publish package to pypi
-        if: steps.tag.outputs.tag == steps.module.outputs.version
+        if: env.tag == env.version
         working-directory: src/server
         env:
-          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-        run: poetry publish --build --username $TWINE_USERNAME --password $TWINE_PASSWORD
+          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_API_TOKEN }}
+        run: poetry publish --build 
