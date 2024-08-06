@@ -138,7 +138,7 @@ def parse_query_for_cmr(q) -> List[str]:
             separate_or_queries.append(token)
         elif "(" in token and ")" in token:
             raise ValueError(
-                "CMR free-text search does not handle exclusion parenthetetical terms "
+                "CMR free-text search does not handle parenthetetical terms "
                 f"like {token}\n"
                 f"full query: {q}"
             )
