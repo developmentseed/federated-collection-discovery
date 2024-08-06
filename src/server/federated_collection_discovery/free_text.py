@@ -8,24 +8,68 @@ and whether they should represent OR or AND clauses!
 https://github.com/stac-api-extensions/freetext-search/blob/master/README.md#http-get
 
 This implementation respects the OGC API spec and treats spaces as AND clauses.
+
+The sqlite fts5 free-text search functionality makes it possible to mimic
+Postgres' tsquery pretty closely which is nice because pgstac will probably use
+tsquery when the free-text search extension is implemented.
+
+
+https://www.sqlite.org/fts5.html
+https://www.postgresql.org/docs/current/functions-textsearch.html
 """
 
 import re
+import sqlite3
 from typing import List
+
+
+def parse_query_for_sqlite(q: str) -> str:
+    # separate out search terms, quoted exact phrases, commas, and exact phrases
+    tokens = [token.strip() for token in re.findall(r'"[^"]*"|,|[\(\)]|[^,\s\(\)]+', q)]
+
+    for i, token in enumerate(tokens):
+        if token.startswith("+"):
+            tokens[i] = token[1:].strip()
+        elif token.startswith("-"):
+            tokens[i] = "NOT " + token[1:].strip()
+        elif token == ",":
+            tokens[i] = "OR"
+
+    return " ".join(tokens)
+
+
+def sqlite_text_search(q: str, text_fields: dict[str, str]) -> bool:
+    column_clause = ", ".join(text_fields.keys())
+    value_clause = ", ".join(["?" for _ in text_fields.keys()])
+
+    with sqlite3.connect(":memory:") as conn:  # Use an in-memory database
+        cursor = conn.cursor()
+
+        cursor.execute(
+            f"""
+        CREATE VIRTUAL TABLE collections USING fts5({column_clause});
+        """
+        )
+
+        cursor.execute(
+            f"""
+        INSERT INTO collections ({column_clause}) VALUES ({value_clause});
+        """,
+            tuple(text_fields.values()),
+        )
+
+        cursor.execute(
+            f"""
+        SELECT COUNT(*)
+        FROM collections WHERE collections MATCH '{parse_query_for_sqlite(q)}';
+        """
+        )
+
+        return bool(cursor.fetchone()[0])
 
 
 def escape_regex(term):
     return re.escape(term)
-
-
-def handle_exact_phrase(phrase):
-    # Match exact phrase including spaces
-    return r"\b{}\b".format(re.escape(phrase.strip('"')))
-
-
-def handle_or_terms(terms):
-    # Match any one of the terms
-    return "|".join(map(escape_regex, terms))
 
 
 def handle_inclusion_exclusion(token):
@@ -37,68 +81,6 @@ def handle_inclusion_exclusion(token):
         return r"(?!.*\b{}\b)".format(escape_regex(term))
     else:
         return escape_regex(token)
-
-
-def merge_parts_with_and(tokens):
-    # Merging parts ensuring all must match
-    return "(?=.*{})".format(")(?=.*".join(tokens))
-
-
-def parse_query_for_ogc(q):
-    regex_parts = []
-
-    # break the query into individual terms, quoted statements, and parentheses
-    tokens = [
-        token.strip() for token in re.findall(r"\".*?\"|\([^\)]*\)|,|[^,\s]+|\s", q)
-    ]
-
-    # track terms that need to be combined in an AND statement
-    current_and_terms = []
-
-    for token in tokens:
-        if not token:
-            continue
-        if token == ",":
-            token = "OR"
-        if token == "AND":
-            continue
-        elif token == "OR":
-            # collect terms that need to be collapsed in an AND statement, continue
-            if current_and_terms:
-                regex_parts.append(merge_parts_with_and(current_and_terms))
-                current_and_terms = []
-        elif token.startswith('"') and token.endswith('"'):
-            # handle the exact phrase term
-            current_and_terms.append(handle_exact_phrase(token))
-        elif "(" in token and ")" in token:
-            # recursively parse parenthetical statements
-            inner_query = token.strip("()")
-            current_and_terms.append("({})".format(parse_query_for_ogc(inner_query)))
-        elif token.startswith("+") or token.startswith("-"):
-            current_and_terms.append(handle_inclusion_exclusion(token))
-        else:
-            if "AND" in token:
-                and_terms = list(map(str.strip, token.split("AND")))
-                current_and_terms.append(merge_parts_with_and(and_terms))
-            elif "OR" in token:
-                or_terms = list(map(str.strip, token.split("OR")))
-                regex_parts.append(handle_or_terms(or_terms))
-            else:
-                current_and_terms.append(escape_regex(token))
-
-    if current_and_terms:
-        regex_parts.append(merge_parts_with_and(current_and_terms))
-
-    # Join OR sets (or a single OR-less set)
-    regex = "|".join(regex_parts)
-
-    return regex
-
-
-def apply_regex(regex, text) -> bool:
-    """Apply the regex to the given text and return if there's a match."""
-    pattern = re.compile(regex, re.IGNORECASE)
-    return bool(pattern.search(text))
 
 
 def parse_query_for_cmr(q) -> List[str]:

@@ -1,92 +1,100 @@
 import pytest
 
-from app.free_text import apply_regex, parse_query_for_cmr, parse_query_for_ogc
+from app.free_text import (
+    parse_query_for_cmr,
+    sqlite_text_search,
+)
 
 
-def test_ogc_single_term():
+def test_sqlite_single_term():
     query = "sentinel"
-    regex = parse_query_for_ogc(query)
-    assert apply_regex(regex, "The sentinel node was true")
-    assert not apply_regex(regex, "No match here")
+    assert sqlite_text_search(query, {"description": "The sentinel node was true"})
+    assert not sqlite_text_search(query, {"description": "No match here"})
 
 
-def test_ogc_exact_phrase():
+def test_sqlite_exact_phrase():
     query = '"climate model"'
-    regex = parse_query_for_ogc(query)
-    assert apply_regex(regex, "The climate model is impressive")
-    assert not apply_regex(regex, "This model is for climate modeling")
+    assert sqlite_text_search(query, {"description": "The climate model is impressive"})
+    assert not sqlite_text_search(
+        query, {"description": "This model is for climate modeling"}
+    )
 
     # an exact phrase with a comma inside
     query = '"models, etc"'
-    regex = parse_query_for_ogc(query)
-    assert apply_regex(regex, "Produced with equations, and models, etc.")
-    assert not apply_regex(regex, "Produced with models")
+    assert sqlite_text_search(
+        query, {"description": "Produced with equations, and models, etc."}
+    )
+    assert not sqlite_text_search(query, {"description": "Produced with models"})
 
 
-def test_ogc_and_terms_default():
+def test_sqlite_and_terms_default():
     query = "climate model"
-    regex = parse_query_for_ogc(query)
-    assert apply_regex(regex, "Climate change is a significant modeling challenge")
-    assert apply_regex(regex, "The model was developed using climate observation data")
-    assert not apply_regex(regex, "This is an advanced model")
-    assert not apply_regex(regex, "No relevant terms here")
+    assert sqlite_text_search(
+        query,
+        {
+            "description": "Climate change is a significant challenge",
+            "keywords": "model, prediction",
+        },
+    )
+    assert sqlite_text_search(
+        query, {"description": "The model was developed using climate observation data"}
+    )
+    assert not sqlite_text_search(query, {"description": "This is an advanced model"})
+    assert not sqlite_text_search(query, {"description": "No relevant terms here"})
 
 
-def test_ogc_or_terms_explicit():
+def test_sqlite_or_terms_explicit():
     query = "climate OR model"
-    regex = parse_query_for_ogc(query)
-    assert apply_regex(regex, "Climate discussion")
-    assert apply_regex(regex, "FPGA model creation")
-    assert not apply_regex(regex, "No matching term here")
+    assert sqlite_text_search(query, {"description": "Climate discussion"})
+    assert sqlite_text_search(query, {"description": "FPGA model creation"})
+    assert not sqlite_text_search(query, {"description": "No matching term here"})
 
 
-def test_ogc_or_terms_commas():
+def test_sqlite_or_terms_commas():
     query = "climate,model"
-    regex = parse_query_for_ogc(query)
-    assert apply_regex(regex, "Climate change is here")
-    assert apply_regex(regex, "They built a model train")
-    assert apply_regex(regex, "It's a climate model!")
-    assert not apply_regex(regex, "It's a mathematical equation")
+    assert sqlite_text_search(query, {"description": "Climate change is here"})
+    assert sqlite_text_search(query, {"description": "They built a model train"})
+    assert sqlite_text_search(query, {"description": "It's a climate model!"})
+    assert not sqlite_text_search(
+        query, {"description": "It's a mathematical equation"}
+    )
 
 
-def test_ogc_and_terms():
+def test_sqlite_and_terms():
     query = "climate AND model"
-    regex = parse_query_for_ogc(query)
-    assert apply_regex(regex, "The climate model is impressive")
-    assert not apply_regex(regex, "This climate change discussion")
-    assert not apply_regex(regex, "Advanced model system")
+    assert sqlite_text_search(query, {"description": "The climate model is impressive"})
+    assert not sqlite_text_search(
+        query, {"description": "This climate change discussion"}
+    )
+    assert not sqlite_text_search(query, {"description": "Advanced model system"})
 
 
-def test_ogc_parentheses_grouping():
+def test_sqlite_parentheses_grouping():
     query = "(quick OR brown) AND fox"
-    regex = parse_query_for_ogc(query)
-    assert apply_regex(regex, "The quick brown fox")
-    assert apply_regex(regex, "A quick fox jumps")
-    assert apply_regex(regex, "brown bear and a fox")
-    assert not apply_regex(regex, "The fox is clever")
+    assert sqlite_text_search(query, {"description": "The quick brown fox"})
+    assert sqlite_text_search(query, {"description": "A quick fox jumps"})
+    assert sqlite_text_search(query, {"description": "brown bear and a fox"})
+    assert not sqlite_text_search(query, {"description": "The fox is clever"})
 
     query = "(quick AND brown) OR (fast AND red)"
-    regex = parse_query_for_ogc(query)
-    assert apply_regex(regex, "quick brown fox")
-    assert apply_regex(regex, "fast red car")
-    assert not apply_regex(regex, "quick red car")
+    assert sqlite_text_search(query, {"description": "quick brown fox"})
+    assert sqlite_text_search(query, {"description": "fast red car"})
+    assert not sqlite_text_search(query, {"description": "quick red car"})
 
 
-def test_ogc_inclusions_exclusions():
+def test_sqlite_inclusions_exclusions():
     query = "quick +brown -fox"
-    regex = parse_query_for_ogc(query)
-    assert apply_regex(regex, "The quick brown bear")
-    assert not apply_regex(regex, "The quick fox")
-    assert not apply_regex(regex, "The quickest")
-    assert apply_regex(regex, "A quick light brown jumper")
+    assert sqlite_text_search(query, {"description": "The quick brown bear"})
+    assert not sqlite_text_search(query, {"description": "The quick fox"})
+    assert not sqlite_text_search(query, {"description": "The quickest"})
+    assert sqlite_text_search(query, {"description": "A quick light brown jumper"})
 
 
-def test_ogc_partial_match():
+def test_sqlite_partial_match():
     query = "climat"
-    regex = parse_query_for_ogc(query)
-    assert apply_regex(regex, "climatology")
-    assert apply_regex(regex, "climate")
-    assert not apply_regex(regex, "climbing")
+    assert not sqlite_text_search(query, {"description": "climatology"})
+    assert not sqlite_text_search(query, {"description": "climate"})
+    assert not sqlite_text_search(query, {"description": "climbing"})
 
 
 def test_cmr_single_term():
