@@ -38,11 +38,11 @@ jobs:
         working-directory: src/server
         run: poetry run pytest
 
-    publish:
-      needs: [test]
-      runs-on: ubuntu-latest
-      if: startsWith(github.event.ref, 'refs/tags') || github.event_name == 'release'
-      steps:
+  publish:
+    needs: [test]
+    runs-on: ubuntu-latest
+    if: startsWith(github.event.ref, 'refs/tags') || github.event_name == 'release'
+    steps:
       - name: Check out repository
         uses: actions/checkout@v4
       
