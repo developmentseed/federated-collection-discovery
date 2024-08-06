@@ -8,7 +8,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./src/server/app:/work/app
+      - ./src/server/federated_collection_discovery:/work/federated_collection_discovery
     environment:
       - PYTHONUNBUFFERED=1
       - FEDERATED_STAC_API_URLS=https://stac.maap-project.org/,https://openveda.cloud/api/stac/,https://catalogue.dataspace.copernicus.eu/stac

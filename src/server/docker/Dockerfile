@@ -60,9 +60,9 @@ WORKDIR /work
 COPY ./poetry.lock ./pyproject.toml ./
 # will get overwritten by mounted vol if you run with docker compose
 # note: not re-installing since we already have the runtime deps from builder-base
-COPY ./app ./app/ 
+COPY ./federated_collection_discovery ./federated_collection_discovery/ 
 
 EXPOSE 8000
 ENTRYPOINT /docker-entrypoint.sh $0 $@
-CMD ["poetry", "run", "uvicorn", "app.main:app", "--host=0.0.0.0", "--port=8000", "--reload"]
+CMD ["poetry", "run", "uvicorn", "federated_collection_discovery.main:app", "--host=0.0.0.0", "--port=8000", "--reload"]
 
