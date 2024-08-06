@@ -2,7 +2,10 @@ from datetime import datetime
 
 import black
 
-from app.hint import generate_cmr_hint, generate_pystac_client_hint
+from federated_collection_discovery.hint import (
+    generate_cmr_hint,
+    generate_pystac_client_hint,
+)
 
 
 def test_cmr_hint_no_params():

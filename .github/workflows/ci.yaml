@@ -13,27 +13,68 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Check out repository
-      uses: actions/checkout@v4
-    
-    - name: Install Poetry
-      uses: Gr1N/setup-poetry@v9
-      with:
-        poetry-version: "1.8.0"
+      - name: Check out repository
+        uses: actions/checkout@v4
+      
+      - name: Install Poetry
+        uses: Gr1N/setup-poetry@v9
+        with:
+          poetry-version: "1.8.0"
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      env:
-        POETRY_VIRTUALENVS_IN_PROJECT: "true"
-      with:
-        python-version: "3.10"
-        cache: poetry
-        cache-dependency-path: src/server/poetry.lock
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        env:
+          POETRY_VIRTUALENVS_IN_PROJECT: "true"
+        with:
+          python-version: "3.12"
+          cache: poetry
+          cache-dependency-path: src/server/poetry.lock
 
-    - name: Install dependencies including dev dependencies
-      working-directory: src/server
-      run: poetry install --with dev
+      - name: Install dependencies including dev dependencies
+        working-directory: src/server
+        run: poetry install --with dev
 
-    - name: Run Tests
-      working-directory: src/server
-      run: poetry run pytest
+      - name: Run Tests
+        working-directory: src/server
+        run: poetry run pytest
+
+    publish:
+      needs: [test]
+      runs-on: ubuntu-latest
+      if: startsWith(github.event.ref, 'refs/tags') || github.event_name == 'release'
+      steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      
+      - name: Install Poetry
+        uses: Gr1N/setup-poetry@v9
+        with:
+          poetry-version: "1.8.0"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        env:
+          POETRY_VIRTUALENVS_IN_PROJECT: "true"
+        with:
+          python-version: "3.12"
+          cache: poetry
+          cache-dependency-path: src/server/poetry.lock
+
+      - name: Set tag version
+        id: tag
+        # https://stackoverflow.com/questions/58177786/get-the-current-pushed-tag-in-github-actions
+        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+
+      - name: Set module version
+        working-directory: src/server
+        id: module
+        # https://stackoverflow.com/questions/58177786/get-the-current-pushed-tag-in-github-actions
+        run: echo ::set-output name=version::$(poetry version -s)
+
+      - name: Build and publish package to pypi
+        if: steps.tag.outputs.tag == steps.module.outputs.version
+        working-directory: src/server
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        run: poetry publish --build --username $TWINE_USERNAME --password $TWINE_PASSWORD

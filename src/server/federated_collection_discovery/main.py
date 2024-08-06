@@ -10,12 +10,21 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import PositiveInt
 from stac_fastapi.types.rfc3339 import str_to_interval
 
-from app.cmr_collection_search import CMRCollectionSearch
-from app.collection_search import CollectionSearch, search_all
-from app.config import Settings
-from app.models import CollectionMetadata, FederatedSearchError, SearchResponse
-from app.shared import BBox, DatetimeInterval
-from app.stac_api_collection_search import STACAPICollectionSearch
+from federated_collection_discovery.cmr_collection_search import CMRCollectionSearch
+from federated_collection_discovery.collection_search import (
+    CollectionSearch,
+    search_all,
+)
+from federated_collection_discovery.config import Settings
+from federated_collection_discovery.models import (
+    CollectionMetadata,
+    FederatedSearchError,
+    SearchResponse,
+)
+from federated_collection_discovery.shared import BBox, DatetimeInterval
+from federated_collection_discovery.stac_api_collection_search import (
+    STACAPICollectionSearch,
+)
 
 DEFAULT_LIMIT = 100
 
@@ -188,3 +197,16 @@ def health(settings: Annotated[Settings, Depends(get_settings)]) -> dict[str, st
         statuses[catalog.base_url] = catalog.check_health()
 
     return statuses
+
+
+def create_handler(app):
+    """Create a handler to use with AWS Lambda if mangum available."""
+    try:
+        from mangum import Mangum
+
+        return Mangum(app)
+    except ImportError:
+        return None
+
+
+handler = create_handler(app)

@@ -3,10 +3,12 @@ from datetime import datetime
 import pytest
 from cmr import CMR_OPS
 
-from app.cmr_collection_search import CMRCollectionSearch
-from app.collection_search import search_all
-from app.models import CollectionMetadata
-from app.stac_api_collection_search import STACAPICollectionSearch
+from federated_collection_discovery.cmr_collection_search import CMRCollectionSearch
+from federated_collection_discovery.collection_search import search_all
+from federated_collection_discovery.models import CollectionMetadata
+from federated_collection_discovery.stac_api_collection_search import (
+    STACAPICollectionSearch,
+)
 
 
 @pytest.mark.asyncio

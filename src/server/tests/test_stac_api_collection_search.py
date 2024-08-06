@@ -1,8 +1,13 @@
 from datetime import datetime
 
-from app.hint import PYTHON
-from app.models import CollectionMetadata, FederatedSearchError
-from app.stac_api_collection_search import STACAPICollectionSearch
+from federated_collection_discovery.hint import PYTHON
+from federated_collection_discovery.models import (
+    CollectionMetadata,
+    FederatedSearchError,
+)
+from federated_collection_discovery.stac_api_collection_search import (
+    STACAPICollectionSearch,
+)
 
 
 def test_base(mock_apis):

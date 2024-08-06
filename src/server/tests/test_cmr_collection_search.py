@@ -1,6 +1,6 @@
 from cmr.queries import CMR_OPS
 
-from app.cmr_collection_search import CMRCollectionSearch
+from federated_collection_discovery.cmr_collection_search import CMRCollectionSearch
 
 
 def test_base():
