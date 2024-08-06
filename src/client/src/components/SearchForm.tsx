@@ -22,7 +22,7 @@ import "../css/react-datepicker.css";
 type FormData = {
   bbox: string;
   datetime: string;
-  text: string;
+  q: string;
   hint_lang: string;
 };
 
@@ -50,7 +50,7 @@ const SearchForm: React.FC<Props> = ({ onSubmit }) => {
     bbox: "",
     startDatetime: null,
     endDatetime: null,
-    text: "",
+    q: "",
     hint_lang: "python",
   });
 
@@ -95,7 +95,7 @@ const SearchForm: React.FC<Props> = ({ onSubmit }) => {
     const submitData = {
       bbox: formData.bbox,
       datetime,
-      text: formData.text,
+      q: formData.q,
       hint_lang: formData.hint_lang,
     };
     onSubmit(submitData);
@@ -156,11 +156,11 @@ const SearchForm: React.FC<Props> = ({ onSubmit }) => {
             </FormControl>
           </Flex>
         </FormControl>
-        <FormControl id="text">
+        <FormControl id="q">
           <FormLabel>Text Search</FormLabel>
           <Input
-            name="text"
-            value={formData.text}
+            name="q"
+            value={formData.q}
             onChange={handleChange}
             placeholder="Enter text"
           />

@@ -131,7 +131,7 @@ async def search_collections(
             "or 2024-06-01T00:00:00/2024-06-30T23:59:59Z",
         ),
     ] = None,
-    text: Annotated[
+    q: Annotated[
         Optional[str],
         Query(
             description=(
@@ -156,7 +156,7 @@ async def search_collections(
             base_url=base_url,
             bbox=parsed_bbox,
             datetime=datetime_interval,
-            q=text,
+            q=q,
             hint_lang=hint_lang,
         )
         for base_url in settings.stac_api_urls
@@ -165,7 +165,7 @@ async def search_collections(
             base_url=base_url,
             bbox=parsed_bbox,
             datetime=datetime_interval,
-            q=text,
+            q=q,
             hint_lang=hint_lang,
         )
         for base_url in settings.cmr_urls
