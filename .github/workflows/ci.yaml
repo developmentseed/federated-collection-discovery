@@ -42,6 +42,11 @@ jobs:
     needs: [test]
     runs-on: ubuntu-latest
     if: startsWith(github.event.ref, 'refs/tags') || github.event_name == 'release'
+    environment:
+      name: pypi
+      url: https://pypi.org/p/federated-collection-discovery
+    permissions:
+      id-token: write
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -69,9 +74,12 @@ jobs:
         id: module
         run: echo "version=$(poetry version -s)" >> $GITHUB_ENV
 
-      - name: Build and publish package to pypi
+      - name: Build package
         if: env.tag == env.version
         working-directory: src/server
-        env:
-          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_API_TOKEN }}
-        run: poetry publish --build 
+        run: poetry build
+
+      - name: Publish to pypi
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: src/server/dist/

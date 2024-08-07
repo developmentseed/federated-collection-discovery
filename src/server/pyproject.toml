@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "An application for discovering collections from multiple STAC APIs and/or CMRs"
 authors = ["Henry Rodman <henry@developmentseed.org>"]
 license = "MIT"
-# readme = "README.md"
+readme = "README.md"
 homepage = "https://github.com/developmentseed/federated-collection-discovery"
 
 packages = [
