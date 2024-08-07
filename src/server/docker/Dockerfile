@@ -61,6 +61,7 @@ COPY ./poetry.lock ./pyproject.toml ./
 # will get overwritten by mounted vol if you run with docker compose
 # note: not re-installing since we already have the runtime deps from builder-base
 COPY ./federated_collection_discovery ./federated_collection_discovery/ 
+RUN poetry install --no-dev -E uvicorn
 
 EXPOSE 8000
 ENTRYPOINT /docker-entrypoint.sh $0 $@
