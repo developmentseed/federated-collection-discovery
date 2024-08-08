@@ -3,7 +3,7 @@ from typing import Optional
 import black
 from stac_pydantic.shared import BBox
 
-from app.shared import DatetimeInterval
+from federated_collection_discovery.shared import DatetimeInterval
 
 PYTHON = "python"
 PYSTAC_CLIENT_HINT = """import pystac_client

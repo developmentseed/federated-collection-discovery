@@ -5,10 +5,13 @@ from pystac import Collection
 from pystac_client.client import Client
 from pystac_client.exceptions import APIError
 
-from app.collection_search import CollectionSearch
-from app.hint import PYTHON, generate_pystac_client_hint
-from app.models import CollectionMetadata, FederatedSearchError
-from app.shared import BBox, DatetimeInterval
+from federated_collection_discovery.collection_search import CollectionSearch
+from federated_collection_discovery.hint import PYTHON, generate_pystac_client_hint
+from federated_collection_discovery.models import (
+    CollectionMetadata,
+    FederatedSearchError,
+)
+from federated_collection_discovery.shared import BBox, DatetimeInterval
 
 
 def get_full_bounding_box(bboxes: Sequence[BBox]) -> BBox:

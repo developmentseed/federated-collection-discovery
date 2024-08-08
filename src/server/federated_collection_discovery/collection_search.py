@@ -4,8 +4,11 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Iterable, Literal, Optional, Union
 
-from app.models import CollectionMetadata, FederatedSearchError
-from app.shared import BBox, DatetimeInterval
+from federated_collection_discovery.models import (
+    CollectionMetadata,
+    FederatedSearchError,
+)
+from federated_collection_discovery.shared import BBox, DatetimeInterval
 
 
 @dataclass

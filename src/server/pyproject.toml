@@ -3,23 +3,26 @@ name = "federated-collection-discovery"
 version = "0.1.0"
 description = "An application for discovering collections from multiple STAC APIs and/or CMRs"
 authors = ["Henry Rodman <henry@developmentseed.org>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/developmentseed/federated-collection-discovery"
 
 packages = [
-    { include = "app" },
+    { include = "federated_collection_discovery" },
 ]
 
 [tool.poetry.dependencies]
 python = "^3.9"
 pystac-client = "^0.8.2"
 stac-fastapi-types = "^3.0.0a1"
-uvicorn = "^0.30.1"
 pydantic-settings = "^2.3.4"
 # Used as main dependency to format Python code hints in responses
 black = "^24.4.2"
 httpx = "^0.27.0"
 python-cmr = "^0.11.0"
 fastapi = "^0.111.1"
-gunicorn = "^22.0.0"
+uvicorn = { version = "^0.30.1", optional = true }
+mangum = { version = "^0.17.0", optional = true }
 
 [tool.poetry.group.dev.dependencies]
 jupyterlab = "^4.2.3"
@@ -31,6 +34,10 @@ ruff = "^0.5.2"
 types-requests = "^2.32.0.20240712"
 pytest-asyncio = "^0.23.8"
 asgi-lifespan = "^2.1.0"
+
+[tool.poetry.extras]
+aws_lambda = ["mangum"]
+uvicorn = ["uvicorn"]
 
 [tool.isort]
 profile = "black"

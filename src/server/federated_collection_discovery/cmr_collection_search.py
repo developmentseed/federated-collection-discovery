@@ -5,9 +5,12 @@ from typing import Iterable, List, TypedDict, Union
 from cmr import CollectionQuery
 from requests.exceptions import RequestException
 
-from app.collection_search import CollectionSearch
-from app.hint import PYTHON, generate_cmr_hint
-from app.models import CollectionMetadata, FederatedSearchError
+from federated_collection_discovery.collection_search import CollectionSearch
+from federated_collection_discovery.hint import PYTHON, generate_cmr_hint
+from federated_collection_discovery.models import (
+    CollectionMetadata,
+    FederatedSearchError,
+)
 
 
 class CMRCollectionResult(TypedDict, total=False):
