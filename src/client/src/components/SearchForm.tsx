@@ -3,17 +3,21 @@ import {
   Input,
   Box,
   Button,
+  Flex,
   VStack,
   HStack,
   FormControl,
   FormLabel,
   Select,
   useDisclosure,
+  Spacer,
 } from "@chakra-ui/react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import MapModal from "./MapModal";
 import ApiDocModal from "./ApiDocModal"; // Import the new modal component
+
+import "../css/react-datepicker.css";
 
 type FormData = {
   bbox: string;
@@ -128,30 +132,29 @@ const SearchForm: React.FC<Props> = ({ onSubmit }) => {
 
         <FormControl>
           <FormLabel>Temporal Range</FormLabel>
-          <HStack spacing={4}>
-            <FormControl id="startDatetime">
+          <Flex direction="row">
+            <FormControl id="startDatetime" maxWidth="45%">
               <FormLabel>Start Date</FormLabel>
-              <Box width="100%">
-                <DatePicker
-                  selected={formData.startDatetime}
-                  onChange={(date) => handleDateChange(date, "startDatetime")}
-                  maxDate={today} // Limiting date to today
-                  placeholderText="start date"
-                />
-              </Box>
+              <DatePicker
+                selected={formData.startDatetime}
+                onChange={(date) => handleDateChange(date, "startDatetime")}
+                maxDate={today} // Limiting date to today
+                placeholderText="start date"
+                className="customDatePickerWidth" // Applying custom CSS class
+              />
             </FormControl>
-            <FormControl id="endDatetime">
+            <Spacer />
+            <FormControl id="endDatetime" maxWidth="45%">
               <FormLabel>End Date</FormLabel>
-              <Box width="100%">
-                <DatePicker
-                  selected={formData.endDatetime}
-                  onChange={(date) => handleDateChange(date, "endDatetime")}
-                  maxDate={today} // Limiting date to today
-                  placeholderText="end date"
-                />
-              </Box>
+              <DatePicker
+                selected={formData.endDatetime}
+                onChange={(date) => handleDateChange(date, "endDatetime")}
+                maxDate={today} // Limiting date to today
+                placeholderText="end date"
+                className="customDatePickerWidth" // Applying custom CSS class
+              />
             </FormControl>
-          </HStack>
+          </Flex>
         </FormControl>
         <FormControl id="text">
           <FormLabel>Text Search</FormLabel>

@@ -15,6 +15,7 @@ import {
   ModalBody,
   ModalCloseButton,
   Button,
+  useBreakpointValue,
   useDisclosure,
   useColorMode,
   useColorModeValue,
@@ -49,7 +50,17 @@ interface Props {
   data: Array<Record<string, any>>;
 }
 
-const specificColumns = ["title", "catalog_url", "id"];
+// Define the type
+type ColumnBreakpoints = {
+  base: string[];
+  xl: string[];
+};
+
+// Define the constant
+const specificColumns: ColumnBreakpoints = {
+  base: ["title", "catalog_url"],
+  xl: ["title", "catalog_url", "id"],
+};
 
 const ResultsTable: React.FC<Props> = ({ data }) => {
   const bgColor = useColorModeValue("white", "gray.800");
@@ -60,6 +71,7 @@ const ResultsTable: React.FC<Props> = ({ data }) => {
     any
   > | null>(null);
   const hintStyle = colorMode === "dark" ? materialDark : materialLight;
+  const columns = useBreakpointValue(specificColumns) ?? [];
 
   const renderCell = (header: string, value: any) => {
     if (header === "temporal_range" && Array.isArray(value)) {
@@ -86,18 +98,13 @@ const ResultsTable: React.FC<Props> = ({ data }) => {
     onOpen();
   };
 
-  // Handle empty data scenario
-  if (data.length === 0) {
-    return <Text>No results</Text>;
-  }
-
   return (
     <>
       <Box overflow="auto" maxHeight="100%">
         <Table variant="simple">
           <Thead>
             <Tr>
-              {specificColumns.map((header) => (
+              {columns.map((header) => (
                 <Th
                   key={header}
                   position="sticky"
@@ -114,7 +121,7 @@ const ResultsTable: React.FC<Props> = ({ data }) => {
           <Tbody>
             {data.map((row, rowIndex) => (
               <Tr key={rowIndex}>
-                {specificColumns.map((header) => (
+                {columns.map((header) => (
                   <Td key={header}>{renderCell(header, row[header])}</Td>
                 ))}
                 <Td>
