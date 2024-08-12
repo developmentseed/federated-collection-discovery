@@ -189,17 +189,13 @@ const MapDisplay: React.FC<MapDisplayProps> = ({ spatialExtent }) => {
     <Box height="300px">
       <MapContainer
         style={{ height: "100%", width: "100%" }}
-        center={[
-          (spatialExtent.south + spatialExtent.north) / 2,
-          (spatialExtent.west + spatialExtent.east) / 2,
-        ]}
-        zoom={1}
+        bounds={bounds}
         maxBounds={[
           [-90, -180],
           [90, 180],
         ]}
         maxBoundsViscosity={1.0}
-        scrollWheelZoom={false}
+        scrollWheelZoom={true}
       >
         <CommonTileLayer />
         <Rectangle bounds={bounds} pathOptions={{ color: "red" }} />

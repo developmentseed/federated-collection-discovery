@@ -4,7 +4,7 @@ type SearchParams = {
   text: string;
 };
 
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
+export const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
 
 function buildQuery(params: SearchParams): string {
   const urlParams = new URLSearchParams(params as any);

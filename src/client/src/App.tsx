@@ -12,7 +12,7 @@ import {
 } from "@chakra-ui/react";
 
 import { ColorModeSwitcher } from "./ColorModeSwitcher";
-import { searchApi } from "./api/search";
+import { searchApi, API_URL } from "./api/search";
 
 const HealthStatus = React.lazy(() => import("./components/HealthStatus"));
 const SearchForm = React.lazy(() => import("./components/SearchForm"));
@@ -55,8 +55,17 @@ export const App = () => {
             alignItems="center"
             justifyContent="center"
           >
-            <VStack align="center">
+            <VStack align="center" spacing={4}>
               <Heading>Federated Collection Discovery</Heading>
+              <Text align="left">
+                Use spatial, temporal, and keyword search terms to discover
+                geospatial collections across multiple STAC APIs.
+              </Text>
+
+              <Text align="left">
+                Only performs a collection-level search, will not return
+                item-level results!
+              </Text>
             </VStack>
           </GridItem>
           <GridItem
@@ -83,8 +92,11 @@ export const App = () => {
             )}
           </GridItem>
           <GridItem rowSpan={1} colSpan={1}>
-            <VStack align="start">
-              <Heading size="md">API Health:</Heading>
+            <VStack align="start" spacing={4}>
+              <Heading size="md" textAlign="left">
+                Federated Collection Discovery API Health
+              </Heading>
+              <Text>API URL: {API_URL}</Text>
               <React.Suspense fallback={<Spinner size="md" />}>
                 <HealthStatus />
               </React.Suspense>
