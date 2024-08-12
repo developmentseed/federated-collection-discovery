@@ -1,6 +1,6 @@
 import pytest
 
-from app.free_text import (
+from federated_collection_discovery.free_text import (
     parse_query_for_cmr,
     sqlite_text_search,
 )
