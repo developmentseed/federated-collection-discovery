@@ -12,11 +12,11 @@ import {
 } from "@chakra-ui/react";
 
 import { ColorModeSwitcher } from "./ColorModeSwitcher";
-import HealthStatus from "./components/HealthStatus";
-import { Logo } from "./components/Logo";
-import SearchForm from "./components/SearchForm";
-import ResultsTable from "./components/ResultsTable";
 import { searchApi } from "./api/search";
+
+const HealthStatus = React.lazy(() => import("./components/HealthStatus"));
+const SearchForm = React.lazy(() => import("./components/SearchForm"));
+const ResultsTable = React.lazy(() => import("./components/ResultsTable"));
 
 export const App = () => {
   const [results, setResults] = React.useState<Array<Record<string, any>>>([]);
@@ -57,7 +57,6 @@ export const App = () => {
           >
             <VStack align="center">
               <Heading>Federated Collection Discovery</Heading>
-              <Logo size="300" />
             </VStack>
           </GridItem>
           <GridItem
@@ -76,15 +75,19 @@ export const App = () => {
                 <Spinner size="xl" />
               </Box>
             ) : (
-              <Box w="100%">
-                <ResultsTable data={results} />
-              </Box>
+              <React.Suspense fallback={<Spinner size="xl" />}>
+                <Box w="100%">
+                  <ResultsTable data={results} />
+                </Box>
+              </React.Suspense>
             )}
           </GridItem>
           <GridItem rowSpan={1} colSpan={1}>
             <VStack align="start">
               <Heading size="md">API Health:</Heading>
-              <HealthStatus />
+              <React.Suspense fallback={<Spinner size="md" />}>
+                <HealthStatus />
+              </React.Suspense>
             </VStack>
           </GridItem>
           <GridItem
@@ -96,7 +99,9 @@ export const App = () => {
           >
             <VStack align="flex-start">
               <Heading size="md">Collection search:</Heading>
-              <SearchForm onSubmit={handleSearch} />
+              <React.Suspense fallback={<Spinner size="md" />}>
+                <SearchForm onSubmit={handleSearch} />
+              </React.Suspense>
               <Text>
                 {results.length > 0
                   ? `Found ${results.length} results`
