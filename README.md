@@ -2,10 +2,11 @@
 
 ![federated collection discovery logo is a modified version of the proposed Fediverse logo but with a geographic theme](src/client/src/assets/logo.svg)
 
-This project implements an application that searches through multiple
+This project makes it possible to search across multiple
 geospatial metadata catalogs, such as STAC and NASA CMR, based on provided
 search parameters like bounding box (bbox), datetime, and free-text
-criteria.
+criteria to return collection-level metadata and code hints for accessing
+items.
 
 ## Table of Contents
 
@@ -34,7 +35,7 @@ docker compose up --build
 This will use the `FEDERATED_STAC_API_URLS` and
 `FEDERATED_CMR_URLS` environment variables
 defined in [docker-compose.yaml](./docker-compose.yaml) to search across
-NASA's MAAP STAC API and VEDA STAC API, and ESA's STAC API.
+NASA's MAAP STAC API and VEDA STAC API, and ESA's STAC API
 
 Stop the services:
 
