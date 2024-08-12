@@ -83,14 +83,14 @@ async def test_stac_api_and_cmr(executor, mock_apis):
             catalogs=[
                 STACAPICollectionSearch(
                     base_url=mock_api_url,
-                    text=text,
+                    q=text,
                 )
                 for mock_api_url in mock_apis
             ]
             + [
                 CMRCollectionSearch(
                     base_url=CMR_OPS,
-                    text=text,
+                    q=text,
                 )
             ],
         )
@@ -109,14 +109,14 @@ async def test_stac_api_and_cmr(executor, mock_apis):
             catalogs=[
                 STACAPICollectionSearch(
                     base_url=mock_api_url,
-                    text=text,
+                    q=text,
                 )
                 for mock_api_url in mock_apis
             ]
             + [
                 CMRCollectionSearch(
                     base_url=CMR_OPS,
-                    text=text,
+                    q=text,
                 )
             ],
         )

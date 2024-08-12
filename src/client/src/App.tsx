@@ -26,7 +26,7 @@ export const App = () => {
   const handleSearch = async (formData: {
     bbox: string;
     datetime: string;
-    text: string;
+    q: string;
   }) => {
     setLoading(true);
     try {

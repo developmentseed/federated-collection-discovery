@@ -66,15 +66,15 @@ async def test_search_with_datetime(mock_apis, client):
 
 
 @pytest.mark.anyio
-async def test_search_with_text(mock_apis, client):
-    text = "awesome"
-    response = await client.get("/search", params={"text": text})
+async def test_search_with_q(mock_apis, client):
+    q = "awesome"
+    response = await client.get("/search", params={"q": q})
     assert response.status_code == 200
     json_response = response.json()
     assert len(json_response["results"]) == 2
 
-    text = "appropriate"
-    response = await client.get("/search", params={"text": text})
+    q = "appropriate"
+    response = await client.get("/search", params={"q": q})
     assert response.status_code == 200
     json_response = response.json()
     assert len(json_response["results"]) == 2
@@ -84,9 +84,9 @@ async def test_search_with_text(mock_apis, client):
 async def test_search_with_all_params(mock_apis, client):
     bbox = "10,10,20,20"
     datetime = "2020-01-01T00:00:00Z/2020-01-31T23:59:59Z"
-    text = "awesome"
+    q = "awesome"
     response = await client.get(
-        "/search", params={"bbox": bbox, "datetime": datetime, "text": text}
+        "/search", params={"bbox": bbox, "datetime": datetime, "q": q}
     )
     assert response.status_code == 200
     json_response = response.json()

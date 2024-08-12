@@ -1,4 +1,5 @@
 import json
+from copy import copy
 from dataclasses import dataclass
 from typing import Iterable, List, TypedDict, Union
 
@@ -6,6 +7,7 @@ from cmr import CollectionQuery
 from requests.exceptions import RequestException
 
 from federated_collection_discovery.collection_search import CollectionSearch
+from federated_collection_discovery.free_text import parse_query_for_cmr
 from federated_collection_discovery.hint import PYTHON, generate_cmr_hint
 from federated_collection_discovery.models import (
     CollectionMetadata,
@@ -36,6 +38,8 @@ class CMRCollectionSearch(CollectionSearch):
         self,
     ) -> Iterable[Union[CollectionMetadata, FederatedSearchError]]:
         try:
+            collection_searches = []
+
             collection_search = CollectionQuery(mode=self.base_url)
             if self.bbox:
                 collection_search = collection_search.bounding_box(*self.bbox)
@@ -43,17 +47,25 @@ class CMRCollectionSearch(CollectionSearch):
             if self.datetime:
                 collection_search = collection_search.temporal(*self.datetime)
 
-            if self.text:
-                collection_search = collection_search.keyword(self.text)
+            if self.q:
+                # parse the q parameter so we can send OR queries as separate requests
+                q_parsed = parse_query_for_cmr(self.q)
+                # if it requires multiple separate queries identify them and add them
+                # to the list
+                for _q in q_parsed:
+                    _collection_search = copy(collection_search)
 
-            return (
+                    collection_searches.append(_collection_search.keyword(_q))
+            else:
+                collection_searches.append(collection_search)
+
+            yield from (
                 self.collection_metadata(collection)
-                for collection in collection_search.get()
+                for collection_search in collection_searches
+                for collection in set(collection_search.get())
             )
-        except RequestException as e:
-            return [
-                FederatedSearchError(catalog_url=self.base_url, error_message=str(e))
-            ]
+        except Exception as e:
+            yield FederatedSearchError(catalog_url=self.base_url, error_message=str(e))
 
     def collection_metadata(
         self, collection: CMRCollectionResult
