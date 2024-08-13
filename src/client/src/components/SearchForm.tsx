@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
   Input,
-  Box,
   Button,
   Flex,
   VStack,
