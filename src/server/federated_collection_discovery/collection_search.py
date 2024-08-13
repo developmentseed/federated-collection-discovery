@@ -37,3 +37,12 @@ async def search_all(
     return itertools.chain.from_iterable(
         executor.map(lambda catalog: catalog.get_collection_metadata(), catalogs)
     )
+
+
+async def check_health(
+    executor: ThreadPoolExecutor,
+    catalogs: Iterable[CollectionSearch],
+) -> dict[str, str]:
+    statuses = executor.map(lambda catalog: catalog.check_health(), catalogs)
+
+    return {catalog.base_url: status for catalog, status in zip(catalogs, statuses)}

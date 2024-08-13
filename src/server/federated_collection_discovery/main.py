@@ -13,6 +13,7 @@ from stac_fastapi.types.rfc3339 import str_to_interval
 from federated_collection_discovery.cmr_collection_search import CMRCollectionSearch
 from federated_collection_discovery.collection_search import (
     CollectionSearch,
+    check_health,
     search_all,
 )
 from federated_collection_discovery.config import Settings
@@ -184,8 +185,10 @@ async def search_collections(
 
 
 @app.get("/health")
-def health(settings: Annotated[Settings, Depends(get_settings)]) -> dict[str, str]:
-    statuses = {}
+async def health(
+    settings: Annotated[Settings, Depends(get_settings)],
+    executor: Annotated[ThreadPoolExecutor, Depends(get_executor)],
+) -> dict[str, str]:
     base_api_searches: List[CollectionSearch] = []
     for stac_api_url in settings.stac_api_urls:
         base_api_searches.append(STACAPICollectionSearch(base_url=stac_api_url))
@@ -193,10 +196,9 @@ def health(settings: Annotated[Settings, Depends(get_settings)]) -> dict[str, st
     for cmr_url in settings.cmr_urls:
         base_api_searches.append(CMRCollectionSearch(base_url=cmr_url))
 
-    for catalog in base_api_searches:
-        statuses[catalog.base_url] = catalog.check_health()
+    health_dict = await check_health(executor, base_api_searches)
 
-    return statuses
+    return health_dict
 
 
 def create_handler(app):

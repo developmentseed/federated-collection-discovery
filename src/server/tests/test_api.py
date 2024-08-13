@@ -134,11 +134,16 @@ async def test_search_bad_limit(mock_apis, client):
     assert response.status_code == 422
 
 
-def test_health():
+def test_health(mock_apis):
     bad_stac_api_url = "http://fake-stac.net"
     bad_cmr_url = "http://fake-cmr.gov/"
     app.dependency_overrides[get_settings] = lambda: Settings(
-        stac_api_urls=bad_stac_api_url,
+        stac_api_urls=",".join(
+            [
+                mock_apis[0],
+                bad_stac_api_url,
+            ]
+        ),
         cmr_urls=bad_cmr_url,
     )
 
