@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "federated-collection-discovery"
-version = "0.1.0"
+version = "0.1.1"
 description = "An application for discovering collections from multiple STAC APIs and/or CMRs"
 authors = ["Henry Rodman <henry@developmentseed.org>"]
 license = "MIT"

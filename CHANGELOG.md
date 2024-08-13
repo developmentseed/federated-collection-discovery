@@ -7,10 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+- Nothing
+
+## 0.1.1
+
+## Added
+
 - Make the client application responsive to window size
 - Implement free-text search as defined by
 [Free-Text STAC API extension](https://github.com/stac-api-extensions/freetext-search)
 ([#14](https://github.com/developmentseed/federated-collection-discovery/pull/1))
+- Run `check_health` asynchronously
 
 ## 0.1.0
 
