@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Nothing
 
+## 0.1.2
+
+### Added
+
+- enable `stac_api_urls` and `cmr_urls` parameters to override the default
+  APIs to search
+- better descriptions for API and its parameters
+- enable sorting in results table in client application
+- reuse openapi.json description in client application
+
 ## 0.1.1
 
 ## Added
