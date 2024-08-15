@@ -27,9 +27,10 @@ type FormData = {
 
 interface Props {
   onSubmit: (data: FormData) => void;
+  apiDocs: any;
 }
 
-const SearchForm: React.FC<Props> = ({ onSubmit }) => {
+const SearchForm: React.FC<Props> = ({ onSubmit, apiDocs }) => {
   const {
     isOpen: isMapOpen,
     onOpen: onMapOpen,
@@ -188,7 +189,11 @@ const SearchForm: React.FC<Props> = ({ onSubmit }) => {
           onClose={onMapClose}
           onSubmit={updateBoundingBox}
         />
-        <ApiDocModal isOpen={isDocOpen} onClose={onDocClose} />
+        <ApiDocModal
+          isOpen={isDocOpen}
+          onClose={onDocClose}
+          apiDocs={apiDocs}
+        />
       </VStack>
     </form>
   );

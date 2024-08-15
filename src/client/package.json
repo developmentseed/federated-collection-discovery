@@ -20,6 +20,7 @@
     "react-icons": "^3.0.0",
     "react-leaflet": "^4.2.1",
     "react-leaflet-draw": "^0.20.4",
+    "react-markdown": "^9.0.1",
     "react-scripts": "5.0.1",
     "react-syntax-highlighter": "^15.5.0",
     "source-map-explorer": "^2.5.3",
