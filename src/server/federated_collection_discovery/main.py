@@ -130,27 +130,40 @@ async def search_collections(
     executor: Annotated[ThreadPoolExecutor, Depends(get_executor)],
     bbox: Annotated[
         Optional[str],
-        Query(description="bounding box coordinates (xmin, xmax, ymin, ymax)"),
+        Query(
+            description="Bounding box coordinates (xmin, xmax, ymin, ymax) "
+            "in EPSG:4326",
+            json_schema_extra={
+                "example": "-175.05, -85.05, 175.05, 85.05",
+            },
+        ),
     ] = None,
     datetime: Annotated[
         Optional[str],
         Query(
-            description="datetime interval, e.g. 2021-02-01T00:00:00Z/.. "
-            "or 2024-06-01T00:00:00/2024-06-30T23:59:59Z",
+            description="Datetime interval formatted to RFC3339 (YYYY-MM-DDTHH:MM:SSZ) "
+            "with dates separated by slashes. For open intervals use '..' on "
+            "either side of the slash.",
+            json_schema_extra={"example": "2024-08-01T00:00:00Z/.."},
         ),
     ] = None,
     q: Annotated[
         Optional[str],
         Query(
             description=(
-                "string to search for in collection IDs, titles, "
-                "descriptions, and keywords"
+                "string to search for in collection titles, "
+                "descriptions, and keywords - following the syntax described in the "
+                "[OGC API - Features Text Search Spec](https://docs.ogc.org/DRAFTS/24-031.html#q-parameter)"
             ),
+            json_schema_extra={"example": "landsat OR sentinel"},
         ),
     ] = None,
     hint_lang: Annotated[
         Optional[Literal["python"]],
-        Query(description="Language for code hint, either python or ..."),
+        Query(
+            description="Language for code hint",
+            json_schema_extra={"example": "python"},
+        ),
     ] = None,
     limit: Annotated[
         PositiveInt,
