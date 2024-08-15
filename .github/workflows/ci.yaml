@@ -133,7 +133,9 @@ jobs:
       - name: Build package
         if: env.tag == env.version
         working-directory: src/server
-        run: poetry build
+        run: |
+          poetry self add poetry-version-plugin
+          poetry build
 
       - name: Publish to pypi
         uses: pypa/gh-action-pypi-publish@release/v1
