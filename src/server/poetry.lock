@@ -3283,4 +3283,4 @@ uvicorn = ["uvicorn"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "a0808de63c3fd7f89588e5b5a5de5f77e5a7a42588930ec32ce66c2ce161bca8"
+content-hash = "4376185cee5d75af0208422f2cfb5de45ef5c73358a5c7b8ebda98d6edb5b8a4"

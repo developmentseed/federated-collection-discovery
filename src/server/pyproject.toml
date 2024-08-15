@@ -17,7 +17,7 @@ source = "init"
 [tool.poetry.dependencies]
 python = "^3.9"
 pystac-client = "^0.8.2"
-stac-fastapi-types = "^3.0.0a1"
+stac-fastapi-types = "^3.0.0"
 pydantic-settings = "^2.3.4"
 # Used as main dependency to format Python code hints in responses
 black = "^24.4.2"
