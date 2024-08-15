@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "federated-collection-discovery"
-version = "0.1.1"
+version = "0" # handled by poetry-version-plugin
 description = "An application for discovering collections from multiple STAC APIs and/or CMRs"
 authors = ["Henry Rodman <henry@developmentseed.org>"]
 license = "MIT"
@@ -10,6 +10,9 @@ homepage = "https://github.com/developmentseed/federated-collection-discovery"
 packages = [
     { include = "federated_collection_discovery" },
 ]
+
+[tool.poetry-version-plugin]
+source = "init"
 
 [tool.poetry.dependencies]
 python = "^3.9"

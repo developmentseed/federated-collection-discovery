@@ -11,6 +11,7 @@ from fastapi.responses import RedirectResponse
 from pydantic import PositiveInt
 from stac_fastapi.types.rfc3339 import str_to_interval
 
+from federated_collection_discovery import __version__ as package_version
 from federated_collection_discovery.cmr_collection_search import CMRCollectionSearch
 from federated_collection_discovery.collection_search import (
     CollectionSearch,
@@ -94,7 +95,7 @@ app = FastAPI(
     "Provides capabilities to filter collections based on bounding "
     "box, datetime intervals, and keywords.",
     lifespan=lifespan,
-    version="0.1.0",
+    version=package_version,
     license_info={
         "name": "MIT License",
         "url": "https://opensource.org/licenses/MIT",
