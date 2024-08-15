@@ -128,7 +128,7 @@ jobs:
       - name: Set module version
         working-directory: src/server
         id: module
-        run: echo "version=$(poetry version -s)" >> $GITHUB_ENV
+        run: echo "version=$(python federated_collection_discovery/__init__.py)" >> $GITHUB_ENV
 
       - name: Build package
         if: env.tag == env.version
