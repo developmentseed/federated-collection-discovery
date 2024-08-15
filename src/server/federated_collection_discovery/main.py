@@ -7,6 +7,7 @@ from typing import Annotated, Any, List, Literal, Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from pydantic import PositiveInt
 from stac_fastapi.types.rfc3339 import str_to_interval
 
@@ -112,6 +113,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.get("/", response_class=RedirectResponse)
+async def redirect_to_docs():
+    return RedirectResponse(url="/docs")
 
 
 @app.get(
