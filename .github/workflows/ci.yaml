@@ -38,6 +38,62 @@ jobs:
         working-directory: src/server
         run: poetry run pytest
 
+  check-client-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      changes: ${{ steps.client_changes.outputs.changes }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Check for changes in client directory
+        id: client_changes
+        run: |
+          if git diff --quiet HEAD^ HEAD -- src/client; then
+            echo "changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "changes=true" >> $GITHUB_OUTPUT
+          fi
+
+  build-client:
+    needs: [check-client-changes]
+    runs-on: ubuntu-latest
+    if: needs.check-client-changes.outputs.changes == 'true'
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      
+      - name: Set up node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Cache Node.js dependencies
+        uses: actions/cache@v4
+        with:
+          path: src/client/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            node-modules-${{ runner.os }}-
+
+      - name: Cache Yarn dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            src/client/node_modules
+            src/client/.yarn
+          key: yarn-cache-${{ runner.os }}-${{ hashFiles('src/client/yarn.lock') }}
+          restore-keys: |
+            yarn-cache-${{ runner.os }}-
+
+      - name: Install dependencies
+        working-directory: src/client
+        run: yarn install
+
+      - name: Build client application
+        working-directory: src/client
+        run: yarn build
+
   publish:
     needs: [test]
     runs-on: ubuntu-latest

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "federated-collection-discovery"
-version = "0.1.1"
+version = "0" # handled by poetry-version-plugin
 description = "An application for discovering collections from multiple STAC APIs and/or CMRs"
 authors = ["Henry Rodman <henry@developmentseed.org>"]
 license = "MIT"
@@ -11,10 +11,13 @@ packages = [
     { include = "federated_collection_discovery" },
 ]
 
+[tool.poetry-version-plugin]
+source = "init"
+
 [tool.poetry.dependencies]
 python = "^3.9"
 pystac-client = "^0.8.2"
-stac-fastapi-types = "^3.0.0a1"
+stac-fastapi-types = "^3.0.0"
 pydantic-settings = "^2.3.4"
 # Used as main dependency to format Python code hints in responses
 black = "^24.4.2"

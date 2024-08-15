@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -8,13 +7,11 @@ import {
   ModalBody,
   ModalCloseButton,
   Button,
-  Spinner,
   Box,
   useColorMode,
 } from "@chakra-ui/react";
 import SwaggerUI from "swagger-ui-react";
 import "swagger-ui-react/swagger-ui.css";
-import { getApiDocs } from "../api/search";
 
 // Custom swagger style override for dark mode only
 import "../css/swagger-dark.css";
@@ -22,28 +19,15 @@ import "../css/swagger-dark.css";
 interface ApiDocModalProps {
   isOpen: boolean;
   onClose: () => void;
+  apiDocs: any;
 }
 
-const ApiDocModal: React.FC<ApiDocModalProps> = ({ isOpen, onClose }) => {
-  const [loading, setLoading] = useState(true);
-  const [apiDoc, setApiDoc] = useState<any>(null);
+const ApiDocModal: React.FC<ApiDocModalProps> = ({
+  isOpen,
+  onClose,
+  apiDocs,
+}) => {
   const { colorMode } = useColorMode();
-
-  useEffect(() => {
-    if (isOpen) {
-      (async function fetchApiDocs() {
-        setLoading(true);
-        try {
-          const data = await getApiDocs();
-          setApiDoc(data);
-        } catch (error) {
-          setApiDoc(null);
-        } finally {
-          setLoading(false);
-        }
-      })();
-    }
-  }, [isOpen]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="6xl">
@@ -52,18 +36,12 @@ const ApiDocModal: React.FC<ApiDocModalProps> = ({ isOpen, onClose }) => {
         <ModalHeader>API Documentation</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          {loading ? (
-            <Spinner />
-          ) : (
-            apiDoc && (
-              <Box overflow="auto" maxHeight="70vh">
-                {/* Apply dark mode class conditionally */}
-                <div className={colorMode === "dark" ? "swagger-dark" : ""}>
-                  <SwaggerUI spec={apiDoc} />
-                </div>
-              </Box>
-            )
-          )}
+          <Box overflow="auto" maxHeight="70vh">
+            {/* Apply dark mode class conditionally */}
+            <div className={colorMode === "dark" ? "swagger-dark" : ""}>
+              <SwaggerUI spec={apiDocs} />
+            </div>
+          </Box>
         </ModalBody>
         <ModalFooter>
           <Button colorScheme="blue" mr={3} onClick={onClose}>

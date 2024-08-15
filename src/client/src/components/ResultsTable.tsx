@@ -50,16 +50,14 @@ interface Props {
   data: Array<Record<string, any>>;
 }
 
-// Define the type
 type ColumnBreakpoints = {
   base: string[];
   xl: string[];
 };
 
-// Define the constant
 const specificColumns: ColumnBreakpoints = {
   base: ["title", "catalog_url"],
-  xl: ["title", "catalog_url", "id"],
+  xl: ["title", "id", "catalog_url"],
 };
 
 const ResultsTable: React.FC<Props> = ({ data }) => {
@@ -72,6 +70,33 @@ const ResultsTable: React.FC<Props> = ({ data }) => {
   > | null>(null);
   const hintStyle = colorMode === "dark" ? materialDark : materialLight;
   const columns = useBreakpointValue(specificColumns) ?? [];
+
+  // Sorting state
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  // Sort handler
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(column);
+      setSortOrder("asc");
+    }
+  };
+
+  // Sorting data
+  const sortedData = React.useMemo(() => {
+    if (!sortColumn) return data;
+
+    const sortedArray = [...data].sort((a, b) => {
+      if (a[sortColumn] < b[sortColumn]) return sortOrder === "asc" ? -1 : 1;
+      if (a[sortColumn] > b[sortColumn]) return sortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
+
+    return sortedArray;
+  }, [sortColumn, sortOrder, data]);
 
   const renderCell = (header: string, value: any) => {
     if (header === "temporal_range" && Array.isArray(value)) {
@@ -111,15 +136,22 @@ const ResultsTable: React.FC<Props> = ({ data }) => {
                   top={0}
                   zIndex={1}
                   bg={bgColor}
+                  cursor="pointer"
+                  onClick={() => handleSort(header)}
                 >
-                  {header}
+                  {header}{" "}
+                  {sortColumn === header
+                    ? sortOrder === "asc"
+                      ? "🔼"
+                      : "🔽"
+                    : ""}
                 </Th>
               ))}
               <Th position="sticky" top={0} zIndex={1} bg={bgColor}></Th>
             </Tr>
           </Thead>
           <Tbody>
-            {data.map((row, rowIndex) => (
+            {sortedData.map((row, rowIndex) => (
               <Tr key={rowIndex}>
                 {columns.map((header) => (
                   <Td key={header}>{renderCell(header, row[header])}</Td>

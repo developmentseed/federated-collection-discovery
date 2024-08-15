@@ -6,8 +6,8 @@ from httpx import (
     AsyncClient,
 )
 
-from federated_collection_discovery.config import Settings
 from federated_collection_discovery.main import app, get_settings
+from federated_collection_discovery.models import Settings
 
 
 @pytest.fixture

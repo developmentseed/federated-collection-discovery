@@ -1,4 +1,5 @@
 import * as React from "react";
+import ReactMarkdown from "react-markdown";
 import {
   ChakraProvider,
   Box,
@@ -13,7 +14,7 @@ import {
 } from "@chakra-ui/react";
 
 import { ColorModeSwitcher } from "./ColorModeSwitcher";
-import { searchApi, API_URL } from "./api/search";
+import { getApiDocs, searchApi, API_URL } from "./api/search";
 
 const HealthStatus = React.lazy(() => import("./components/HealthStatus"));
 const SearchForm = React.lazy(() => import("./components/SearchForm"));
@@ -22,6 +23,25 @@ const ResultsTable = React.lazy(() => import("./components/ResultsTable"));
 export const App = () => {
   const [results, setResults] = React.useState<Array<Record<string, any>>>([]);
   const [loading, setLoading] = React.useState<boolean>(false);
+
+  const [docsLoading, setDocsLoading] = React.useState(true);
+  const [apiDocs, setApiDocs] = React.useState<any | null>(null);
+
+  React.useEffect(() => {
+    async function fetchApiDocs() {
+      try {
+        setDocsLoading(true);
+        const apiDocs = await getApiDocs();
+        setApiDocs(apiDocs);
+      } catch (err) {
+        console.error("Failed to fetch API documentation", err);
+      } finally {
+        setDocsLoading(false);
+      }
+    }
+
+    fetchApiDocs();
+  }, []);
 
   const handleSearch = async (formData: {
     bbox: string;
@@ -46,30 +66,26 @@ export const App = () => {
 
   return (
     <ChakraProvider theme={theme}>
-      <Box textAlign="left" fontSize="xl" minH="100vh" p={3}>
+      <Box textAlign="left" fontSize="large" minH="100vh" p={1}>
         <Flex direction="column">
           <Flex direction={flexDirection}>
-            <Box mb={{ base: 4, lg: 0 }} flex="1" maxWidth="500px">
+            <Box mb={{ base: 4, lg: 0 }} flex="1" maxWidth="500px" height="90%">
               <VStack align="left" spacing={4}>
                 <Heading>Federated Collection Discovery</Heading>
-                <Text align="left">
-                  Use spatial, temporal, and keyword search terms to discover
-                  geospatial collections across multiple STAC APIs.
-                </Text>
-                <Text align="left">
-                  Only performs a collection-level search, will not return
-                  item-level results!
-                </Text>
+                {docsLoading ? (
+                  <Spinner />
+                ) : (
+                  <ReactMarkdown>{apiDocs.info.description}</ReactMarkdown>
+                )}
                 <Heading size="md" textAlign="left">
-                  Federated Collection Discovery API Health
+                  API Health ({API_URL})
                 </Heading>
-                <Text>API URL: {API_URL}</Text>
                 <React.Suspense fallback={<Spinner size="md" />}>
                   <HealthStatus />
                 </React.Suspense>
                 <Heading size="md">Collection search:</Heading>
                 <React.Suspense fallback={<Spinner size="md" />}>
-                  <SearchForm onSubmit={handleSearch} />
+                  <SearchForm onSubmit={handleSearch} apiDocs={apiDocs} />
                 </React.Suspense>
                 <Text>
                   {results.length > 0
@@ -91,7 +107,7 @@ export const App = () => {
                 </Box>
               ) : (
                 <React.Suspense fallback={<Spinner size="xl" />}>
-                  <Box w="100%" height="100%">
+                  <Box w="100%" height="95vh" overflowY="auto">
                     <ResultsTable data={results} />
                   </Box>
                 </React.Suspense>
