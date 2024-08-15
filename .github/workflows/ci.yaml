@@ -82,7 +82,7 @@ jobs:
           path: |
             src/client/node_modules
             src/client/.yarn
-          key: yarn-cache-${{ runner.os }}-${{ hashFiles('client_app/src/client/yarn.lock') }}
+          key: yarn-cache-${{ runner.os }}-${{ hashFiles('src/client/yarn.lock') }}
           restore-keys: |
             yarn-cache-${{ runner.os }}-
 
