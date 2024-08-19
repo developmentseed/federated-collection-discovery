@@ -143,7 +143,7 @@ Initiates a search for collections that match the specified criteria.
   - `bbox` (query parameter, comma separated list of floats)
   - `datetime` (query parameter, datetime range separated by `/`, e.g.
     `2024-06-01T00:00:00Z/2024-07-12T12:00:00Z`)
-  - `text` (query parameter, str)
+  - `q` (query parameter, str)
 - **Response:**
   - A JSON object containing an array of results.
 
@@ -156,7 +156,7 @@ Example Requests:
       "http://localhost:8000/search?` \
       `bbox=-180.0,-90.0,180.0,90.0&` \
       `datetime=2020-01-01T00:00:00Z/2020-12-31T23:59:59Z&` \
-      `text=hls" | jq
+      `q=hls" | jq
     ```
 
 2. Look for collections with `'elevation'` in one of the text fields that intersects
@@ -166,7 +166,7 @@ a part of North America:
     curl -X GET \
       "http://localhost:8000/search?` \
       `bbox=-120,40,-110,50&` \
-      `text=elevation" | jq
+      `q=elevation" | jq
     ```
 
 The arguments are consistent with the STAC API Item Search spec.
