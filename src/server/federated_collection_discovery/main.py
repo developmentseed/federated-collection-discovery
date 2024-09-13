@@ -127,6 +127,36 @@ description = f"""
 Discover data collections from across a set of APIs by filtering 
 collections using bounding box, datetime intervals, and/or keywords.
 
+**Usage:**
+
+- The `/search` endpoint allows you to perform a federated search across multiple 
+datasets.
+You can specify parameters such as bounding box coordinates, datetime intervals, and 
+keywords to refine your search.
+
+**Example Requests:**
+
+1. **Bounding Box Search:**
+   ```bash
+   curl -X 'GET' \
+   '$API_URL/search?bbox=-175.05,-85.05,175.05,85.05' \
+   -H 'accept: application/json'
+   ```
+
+2. **Datetime Interval Search:**
+   ```bash
+   curl -X 'GET' \
+   '$API_URL/search?datetime=2024-08-01T00:00:00Z/..' \
+   -H 'accept: application/json'
+   ```
+
+3. **Keyword Search:**
+   ```bash
+   curl -X 'GET' \
+   '$API_URL/search?q=landsat OR sentinel' \
+   -H 'accept: application/json'
+   ```
+
 By default, this application will perform a collection-level search across all of these 
 APIs:
 
