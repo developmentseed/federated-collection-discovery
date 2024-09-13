@@ -1,6 +1,11 @@
 # Federated Collection Discovery
 
-<img src="src/client/src/assets/logo.svg" alt="federated collection discovery logo" width="200">
+<img
+    src="src/client/src/assets/logo.svg"
+    alt="federated collection discovery logo is a modified version of the
+    proposed Fediverse logo but with a geographic theme"
+    width="200"
+/>
 
 This project makes it possible to search across multiple
 geospatial metadata catalogs, such as STAC and NASA CMR, based on provided
