@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  Image,
   Input,
   Button,
   Flex,
@@ -29,6 +30,8 @@ interface Props {
   onSubmit: (data: FormData) => void;
   apiDocs: any;
 }
+
+const GitHubLogo = require("../assets/github-mark.svg").default;
 
 const SearchForm: React.FC<Props> = ({ onSubmit, apiDocs }) => {
   const {
@@ -178,6 +181,16 @@ const SearchForm: React.FC<Props> = ({ onSubmit, apiDocs }) => {
         <HStack justify="space-between" width="100%">
           <Button onClick={onDocOpen} colorScheme="blue">
             API docs
+          </Button>
+          <Button
+            as="a"
+            href="https://github.com/developmentseed/federated-collection-discovery"
+            colorScheme="orange"
+            leftIcon={<Image src={GitHubLogo} boxSize="1.5em" alt="GitHub" />}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            source
           </Button>
           <Button type="submit" colorScheme="teal">
             Search
