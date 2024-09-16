@@ -62,7 +62,7 @@ class CMRCollectionSearch(CollectionSearch):
             yield from (
                 self.collection_metadata(collection)
                 for collection_search in collection_searches
-                for collection in set(collection_search.get())
+                for collection in collection_search.get()
             )
         except Exception as e:
             yield FederatedSearchError(catalog_url=self.base_url, error_message=str(e))
