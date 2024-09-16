@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Nothing
 
+## 0.1.4
+
+### Fixed
+
+- Do not try to return a `set` from a `dict` in CMR search
+
+## 0.1.3
+
+### Added
+
+- Add link to GitHub source in client application
+
 ## 0.1.2
 
 ### Added
