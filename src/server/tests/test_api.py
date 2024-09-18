@@ -2,7 +2,7 @@ import pytest
 from asgi_lifespan import LifespanManager
 from fastapi.testclient import TestClient
 from httpx import (
-    # ASGITransport,
+    ASGITransport,
     AsyncClient,
 )
 
@@ -22,12 +22,9 @@ async def client(mock_apis):
 
     # Manually start and stop the FastAPI lifespan
     async with LifespanManager(app):
-        # waiting on a new release of httpx to avoid the deprecation warning
-        # which should be fixed: https://github.com/encode/httpx/pull/3109
-        # transport = ASGITransport(app)
+        transport = ASGITransport(app)
         async with AsyncClient(
-            app=app,
-            # transport=transport,
+            transport=transport,
             base_url="http://test",
         ) as ac:
             yield ac

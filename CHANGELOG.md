@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-- Nothing
+- Upgrade to httpx==0.27.2
 
 ## 0.1.4
 

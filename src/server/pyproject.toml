@@ -21,7 +21,7 @@ stac-fastapi-types = "^3.0.0"
 pydantic-settings = "^2.3.4"
 # Used as main dependency to format Python code hints in responses
 black = "^24.4.2"
-httpx = "^0.27.0"
+httpx = "^0.27.2"
 python-cmr = "^0.11.0"
 fastapi = "^0.111.1"
 uvicorn = { version = "^0.30.1", optional = true }
