@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### Fixed
+
+- Display all bounding boxes from a collection's spatial extent in the
+  details map [#27](https://github.com/developmentseed/federated-collection-discovery/pull/27)
+- Improve format of temporal range in collection details
+
+## 0.1.5
+
+### Added
+
+- Replace STAC collection filter code with `pystac_client.Client.collection_search`
+  [#26](https://github.com/developmentseed/federated-collection-discovery/pull/26)
+- Migrate from `poetry` to `uv` [#26](https://github.com/developmentseed/federated-collection-discovery/pull/26)
 - Upgrade to httpx==0.27.2
 
 ## 0.1.4
