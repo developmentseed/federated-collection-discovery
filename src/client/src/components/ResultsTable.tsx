@@ -40,10 +40,50 @@ interface SpatialExtentArrayFormat {
 }
 
 const convertToSpatialExtent = (
-  extent: [number, number, number, number],
-): SpatialExtentArrayFormat => {
-  const [west, south, east, north] = extent;
-  return { west, south, east, north };
+  extents: [number, number, number, number][],
+): SpatialExtentArrayFormat[] => {
+  return extents.map(([west, south, east, north]) => ({
+    west,
+    south,
+    east,
+    north,
+  }));
+};
+
+const formatTemporalRange = (ranges: any[]): string => {
+  const formatDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return "Open";
+    const date = new Date(dateString);
+    return isNaN(date.getTime())
+      ? "Invalid Date"
+      : date.toISOString().split("T")[0];
+  };
+
+  const formatSingleRange = (range: any[]): string => {
+    if (!Array.isArray(range) || range.length < 2) {
+      return "Invalid range";
+    }
+
+    const [start, end] = range;
+    const formattedStart = formatDate(start);
+    const formattedEnd = formatDate(end);
+
+    if (formattedStart === "Open" && formattedEnd === "Open") {
+      return "Undefined range";
+    } else if (formattedStart === "Open") {
+      return `- ${formattedEnd}`;
+    } else if (formattedEnd === "Open") {
+      return `${formattedStart} - `;
+    } else {
+      return `${formattedStart} - ${formattedEnd}`;
+    }
+  };
+
+  if (!Array.isArray(ranges) || ranges.length === 0) {
+    return "No temporal extent data";
+  }
+
+  return ranges.map(formatSingleRange).join(", ");
 };
 
 interface Props {
@@ -100,8 +140,7 @@ const ResultsTable: React.FC<Props> = ({ data }) => {
 
   const renderCell = (header: string, value: any) => {
     if (header === "temporal_range" && Array.isArray(value)) {
-      const [start, end] = value;
-      return `${start ? new Date(start).toLocaleDateString() : "Start Unknown"} - ${end ? new Date(end).toLocaleDateString() : "Present"}`;
+      return formatTemporalRange(value);
     } else if (header === "keywords" && Array.isArray(value)) {
       return (
         <Wrap>
@@ -183,10 +222,10 @@ const ResultsTable: React.FC<Props> = ({ data }) => {
                     </SyntaxHighlighter>
                   ) : key === "spatial_extent" ? (
                     <MapDisplay
-                      spatialExtent={convertToSpatialExtent(value[0])}
+                      spatialExtents={convertToSpatialExtent(value)}
                     />
-                  ) : key === "temporal_range" && Array.isArray(value) ? (
-                    <Text>{renderCell("temporal_range", value)}</Text>
+                  ) : key === "temporal_extent" && Array.isArray(value) ? (
+                    <Text>{formatTemporalRange(value)}</Text>
                   ) : key === "keywords" && Array.isArray(value) ? (
                     renderCell("keywords", value)
                   ) : (
@@ -206,29 +245,41 @@ const ResultsTable: React.FC<Props> = ({ data }) => {
 };
 
 interface MapDisplayProps {
-  spatialExtent: SpatialExtentArrayFormat;
+  spatialExtents: SpatialExtentArrayFormat[];
 }
 
-const MapDisplay: React.FC<MapDisplayProps> = ({ spatialExtent }) => {
+const MapDisplay: React.FC<MapDisplayProps> = ({ spatialExtents }) => {
   if (
-    typeof spatialExtent.south !== "number" ||
-    typeof spatialExtent.west !== "number" ||
-    typeof spatialExtent.north !== "number" ||
-    typeof spatialExtent.east !== "number"
+    spatialExtents.length === 0 ||
+    spatialExtents.some(
+      (extent) =>
+        typeof extent.south !== "number" ||
+        typeof extent.west !== "number" ||
+        typeof extent.north !== "number" ||
+        typeof extent.east !== "number",
+    )
   ) {
     return <Text>Invalid spatial extent data</Text>;
   }
 
-  const bounds: [number, number][] = [
-    [spatialExtent.south, spatialExtent.west],
-    [spatialExtent.north, spatialExtent.east],
-  ];
+  const allBounds: [number, number][][] = spatialExtents.map((extent) => [
+    [extent.south, extent.west],
+    [extent.north, extent.east],
+  ]);
+
+  // Calculate the overall bounds to fit all rectangles
+  const overallBounds = allBounds.reduce((acc, bounds) => {
+    return [
+      [Math.min(acc[0][0], bounds[0][0]), Math.min(acc[0][1], bounds[0][1])],
+      [Math.max(acc[1][0], bounds[1][0]), Math.max(acc[1][1], bounds[1][1])],
+    ];
+  }, allBounds[0]);
 
   return (
     <Box height="300px">
       <MapContainer
         style={{ height: "100%", width: "100%" }}
-        bounds={bounds}
+        bounds={overallBounds}
         maxBounds={[
           [-90, -180],
           [90, 180],
@@ -237,7 +288,13 @@ const MapDisplay: React.FC<MapDisplayProps> = ({ spatialExtent }) => {
         scrollWheelZoom={true}
       >
         <CommonTileLayer />
-        <Rectangle bounds={bounds} pathOptions={{ color: "red" }} />
+        {allBounds.map((bounds, index) => (
+          <Rectangle
+            key={index}
+            bounds={bounds}
+            pathOptions={{ color: "red" }}
+          />
+        ))}
       </MapContainer>
     </Box>
   );
