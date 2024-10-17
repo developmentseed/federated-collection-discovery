@@ -41,7 +41,8 @@ async def test_search_no_params(mock_apis, client):
 @pytest.mark.anyio
 async def test_search_with_bbox(mock_apis, client):
     bbox = "-130,45,-125,46"
-    response = await client.get("/search", params={"bbox": bbox})
+    with pytest.warns(UserWarning, match="does not conform to COLLECTION_SEARCH"):
+        response = await client.get("/search", params={"bbox": bbox})
     assert response.status_code == 200
     json_response = response.json()
     assert len(json_response["results"]) == 3
@@ -50,13 +51,15 @@ async def test_search_with_bbox(mock_apis, client):
 @pytest.mark.anyio
 async def test_search_with_datetime(mock_apis, client):
     datetime = "2024-01-01T00:00:00Z/.."
-    response = await client.get("/search", params={"datetime": datetime})
+    with pytest.warns(UserWarning, match="does not conform to COLLECTION_SEARCH"):
+        response = await client.get("/search", params={"datetime": datetime})
     assert response.status_code == 200
     json_response = response.json()
     assert len(json_response["results"]) == 3
 
     datetime = "2020-01-01T00:00:00Z/2020-01-02T00:00:00Z"
-    response = await client.get("/search", params={"datetime": datetime})
+    with pytest.warns(UserWarning, match="does not conform to COLLECTION_SEARCH"):
+        response = await client.get("/search", params={"datetime": datetime})
     assert response.status_code == 200
     json_response = response.json()
     assert len(json_response["results"]) == 2
@@ -65,13 +68,15 @@ async def test_search_with_datetime(mock_apis, client):
 @pytest.mark.anyio
 async def test_search_with_q(mock_apis, client):
     q = "awesome"
-    response = await client.get("/search", params={"q": q})
+    with pytest.warns(UserWarning, match="does not conform to COLLECTION_SEARCH"):
+        response = await client.get("/search", params={"q": q})
     assert response.status_code == 200
     json_response = response.json()
     assert len(json_response["results"]) == 2
 
     q = "appropriate"
-    response = await client.get("/search", params={"q": q})
+    with pytest.warns(UserWarning, match="does not conform to COLLECTION_SEARCH"):
+        response = await client.get("/search", params={"q": q})
     assert response.status_code == 200
     json_response = response.json()
     assert len(json_response["results"]) == 2
@@ -82,9 +87,10 @@ async def test_search_with_all_params(mock_apis, client):
     bbox = "10,10,20,20"
     datetime = "2020-01-01T00:00:00Z/2020-01-31T23:59:59Z"
     q = "awesome"
-    response = await client.get(
-        "/search", params={"bbox": bbox, "datetime": datetime, "q": q}
-    )
+    with pytest.warns(UserWarning, match="does not conform to COLLECTION_SEARCH"):
+        response = await client.get(
+            "/search", params={"bbox": bbox, "datetime": datetime, "q": q}
+        )
     assert response.status_code == 200
     json_response = response.json()
     assert len(json_response["results"]) == 1

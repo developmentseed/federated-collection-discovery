@@ -35,9 +35,10 @@ async def test_search_bbox(executor, mock_apis):
         ],
     )
 
-    assert (
-        len(list(actual_metadata)) == 4
-    )  # all but one of the mocked collections in conftest.py
+    with pytest.warns(UserWarning, match="does not conform to COLLECTION_SEARCH"):
+        assert (
+            len(list(actual_metadata)) == 4
+        )  # all but one of the mocked collections in conftest.py
 
 
 @pytest.mark.asyncio
@@ -57,9 +58,10 @@ async def test_search_datetime(executor, mock_apis):
         ],
     )
 
-    assert (
-        len(list(actual_metadata)) == 3
-    )  # all but one of the mocked collections in conftest.py
+    with pytest.warns(UserWarning, match="does not conform to COLLECTION_SEARCH"):
+        assert (
+            len(list(actual_metadata)) == 3
+        )  # all but one of the mocked collections in conftest.py
 
 
 @pytest.mark.asyncio
@@ -74,27 +76,29 @@ async def test_search_all_no_collections(executor, mock_apis):
 
 
 @pytest.mark.asyncio
+@pytest.mark.vcr
 async def test_stac_api_and_cmr(executor, mock_apis):
     # test a search that should only yield results from CMR
     text = "hls"
-    actual_metadata = list(
-        await search_all(
-            executor,
-            catalogs=[
-                STACAPICollectionSearch(
-                    base_url=mock_api_url,
-                    q=text,
-                )
-                for mock_api_url in mock_apis
-            ]
-            + [
-                CMRCollectionSearch(
-                    base_url=CMR_OPS,
-                    q=text,
-                )
-            ],
+    with pytest.warns(UserWarning, match="does not conform to COLLECTION_SEARCH"):
+        actual_metadata = list(
+            await search_all(
+                executor,
+                catalogs=[
+                    STACAPICollectionSearch(
+                        base_url=mock_api_url,
+                        q=text,
+                    )
+                    for mock_api_url in mock_apis
+                ]
+                + [
+                    CMRCollectionSearch(
+                        base_url=CMR_OPS,
+                        q=text,
+                    )
+                ],
+            )
         )
-    )
 
     assert len(actual_metadata) > 1
     for result in actual_metadata:
@@ -103,24 +107,25 @@ async def test_stac_api_and_cmr(executor, mock_apis):
 
     # test a search that should only yield results from the STAC APIs
     text = "awesome"
-    actual_metadata = list(
-        await search_all(
-            executor,
-            catalogs=[
-                STACAPICollectionSearch(
-                    base_url=mock_api_url,
-                    q=text,
-                )
-                for mock_api_url in mock_apis
-            ]
-            + [
-                CMRCollectionSearch(
-                    base_url=CMR_OPS,
-                    q=text,
-                )
-            ],
+    with pytest.warns(UserWarning, match="does not conform to COLLECTION_SEARCH"):
+        actual_metadata = list(
+            await search_all(
+                executor,
+                catalogs=[
+                    STACAPICollectionSearch(
+                        base_url=mock_api_url,
+                        q=text,
+                    )
+                    for mock_api_url in mock_apis
+                ]
+                + [
+                    CMRCollectionSearch(
+                        base_url=CMR_OPS,
+                        q=text,
+                    )
+                ],
+            )
         )
-    )
 
     assert len(actual_metadata) > 1
     for result in actual_metadata:
