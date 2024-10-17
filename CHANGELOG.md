@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+- Nothing
+
+## 0.1.6
+
 ### Fixed
 
 - Display all bounding boxes from a collection's spatial extent in the
