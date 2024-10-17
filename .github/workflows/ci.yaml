@@ -137,6 +137,7 @@ jobs:
           uv build
 
       - name: Publish to pypi
+        if: env.tag == env.version
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: src/server/dist/
