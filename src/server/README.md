@@ -43,38 +43,25 @@ git clone git@github.com:developmentseed/federated-collection-discovery.git
 cd federated-collection-discovery
 ```
 
-### Install Poetry
+### Install `uv`
 
-Ensure you have Poetry installed. If not, install it:
+Ensure you have uv installed. If not, install it:
 
 ```bash
-curl -sSL https://install.python-poetry.org | python3 -
+# install uv
+
+# unix
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# or on windows
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
-Add Poetry to your system's PATH:
-
-- **For Unix/MacOS:**
-
-  ```bash
-  export PATH="$HOME/.local/bin:$PATH"
-  ```
-  
-  Add the above line to your shell configuration file (`~/.bashrc`,
-  `~/.bash_profile`, or `~/.zshrc`) to make it permanent.
-
-- **For Windows:**
-
-  Add the path to your `PATH` environment variable through the system environment
-  variable settings.
-
-### Install
+### Install `federated_collection_discovery`
 
 Navigate to the `src/server` directory and install the dependencies (in a virtual
 environment) using Poetry:
 
 ```bash
-python3 -m venv env
-source env/bin/activate
-cd src/server
-poetry install
+uv sync --all-extras
 ```
