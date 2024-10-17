@@ -11,32 +11,37 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
       
-      - name: Install Poetry
-        uses: Gr1N/setup-poetry@v9
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
         with:
-          poetry-version: "1.8.0"
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        env:
-          POETRY_VIRTUALENVS_IN_PROJECT: "true"
-        with:
-          python-version: "3.12"
-          cache: poetry
-          cache-dependency-path: src/server/poetry.lock
-
-      - name: Install dependencies including dev dependencies
+          version: "0.4.22" 
+          enable-cache: true
+    
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+      
+      - name: Install dependencies
         working-directory: src/server
-        run: poetry install --with dev
+        run: |
+          uv sync --all-extras
 
-      - name: Run Tests
+      - name: run pre-commit
+        if: ${{ matrix.python-version == env.LATEST_PY_VERSION }}
         working-directory: src/server
-        run: poetry run pytest
+        run: |
+          uv run pre-commit run --all-files
+
+      - name: Run tests
+        working-directory: src/server
+        run: uv run pytest
 
   check-client-changes:
     runs-on: ubuntu-latest
@@ -107,20 +112,15 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
       
-      - name: Install Poetry
-        uses: Gr1N/setup-poetry@v9
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
         with:
-          poetry-version: "1.8.0"
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        env:
-          POETRY_VIRTUALENVS_IN_PROJECT: "true"
-        with:
-          python-version: "3.12"
-          cache: poetry
-          cache-dependency-path: src/server/poetry.lock
-
+          version: "0.4.22" 
+          enable-cache: true
+    
+      - name: Set up Python 3.12
+        run: uv python install 3.12
+      
       - name: Set tag version
         id: tag
         run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
@@ -134,8 +134,7 @@ jobs:
         if: env.tag == env.version
         working-directory: src/server
         run: |
-          poetry self add poetry-version-plugin
-          poetry build
+          uv build
 
       - name: Publish to pypi
         uses: pypa/gh-action-pypi-publish@release/v1

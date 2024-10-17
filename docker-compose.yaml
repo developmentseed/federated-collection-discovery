@@ -3,14 +3,18 @@ services:
     build: 
       context: ./src/server
       dockerfile: ./docker/Dockerfile
-      target: local
     container_name: federated-collection-discovery-server
     ports:
       - "8000:8000"
-    volumes:
-      - ./src/server/federated_collection_discovery:/work/federated_collection_discovery
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./src/server/federated_collection_discovery/
+          target: /app/federated_collection_discovery/
+        - action: rebuild
+          path: ./pyproject.toml
     environment:
-      - PYTHONUNBUFFERED=1
+      - PORT=8000
       - FEDERATED_STAC_API_URLS=https://stac.maap-project.org/,https://openveda.cloud/api/stac/,https://catalogue.dataspace.copernicus.eu/stac
       - FEDERATED_CMR_URLS=https://cmr.earthdata.nasa.gov/search/
   client:

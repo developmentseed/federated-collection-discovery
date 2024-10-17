@@ -17,7 +17,7 @@ items.
 
 - [Prerequisites](#prerequisites)
 - [Setup Using Docker](#setup-using-docker)
-- [Setup Using Virtual Environment and Poetry](#setup-using-virtual-environment-and-poetry)
+- [Setup Using `uv`](#setup-using-uv)
 - [API Endpoints](#api-endpoints)
 - [Example API usage](#example-api-usage)
 
@@ -55,74 +55,39 @@ same endpoints:
 - Backend (FastAPI): `http://localhost:8000`
 - Frontend (React): `http://localhost:3000`
 
-## Setup Using Virtual Environment and Poetry
+## Setup Using `uv`
 
-### 1. Create and Activate a Virtual Environment
+### 1. Install `uv`
 
-It is recommended to use a virtual environment to manage your project dependencies.
-
-Create a virtual environment:
+Ensure you have uv installed. If not, install it:
 
 ```bash
-python3 -m venv venv
+# install uv
+
+# unix
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# or on windows
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
-Activate the virtual environment:
+### 2. Install Dependencies
 
-- **For Unix/MacOS:**
-
-  ```bash
-  source venv/bin/activate
-  ```
-
-- **For Windows:**
-
-  ```bash
-  venv\Scripts\activate
-  ```
-
-### 2. Install Poetry
-
-Ensure you have Poetry installed. If not, install it:
-
-```bash
-curl -sSL https://install.python-poetry.org | python3 -
-```
-
-Add Poetry to your system's PATH:
-
-- **For Unix/MacOS:**
-
-  ```bash
-  export PATH="$HOME/.local/bin:$PATH"
-  ```
-  
-  Add the above line to your shell configuration file (`~/.bashrc`,
-  `~/.bash_profile`, or `~/.zshrc`) to make it permanent.
-
-- **For Windows:**
-
-  Add the path to your `PATH` environment variable through the system environment
-  variable settings.
-
-### 3. Install Dependencies
-
-Navigate to the `src/server` directory and install the dependencies using Poetry:
+Navigate to the `src/server` directory and install the dependencies using `uv`:
 
 ```bash
 cd src/server
-poetry install
+uv sync --all-extras
 ```
 
-### 4. Run the Application
+### 3. Run the Application
 
 Navigate to the `src/server` directory, activate your virtual environment, and
 run the FastAPI server using Uvicorn:
 
 ```bash
 cd src/server
-source venv/bin/activate  # or `venv\Scripts\activate` for Windows
-poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 Navigate to the `src/client` directory and start the React development server:
