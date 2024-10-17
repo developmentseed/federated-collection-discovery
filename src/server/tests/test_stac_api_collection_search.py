@@ -1,5 +1,7 @@
 from datetime import datetime
 
+import pytest
+
 from federated_collection_discovery.hint import PYTHON
 from federated_collection_discovery.models import (
     CollectionMetadata,
@@ -28,7 +30,8 @@ def test_bbox(mock_apis):
         bbox=(-115, 45, -114, 46),
     )
 
-    assert len(list(bbox_search.get_collection_metadata())) == 2
+    with pytest.warns(UserWarning, match="does not conform to COLLECTION_SEARCH"):
+        assert len(list(bbox_search.get_collection_metadata())) == 2
 
     # the second STAC has one collection with a limited bbox
     bbox_search = STACAPICollectionSearch(
@@ -36,7 +39,8 @@ def test_bbox(mock_apis):
         bbox=(-130, 45, -125, 46),
     )
 
-    assert len(list(bbox_search.get_collection_metadata())) == 1
+    with pytest.warns(UserWarning, match="does not conform to COLLECTION_SEARCH"):
+        assert len(list(bbox_search.get_collection_metadata())) == 1
 
 
 def test_datetime(mock_apis):
@@ -48,7 +52,8 @@ def test_datetime(mock_apis):
             datetime(year=2020, month=1, day=2, hour=12),
         ),
     )
-    assert len(list(datetime_search.get_collection_metadata())) == 1
+    with pytest.warns(UserWarning, match="does not conform to COLLECTION_SEARCH"):
+        assert len(list(datetime_search.get_collection_metadata())) == 1
 
 
 def test_text(mock_apis):
@@ -57,7 +62,8 @@ def test_text(mock_apis):
         base_url=mock_apis[0],
         q="another",
     )
-    assert len(list(text_search.get_collection_metadata())) == 1
+    with pytest.warns(UserWarning, match="does not conform to COLLECTION_SEARCH"):
+        assert len(list(text_search.get_collection_metadata())) == 1
 
 
 def test_hint(mock_apis):

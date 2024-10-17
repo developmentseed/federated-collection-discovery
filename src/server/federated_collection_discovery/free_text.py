@@ -19,53 +19,7 @@ https://www.postgresql.org/docs/current/functions-textsearch.html
 """
 
 import re
-import sqlite3
 from typing import List
-
-
-def parse_query_for_sqlite(q: str) -> str:
-    # separate out search terms, quoted exact phrases, commas, and exact phrases
-    tokens = [token.strip() for token in re.findall(r'"[^"]*"|,|[\(\)]|[^,\s\(\)]+', q)]
-
-    for i, token in enumerate(tokens):
-        if token.startswith("+"):
-            tokens[i] = token[1:].strip()
-        elif token.startswith("-"):
-            tokens[i] = "NOT " + token[1:].strip()
-        elif token == ",":
-            tokens[i] = "OR"
-
-    return " ".join(tokens)
-
-
-def sqlite_text_search(q: str, text_fields: dict[str, str]) -> bool:
-    column_clause = ", ".join(text_fields.keys())
-    value_clause = ", ".join(["?" for _ in text_fields.keys()])
-
-    with sqlite3.connect(":memory:") as conn:  # Use an in-memory database
-        cursor = conn.cursor()
-
-        cursor.execute(
-            f"""
-        CREATE VIRTUAL TABLE collections USING fts5({column_clause});
-        """
-        )
-
-        cursor.execute(
-            f"""
-        INSERT INTO collections ({column_clause}) VALUES ({value_clause});
-        """,
-            tuple(text_fields.values()),
-        )
-
-        cursor.execute(
-            f"""
-        SELECT COUNT(*)
-        FROM collections WHERE collections MATCH '{parse_query_for_sqlite(q)}';
-        """
-        )
-
-        return bool(cursor.fetchone()[0])
 
 
 def escape_regex(term):
