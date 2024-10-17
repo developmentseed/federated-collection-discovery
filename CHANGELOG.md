@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Nothing
 
+## 0.1.7
+
+- Do not suggest users run `search.item_collection()` since that might
+  return a massive number of items!
+
 ## 0.1.6
 
 ### Fixed

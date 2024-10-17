@@ -79,7 +79,6 @@ def test_hint(mock_apis):
         "import pystac_client\n\n"
         'catalog = pystac_client.Client.open("https://stac1.net")\n'
         'search = catalog.search(collections="collection-1")'
-        "\nitem_collection = search.item_collection()"
     )
     for i, result in enumerate(results):
         assert isinstance(result, CollectionMetadata)

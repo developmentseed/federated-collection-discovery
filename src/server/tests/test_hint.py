@@ -139,7 +139,6 @@ def test_pystac_client_hint_no_params():
             "import pystac_client\n\n"
             'catalog = pystac_client.Client.open("https://stac1.net")\n'
             'search = catalog.search(collections="collection-1")\n'
-            "item_collection = search.item_collection()"
         ),
         mode=black.FileMode(),
     )
@@ -159,7 +158,6 @@ def test_pystac_client_hint_with_bbox():
             'catalog = pystac_client.Client.open("https://stac2.net")\n'
             'search = catalog.search(collections="collection-2",'
             "bbox=(10,20,30,40),)\n"
-            "item_collection = search.item_collection()"
         ),
         mode=black.FileMode(),
     )
@@ -182,7 +180,6 @@ def test_pystac_client_hint_with_datetime_interval():
             'catalog = pystac_client.Client.open("https://stac3.net")\n'
             'search = catalog.search(collections="collection-3", '
             'datetime="2023-01-01T00:00:00Z/2023-12-31T23:59:59Z",)\n'
-            "item_collection = search.item_collection()"
         ),
         mode=black.FileMode(),
     )
@@ -208,7 +205,6 @@ def test_pystac_client_hint_with_bbox_and_datetime_interval():
             'collections="collection-4",'
             "bbox=(10,20,30,40),\n"
             'datetime="2022-06-01T00:00:00Z/2022-06-30T23:59:59Z")\n'
-            "item_collection = search.item_collection()"
         ),
         mode=black.FileMode(),
     )

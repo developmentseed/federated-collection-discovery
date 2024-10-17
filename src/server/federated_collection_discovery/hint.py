@@ -10,7 +10,6 @@ PYSTAC_CLIENT_HINT = """import pystac_client
 
 catalog = pystac_client.Client.open("{base_url}")
 search = catalog.search(collections="{collection_id}"{remainder})
-item_collection = search.item_collection()
 """
 
 CMR_PYTHON_HINT = """from cmr import GranuleQuery
