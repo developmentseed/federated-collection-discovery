@@ -5,9 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## Unreleased
+## 0.1.8
 
-- Nothing
+- add earthaccess and rstac code hints
+
+- surface API errors and warnings in the client app
+
+- validate bounding box input in search form of the client app
+
+- attempt to normalize spatial extents if format is bad
 
 ## 0.1.7
 
