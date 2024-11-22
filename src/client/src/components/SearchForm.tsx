@@ -8,7 +8,7 @@ import {
   HStack,
   FormControl,
   FormLabel,
-  Select,
+  FormErrorMessage,
   useDisclosure,
   Spacer,
 } from "@chakra-ui/react";
@@ -23,17 +23,18 @@ type FormData = {
   bbox: string;
   datetime: string;
   q: string;
-  hint_lang: string;
 };
 
 interface Props {
   onSubmit: (data: FormData) => void;
   apiDocs: any;
+  apiError?: string | null; // API-level errors
+  isLoading?: boolean;
 }
 
 const GitHubLogo = require("../assets/github-mark.svg").default;
 
-const SearchForm: React.FC<Props> = ({ onSubmit, apiDocs }) => {
+const SearchForm: React.FC<Props> = ({ onSubmit, apiDocs, isLoading }) => {
   const {
     isOpen: isMapOpen,
     onOpen: onMapOpen,
@@ -54,13 +55,49 @@ const SearchForm: React.FC<Props> = ({ onSubmit, apiDocs }) => {
     startDatetime: null,
     endDatetime: null,
     q: "",
-    hint_lang: "python",
   });
+
+  // Add state for validation error
+  const [bboxError, setBboxError] = useState<string>("");
+
+  // Validation function for bounding box
+  const validateBbox = (value: string): boolean => {
+    if (!value) return true; // Empty value is valid (optional field)
+
+    // Remove multiple spaces and trim
+    const cleanedValue = value.replace(/\s+/g, " ").trim();
+
+    // Split by comma or space
+    const coordinates = cleanedValue.split(/[\s,]+/);
+
+    if (coordinates.length !== 4) {
+      setBboxError("Please enter exactly 4 numbers");
+      return false;
+    }
+
+    // Check if all values are valid numbers
+    const isValid = coordinates.every((coord) => {
+      const num = Number(coord);
+      return !isNaN(num) && isFinite(num);
+    });
+
+    if (!isValid) {
+      setBboxError("All values must be valid numbers");
+      return false;
+    }
+
+    // Clear error if validation passes
+    setBboxError("");
+    return true;
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
+    if (name === "bbox") {
+      validateBbox(value);
+    }
     setFormData({ ...formData, [name]: value });
   };
 
@@ -90,7 +127,13 @@ const SearchForm: React.FC<Props> = ({ onSubmit, apiDocs }) => {
   };
 
   const handleSubmit = (event?: React.FormEvent) => {
-    event?.preventDefault(); // Prevent default form submission
+    event?.preventDefault();
+
+    // Validate bbox before submission
+    if (!validateBbox(formData.bbox)) {
+      return; // Prevent submission if validation fails
+    }
+
     const datetime = formatDateInterval(
       formData.startDatetime,
       formData.endDatetime,
@@ -99,7 +142,6 @@ const SearchForm: React.FC<Props> = ({ onSubmit, apiDocs }) => {
       bbox: formData.bbox,
       datetime,
       q: formData.q,
-      hint_lang: formData.hint_lang,
     };
     onSubmit(submitData);
   };
@@ -120,24 +162,34 @@ const SearchForm: React.FC<Props> = ({ onSubmit, apiDocs }) => {
   return (
     <form onKeyDown={handleKeyDown} onSubmit={handleSubmit}>
       <VStack spacing={4} align="stretch">
-        <FormControl id="bbox">
-          <FormLabel>Bounding Box Coordinates</FormLabel>
+        <FormControl id="q">
+          <strong>text search</strong>
+          <Input
+            name="q"
+            value={formData.q}
+            onChange={handleChange}
+            placeholder="Enter text"
+          />
+        </FormControl>
+        <FormControl id="bbox" isInvalid={!!bboxError}>
+          <strong>bounding box</strong> (xmin, ymin , xmax, ymax; EPSG:4326)
           <Input
             name="bbox"
             value={formData.bbox}
             onChange={handleChange}
             placeholder="Enter bounding box"
           />
+          {bboxError && <FormErrorMessage>{bboxError}</FormErrorMessage>}
           <Button onClick={onMapOpen} mt={2} colorScheme="teal">
             Draw on Map
           </Button>
         </FormControl>
 
         <FormControl>
-          <FormLabel>Temporal Range</FormLabel>
+          <strong>temporal range</strong>
           <Flex direction="row">
             <FormControl id="startDatetime" maxWidth="45%">
-              <FormLabel>Start Date</FormLabel>
+              <FormLabel>start date</FormLabel>
               <DatePicker
                 selected={formData.startDatetime}
                 onChange={(date) => handleDateChange(date, "startDatetime")}
@@ -148,7 +200,7 @@ const SearchForm: React.FC<Props> = ({ onSubmit, apiDocs }) => {
             </FormControl>
             <Spacer />
             <FormControl id="endDatetime" maxWidth="45%">
-              <FormLabel>End Date</FormLabel>
+              <FormLabel>end date</FormLabel>
               <DatePicker
                 selected={formData.endDatetime}
                 onChange={(date) => handleDateChange(date, "endDatetime")}
@@ -158,25 +210,6 @@ const SearchForm: React.FC<Props> = ({ onSubmit, apiDocs }) => {
               />
             </FormControl>
           </Flex>
-        </FormControl>
-        <FormControl id="q">
-          <FormLabel>Text Search</FormLabel>
-          <Input
-            name="q"
-            value={formData.q}
-            onChange={handleChange}
-            placeholder="Enter text"
-          />
-        </FormControl>
-        <FormControl id="hint_lang">
-          <FormLabel>Programming language for item search hint</FormLabel>
-          <Select
-            name="hint_lang"
-            value={formData.hint_lang}
-            onChange={handleChange}
-          >
-            <option value="python">Python</option>
-          </Select>
         </FormControl>
         <HStack justify="space-between" width="100%">
           <Button onClick={onDocOpen} colorScheme="blue">
@@ -192,7 +225,7 @@ const SearchForm: React.FC<Props> = ({ onSubmit, apiDocs }) => {
           >
             source
           </Button>
-          <Button type="submit" colorScheme="teal">
+          <Button type="submit" colorScheme="teal" isLoading={isLoading}>
             Search
           </Button>
         </HStack>

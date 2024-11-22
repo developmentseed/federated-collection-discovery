@@ -1,7 +1,9 @@
-from typing import Any, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 from pydantic_settings import BaseSettings
+
+from federated_collection_discovery.hint import Packages
 
 
 class Settings(BaseSettings):  # type: ignore
@@ -28,10 +30,9 @@ class CollectionMetadata(BaseModel):
     title: str
     spatial_extent: Any
     temporal_extent: Any
-    short_name: Optional[str] = None
     description: Optional[str] = None
     keywords: Optional[List[str]] = []
-    hint: Optional[str] = None
+    hint: Optional[Dict[Packages, str]] = None
 
 
 class FederatedSearchError(BaseModel):

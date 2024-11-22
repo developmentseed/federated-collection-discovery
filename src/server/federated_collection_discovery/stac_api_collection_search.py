@@ -5,7 +5,11 @@ from pystac_client.client import Client
 from pystac_client.exceptions import APIError
 
 from federated_collection_discovery.collection_search import CollectionSearch
-from federated_collection_discovery.hint import PYTHON, generate_pystac_client_hint
+from federated_collection_discovery.hint import (
+    Packages,
+    generate_pystac_client_hint,
+    generate_rstac_hint,
+)
 from federated_collection_discovery.models import (
     CollectionMetadata,
     FederatedSearchError,
@@ -54,16 +58,20 @@ class STACAPICollectionSearch(CollectionSearch):
             yield FederatedSearchError(catalog_url=self.base_url, error_message=str(e))
 
     def collection_metadata(self, collection: Collection) -> CollectionMetadata:
-        hint = (
-            generate_pystac_client_hint(
+        hint = {
+            Packages.PYSTAC_CLIENT: generate_pystac_client_hint(
                 base_url=self.base_url,
                 collection_id=collection.id,
                 bbox=self.bbox,
                 datetime_interval=self.datetime,
-            )
-            if self.hint_lang == PYTHON
-            else None
-        )
+            ),
+            Packages.RSTAC: generate_rstac_hint(
+                base_url=self.base_url,
+                collection_id=collection.id,
+                bbox=self.bbox,
+                datetime_interval=self.datetime,
+            ),
+        }
 
         extent_dict = collection.extent.to_dict()
 

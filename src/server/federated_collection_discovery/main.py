@@ -1,8 +1,9 @@
 import itertools
+import re
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import Annotated, Any, List, Literal, Optional
+from typing import Annotated, Any, List, Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -32,12 +33,18 @@ DEFAULT_LIMIT = 100
 
 
 def str_to_bbox(bbox_str: Optional[str]) -> Optional[BBox]:
-    """Convert string to BBox based on , delimiter."""
+    """Convert string to BBox based on comma or space delimiter."""
     if not bbox_str:
         return None
 
     try:
-        x0, y0, x1, y1 = map(float, bbox_str.split(","))
+        # Split on comma or space (handles multiple spaces too)
+        coordinates = re.split(r"[,\s]+", bbox_str.strip())
+
+        if len(coordinates) != 4:
+            raise ValueError("Must have exactly 4 coordinates")
+
+        x0, y0, x1, y1 = map(float, coordinates)
     except ValueError:
         raise HTTPException(
             status_code=400, detail=f"This is an invalid bbox: {bbox_str}"
@@ -118,24 +125,24 @@ async def lifespan(app: FastAPI):
 default_settings = Settings()
 all_urls = default_settings.stac_api_urls + default_settings.cmr_urls
 default_api_urls = (
-    ", ".join(f"[{url}]({url})" for url in all_urls)
+    "\n".join(f"  - [{url}]({url})" for url in all_urls)
     if default_settings.stac_api_urls
     else "none"
 )
 
-description = f"""
-Discover data collections from across a set of APIs by filtering 
+summary = """Discover data collections from across a set of APIs by filtering 
 collections using bounding box, datetime intervals, and/or keywords.
+"""
 
+description = f"""
 By default, this application will perform a collection-level search across all of these 
 APIs:
-
 {default_api_urls}
 """
 
-
 app = FastAPI(
     title="Federated Collection Discovery API",
+    summary=summary,
     description=description,
     lifespan=lifespan,
     version=package_version,
@@ -197,13 +204,6 @@ async def search_collections(
             json_schema_extra={"example": "landsat OR sentinel"},
         ),
     ] = None,
-    hint_lang: Annotated[
-        Optional[Literal["python"]],
-        Query(
-            description="Language for code hint",
-            json_schema_extra={"example": "python"},
-        ),
-    ] = None,
     limit: Annotated[
         PositiveInt,
         Query(description=("limit for number of returned collection records")),
@@ -217,7 +217,6 @@ async def search_collections(
             bbox=parsed_bbox,
             datetime=datetime_interval,
             q=q,
-            hint_lang=hint_lang,
         )
         for base_url in settings.stac_api_urls
     ] + [
@@ -226,7 +225,6 @@ async def search_collections(
             bbox=parsed_bbox,
             datetime=datetime_interval,
             q=q,
-            hint_lang=hint_lang,
         )
         for base_url in settings.cmr_urls
     ]

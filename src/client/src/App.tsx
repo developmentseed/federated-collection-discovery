@@ -11,10 +11,21 @@ import {
   Text,
   SystemProps,
   Spacer,
+  Alert,
+  AlertIcon,
+  AlertDescription,
 } from "@chakra-ui/react";
 
 import { ColorModeSwitcher } from "./ColorModeSwitcher";
-import { getApiDocs, searchApi, API_URL } from "./api/search";
+import {
+  getApiDocs,
+  searchApi,
+  API_URL,
+  FederatedSearchError,
+} from "./api/search";
+
+type ApiError = string | null;
+type SearchErrors = FederatedSearchError[];
 
 const HealthStatus = React.lazy(() => import("./components/HealthStatus"));
 const SearchForm = React.lazy(() => import("./components/SearchForm"));
@@ -23,18 +34,25 @@ const ResultsTable = React.lazy(() => import("./components/ResultsTable"));
 export const App = () => {
   const [results, setResults] = React.useState<Array<Record<string, any>>>([]);
   const [loading, setLoading] = React.useState<boolean>(false);
+  const [apiError, setApiError] = React.useState<ApiError>(null); // For 400/500 errors
+  const [searchErrors, setSearchErrors] = React.useState<SearchErrors>([]); // For search-level errors
 
   const [docsLoading, setDocsLoading] = React.useState(true);
   const [apiDocs, setApiDocs] = React.useState<any | null>(null);
+  const [docsError, setDocsError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     async function fetchApiDocs() {
       try {
         setDocsLoading(true);
+        setDocsError(null);
         const apiDocs = await getApiDocs();
         setApiDocs(apiDocs);
       } catch (err) {
         console.error("Failed to fetch API documentation", err);
+        setDocsError(
+          "Failed to load API documentation. Please try refreshing the page.",
+        );
       } finally {
         setDocsLoading(false);
       }
@@ -49,11 +67,21 @@ export const App = () => {
     q: string;
   }) => {
     setLoading(true);
+    setApiError(null);
+    setSearchErrors([]);
+    setResults([]);
+
     try {
       const data = await searchApi(formData);
-      setResults(data);
+      setResults(data.results);
+      if (data.errors && data.errors.length > 0) {
+        setSearchErrors(data.errors);
+      }
     } catch (error) {
       console.error("Search error:", error);
+      setApiError(
+        error instanceof Error ? error.message : "An unexpected error occurred",
+      );
     } finally {
       setLoading(false);
     }
@@ -72,26 +100,74 @@ export const App = () => {
             <Box mb={{ base: 4, lg: 0 }} flex="1" maxWidth="500px" height="90%">
               <VStack align="left" spacing={4}>
                 <Heading>Federated Collection Discovery</Heading>
+
+                {docsError && (
+                  <Alert status="error">
+                    <AlertIcon />
+                    <AlertDescription>{docsError}</AlertDescription>
+                  </Alert>
+                )}
+
                 {docsLoading ? (
                   <Spinner />
                 ) : (
-                  <ReactMarkdown>{apiDocs.info.description}</ReactMarkdown>
+                  apiDocs && (
+                    <ReactMarkdown>{apiDocs.info.summary}</ReactMarkdown>
+                  )
                 )}
+
                 <Heading size="md" textAlign="left">
                   API Health ({API_URL})
                 </Heading>
                 <React.Suspense fallback={<Spinner size="md" />}>
                   <HealthStatus />
                 </React.Suspense>
+
                 <Heading size="md">Collection search:</Heading>
+                {/* Show API-level errors (these are blocking errors) */}
+                {apiError && (
+                  <Alert status="error" mb={4}>
+                    <AlertIcon />
+                    <AlertDescription>{apiError}</AlertDescription>
+                  </Alert>
+                )}
+
+                {/* Show search-level errors (these are warnings, as we still got results) */}
+                {searchErrors.length > 0 && (
+                  <Alert status="warning" mb={4}>
+                    <AlertIcon />
+                    <AlertDescription>
+                      {`${searchErrors.length} error${
+                        searchErrors.length === 1 ? "" : "s"
+                      } occurred during the search. The search results may be incomplete.`}
+                      <Box mt={2}>
+                        {searchErrors.map((error, index) => (
+                          <Text key={index} fontSize="sm">
+                            • {error.error_message} (from {error.catalog_url})
+                          </Text>
+                        ))}
+                      </Box>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
                 <React.Suspense fallback={<Spinner size="md" />}>
-                  <SearchForm onSubmit={handleSearch} apiDocs={apiDocs} />
+                  <SearchForm
+                    onSubmit={handleSearch}
+                    apiDocs={apiDocs}
+                    apiError={apiError}
+                    isLoading={loading}
+                  />
                 </React.Suspense>
-                <Text>
-                  {results.length > 0
-                    ? `Found ${results.length} results`
-                    : "No results found"}
-                </Text>
+
+                {!apiError && (
+                  <Text>
+                    {results.length > 0
+                      ? `Found ${results.length} results`
+                      : "No results found"}
+                  </Text>
+                )}
+
                 <Box mt={6}></Box>
               </VStack>
             </Box>

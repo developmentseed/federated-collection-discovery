@@ -2,7 +2,7 @@ import itertools
 from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from typing import Iterable, Literal, Optional, Union
+from typing import Iterable, Optional, Union
 
 from federated_collection_discovery.models import (
     CollectionMetadata,
@@ -17,7 +17,6 @@ class CollectionSearch(ABC):
     bbox: Optional[BBox] = None
     datetime: Optional[DatetimeInterval] = None
     q: Optional[str] = None
-    hint_lang: Optional[Literal["python"]] = None
 
     @abstractmethod
     def get_collection_metadata(
