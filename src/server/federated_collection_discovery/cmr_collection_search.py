@@ -3,12 +3,18 @@ from copy import copy
 from dataclasses import dataclass
 from typing import Iterable, List, TypedDict, Union
 
-from cmr import CollectionQuery
+from cmr import CMR_OPS, CollectionQuery
 from requests.exceptions import RequestException
 
 from federated_collection_discovery.collection_search import CollectionSearch
 from federated_collection_discovery.free_text import parse_query_for_cmr
-from federated_collection_discovery.hint import PYTHON, generate_cmr_hint
+from federated_collection_discovery.hint import (
+    Packages,
+    generate_earthaccess_hint,
+    generate_pystac_client_hint,
+    generate_python_cmr_hint,
+    generate_rstac_hint,
+)
 from federated_collection_discovery.models import (
     CollectionMetadata,
     FederatedSearchError,
@@ -23,6 +29,8 @@ class CMRCollectionResult(TypedDict, total=False):
     time_start: str
     time_end: str
     summary: str
+    data_center: str
+    version_id: str
 
 
 @dataclass
@@ -72,7 +80,10 @@ class CMRCollectionSearch(CollectionSearch):
     ) -> CollectionMetadata:
         # parse the output of the CMR search
         boxes = collection.get("boxes")
-        bbox = tuple(boxes[0].split(" ")) if boxes else None
+        bbox_parsed = None
+        if boxes:
+            bbox_split = [float(i) for i in boxes[0].split(" ")]
+            bbox_parsed = (bbox_split[1], bbox_split[0], bbox_split[3], bbox_split[2])
 
         short_name = collection.get("short_name")
         if not short_name:
@@ -95,22 +106,54 @@ class CMRCollectionSearch(CollectionSearch):
                 f"{json.dumps(collection, indent=2)}"
             )
 
-        hint = (
-            generate_cmr_hint(
+        data_center = collection.get("data_center")
+        if not data_center:
+            raise ValueError(
+                "This CMR collection does not have a data_center:\n "
+                f"{json.dumps(collection, indent=2)}"
+            )
+
+        version = collection.get("version_id")
+
+        cmr_stac_url = self.base_url.replace("/search/", "/stac/") + data_center
+        cmr_stac_collection_id = short_name
+        if version and version.lower() != "not provided":
+            cmr_stac_collection_id += f"_{version}"
+
+        hint = {
+            Packages.PYSTAC_CLIENT: generate_pystac_client_hint(
+                base_url=cmr_stac_url,
+                collection_id=cmr_stac_collection_id,
+                bbox=self.bbox,
+                datetime_interval=self.datetime,
+            ),
+            Packages.PYTHON_CMR: generate_python_cmr_hint(
                 base_url=self.base_url,
                 short_name=short_name,
                 bbox=self.bbox,
                 datetime_interval=self.datetime,
+            ),
+            Packages.RSTAC: generate_rstac_hint(
+                base_url=cmr_stac_url,
+                collection_id=cmr_stac_collection_id,
+                bbox=self.bbox,
+                datetime_interval=self.datetime,
+            ),
+        }
+
+        # only provide earthaccess hint if base_url is the normal CMR url
+        if self.base_url == CMR_OPS:
+            hint[Packages.EARTHACCESS] = generate_earthaccess_hint(
+                short_name=short_name,
+                bbox=self.bbox,
+                datetime_interval=self.datetime,
             )
-            if self.hint_lang == PYTHON
-            else None
-        )
 
         return CollectionMetadata(
             catalog_url=self.base_url,
             id=collection_id,
             title=title,
-            spatial_extent=[bbox],
+            spatial_extent=[bbox_parsed],
             temporal_extent=[
                 [collection.get("time_start"), collection.get("time_end")]
             ],

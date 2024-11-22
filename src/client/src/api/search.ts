@@ -11,12 +11,20 @@ function buildQuery(params: SearchParams): string {
   return urlParams.toString();
 }
 
-export async function searchApi(params: SearchParams) {
+export interface FederatedSearchError {
+  catalog_url: string;
+  error_message: string;
+}
+
+type SearchResponse = {
+  results: any[];
+  errors?: FederatedSearchError[]; // Update this type
+};
+
+export async function searchApi(params: SearchParams): Promise<SearchResponse> {
   console.log(`${params.datetime}`);
   const queryString = buildQuery(params);
-  const url = `${API_URL}/search?hint_lang=python&${queryString}`;
-
-  console.log("Preparing to fetch from:", url); // Log the URL being fetched
+  const url = `${API_URL}/search?${queryString}`;
 
   try {
     const response = await fetch(url, {
@@ -26,12 +34,25 @@ export async function searchApi(params: SearchParams) {
       },
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
-      throw new Error("Search failed");
+      // Handle API-level errors (400/500)
+      throw new Error(
+        data?.detail ||
+          `Search failed with status ${response.status}: ${response.statusText}`,
+      );
     }
 
-    const data = await response.json();
-    return data.results;
+    // Log search-level errors to console for debugging
+    if (data.errors && data.errors.length > 0) {
+      console.log("Search encountered the following errors:", data.errors);
+    }
+
+    return {
+      results: data.results || [],
+      errors: data.errors || [],
+    };
   } catch (error) {
     console.error("Error encountered while performing search:", error);
     throw error;

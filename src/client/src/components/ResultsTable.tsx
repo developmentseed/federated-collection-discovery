@@ -20,17 +20,26 @@ import {
   useColorMode,
   useColorModeValue,
   Text,
+  Tabs,
+  TabList,
+  TabPanels,
+  TabPanel,
+  Tab,
   Tag,
   TagLabel,
   Wrap,
 } from "@chakra-ui/react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import {
-  materialDark,
-  materialLight,
+  coldarkCold,
+  coldarkDark,
 } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import { MapContainer, Rectangle } from "react-leaflet";
 import CommonTileLayer from "./CommonTileLayer";
+
+interface HintFormat {
+  [hint_package: string]: string;
+}
 
 interface SpatialExtentArrayFormat {
   west: number;
@@ -100,15 +109,29 @@ const specificColumns: ColumnBreakpoints = {
   xl: ["title", "id", "catalog_url"],
 };
 
+const KEY_DISPLAY_NAMES: Record<string, string> = {
+  catalog_url: "API",
+  temporal_extent: "temporal extent",
+  spatial_extent: "spatial extent",
+  hint: "item search code hint",
+};
+
+const formatKeyName = (key: string): string => {
+  if (key in KEY_DISPLAY_NAMES) {
+    return KEY_DISPLAY_NAMES[key];
+  }
+  return key;
+};
+
 const ResultsTable: React.FC<Props> = ({ data }) => {
   const bgColor = useColorModeValue("white", "gray.800");
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { colorMode } = useColorMode();
   const [selectedRecord, setSelectedRecord] = useState<Record<
     string,
-    any
+    any | HintFormat
   > | null>(null);
-  const hintStyle = colorMode === "dark" ? materialDark : materialLight;
+  const hintStyle = colorMode === "dark" ? coldarkDark : coldarkCold;
   const columns = useBreakpointValue(specificColumns) ?? [];
 
   // Sorting state
@@ -162,6 +185,11 @@ const ResultsTable: React.FC<Props> = ({ data }) => {
     onOpen();
   };
 
+  const PACKAGE_LANGUAGE_MAP: Record<string, string> = {
+    "pystac-client": "python",
+    "python-cmr": "python",
+    rstac: "r",
+  };
   return (
     <>
       <Box overflow="auto" maxHeight="100%">
@@ -215,11 +243,31 @@ const ResultsTable: React.FC<Props> = ({ data }) => {
             <ModalBody>
               {Object.entries(selectedRecord).map(([key, value]) => (
                 <Box key={key} mb={2}>
-                  <strong>{key}: </strong>
+                  <strong>{formatKeyName(key)}: </strong>
                   {key === "hint" ? (
-                    <SyntaxHighlighter language="python" style={hintStyle}>
-                      {value}
-                    </SyntaxHighlighter>
+                    <Tabs>
+                      <TabList>
+                        {Object.keys(value).map((packageName) => (
+                          <Tab key={packageName}>{packageName}</Tab>
+                        ))}
+                      </TabList>
+                      <TabPanels>
+                        {Object.entries(value as Record<string, string>).map(
+                          ([packageName, hintText]) => (
+                            <TabPanel key={packageName} p={0} pt={4}>
+                              <SyntaxHighlighter
+                                language={
+                                  PACKAGE_LANGUAGE_MAP[packageName] || "python"
+                                } // fallback to python if not found
+                                style={hintStyle}
+                              >
+                                {String(hintText)}
+                              </SyntaxHighlighter>
+                            </TabPanel>
+                          ),
+                        )}
+                      </TabPanels>
+                    </Tabs>
                   ) : key === "spatial_extent" ? (
                     <MapDisplay
                       spatialExtents={convertToSpatialExtent(value)}
@@ -248,21 +296,61 @@ interface MapDisplayProps {
   spatialExtents: SpatialExtentArrayFormat[];
 }
 
-const MapDisplay: React.FC<MapDisplayProps> = ({ spatialExtents }) => {
-  if (
-    spatialExtents.length === 0 ||
-    spatialExtents.some(
-      (extent) =>
-        typeof extent.south !== "number" ||
-        typeof extent.west !== "number" ||
-        typeof extent.north !== "number" ||
-        typeof extent.east !== "number",
-    )
-  ) {
-    return <Text>Invalid spatial extent data</Text>;
+const normalizeExtent = (
+  extent: SpatialExtentArrayFormat,
+): SpatialExtentArrayFormat | null => {
+  let { south, north, east, west } = extent;
+
+  // Swap if south is greater than north
+  if (south > north) {
+    [south, north] = [north, south];
   }
 
-  const allBounds: [number, number][][] = spatialExtents.map((extent) => [
+  // Handle longitude wrap-around
+  if (west > east) {
+    // If the difference is greater than 360, it's invalid
+    if (west - east >= 360) {
+      return null;
+    }
+    // If crossing the date line, we'll use the shorter path
+    if (west - east > 180) {
+      west -= 360;
+    }
+  }
+
+  // Handle degenerate cases (point or line)
+  const EPSILON = 1e-10; // Small value to prevent degenerate rectangles
+  if (Math.abs(north - south) < EPSILON) {
+    north += EPSILON;
+    south -= EPSILON;
+  }
+  if (Math.abs(east - west) < EPSILON) {
+    east += EPSILON;
+    west -= EPSILON;
+  }
+
+  return { south, north, east, west };
+};
+
+const MapDisplay: React.FC<MapDisplayProps> = ({ spatialExtents }) => {
+  // Try to normalize all extents
+  const validExtents = spatialExtents
+    .map(normalizeExtent)
+    .filter((extent): extent is SpatialExtentArrayFormat => extent !== null);
+
+  if (validExtents.length === 0) {
+    return <Text>Could not normalize spatial extent data</Text>;
+  }
+
+  // Log any extents that couldn't be normalized
+  const invalidCount = spatialExtents.length - validExtents.length;
+  if (invalidCount > 0) {
+    console.warn(
+      `${invalidCount} spatial extent(s) could not be normalized and were excluded.`,
+    );
+  }
+
+  const allBounds: [number, number][][] = validExtents.map((extent) => [
     [extent.south, extent.west],
     [extent.north, extent.east],
   ]);
@@ -275,11 +363,30 @@ const MapDisplay: React.FC<MapDisplayProps> = ({ spatialExtents }) => {
     ];
   }, allBounds[0]);
 
+  // Add some padding to the bounds for better visualization
+  const padBounds = (bounds: [number, number][]): [number, number][] => {
+    const PAD = 0.1; // 10% padding
+    const latDiff = bounds[1][0] - bounds[0][0];
+    const lonDiff = bounds[1][1] - bounds[0][1];
+    return [
+      [
+        Math.max(-90, bounds[0][0] - latDiff * PAD),
+        Math.max(-180, bounds[0][1] - lonDiff * PAD),
+      ],
+      [
+        Math.min(90, bounds[1][0] + latDiff * PAD),
+        Math.min(180, bounds[1][1] + lonDiff * PAD),
+      ],
+    ];
+  };
+
+  const paddedBounds = padBounds(overallBounds);
+
   return (
     <Box height="300px">
       <MapContainer
         style={{ height: "100%", width: "100%" }}
-        bounds={overallBounds}
+        bounds={paddedBounds}
         maxBounds={[
           [-90, -180],
           [90, 180],
@@ -292,7 +399,7 @@ const MapDisplay: React.FC<MapDisplayProps> = ({ spatialExtents }) => {
           <Rectangle
             key={index}
             bounds={bounds}
-            pathOptions={{ color: "red" }}
+            pathOptions={{ color: "purple", fillOpacity: 0.1 }}
           />
         ))}
       </MapContainer>

@@ -1,8 +1,9 @@
 from datetime import datetime
 
+import black
 import pytest
 
-from federated_collection_discovery.hint import PYTHON
+from federated_collection_discovery.hint import Packages
 from federated_collection_discovery.models import (
     CollectionMetadata,
     FederatedSearchError,
@@ -70,21 +71,28 @@ def test_hint(mock_apis):
     # gather all collections
     base_search = STACAPICollectionSearch(
         base_url=mock_apis[0],
-        hint_lang=PYTHON,
     )
     results = list(base_search.get_collection_metadata())
     assert len(results) == 2
 
-    expected_hint = (
-        "import pystac_client\n\n"
-        'catalog = pystac_client.Client.open("https://stac1.net")\n'
-        'search = catalog.search(collections="collection-1")'
+    expected_hint = black.format_str(
+        (
+            "# set up an item search with pystac_client\n"
+            "import pystac_client\n\n"
+            'catalog = pystac_client.Client.open("https://stac1.net")\n\n'
+            "# get a sample of 10 items\n"
+            'search = catalog.search(collections="collection-1", max_items=10,)\n'
+            "items = search.items()\n\n"
+            "# consider using the bbox and/or datetime filters for a "
+            "more targeted search"
+        ),
+        mode=black.FileMode(),
     )
     for i, result in enumerate(results):
         assert isinstance(result, CollectionMetadata)
         assert result.hint
         if i == 0:
-            assert result.hint.strip() == expected_hint.strip()
+            assert result.hint[Packages.PYSTAC_CLIENT].strip() == expected_hint.strip()
 
 
 def test_api_error():
