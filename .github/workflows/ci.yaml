@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.10', '3.11', '3.12']
+        python-version: ['3.10', '3.11', '3.12', '3.13']
 
     steps:
       - name: Check out repository
@@ -29,7 +29,6 @@ jobs:
         run: uv python install ${{ matrix.python-version }}
       
       - name: Install dependencies
-        working-directory: src/server
         run: |
           uv sync --all-extras
 
@@ -40,7 +39,6 @@ jobs:
           uv run pre-commit run --all-files
 
       - name: Run tests
-        working-directory: src/server
         run: uv run pytest
 
   check-client-changes:
@@ -76,7 +74,7 @@ jobs:
       - name: Cache Node.js dependencies
         uses: actions/cache@v4
         with:
-          path: src/client/node_modules
+          path: node_modules
           key: node-modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             node-modules-${{ runner.os }}-
@@ -85,18 +83,16 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            src/client/node_modules
-            src/client/.yarn
-          key: yarn-cache-${{ runner.os }}-${{ hashFiles('src/client/yarn.lock') }}
+            node_modules
+            .yarn
+          key: yarn-cache-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
           restore-keys: |
             yarn-cache-${{ runner.os }}-
 
       - name: Install dependencies
-        working-directory: src/client
         run: yarn install
 
       - name: Build client application
-        working-directory: src/client
         run: yarn build
 
   publish:
@@ -132,7 +128,6 @@ jobs:
 
       - name: Build package
         if: env.tag == env.version
-        working-directory: src/server
         run: |
           uv build
 
@@ -140,4 +135,4 @@ jobs:
         if: env.tag == env.version
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          packages-dir: src/server/dist/
+          packages-dir: dist/

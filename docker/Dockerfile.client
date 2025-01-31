@@ -5,12 +5,13 @@ FROM node:18 AS build
 WORKDIR /app
 
 # Install the dependencies.
-COPY package*.json tsconfig.json yarn.lock ./
+COPY package*.json yarn.lock  ./
+COPY src/client/package*.json src/client/tsconfig.json ./src/client/
 RUN yarn install && yarn cache clean
 
 # Copy the entire project.
-COPY ./public ./public/
-COPY ./src ./src/
+COPY ./src/client/public ./src/client/public/
+COPY ./src/client/src ./src/client/src/
 
 # Inform Docker that the container's web server will be on port 3000.
 EXPOSE 3000
