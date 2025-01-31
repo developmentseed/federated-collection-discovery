@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 - set project up so you can run everything from root directory
+- use `polygons` if `boxes` field is missing from CMR results
+- skip collection map if `spatial_extent` is empty in details page
 
 ## 0.1.8
 

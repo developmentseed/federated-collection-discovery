@@ -74,7 +74,7 @@ same endpoints:
 uv sync
 ```
 
-### 2. Run the Application
+### 2. Run the application
 
 Start the API server
 
