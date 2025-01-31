@@ -3,9 +3,9 @@ FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 WORKDIR /app
 
 COPY README.md pyproject.toml uv.lock ./
-COPY federated_collection_discovery/ ./federated_collection_discovery/
+COPY src/server ./src/server
 
-RUN uv sync --frozen --extra uvicorn
+RUN uv sync --frozen --no-dev --extra uvicorn
 
 ENV HOST 0.0.0.0
 ENV PORT 80

@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.10', '3.11', '3.12']
+        python-version: ['3.10', '3.11', '3.12', '3.13']
 
     steps:
       - name: Check out repository
@@ -22,25 +22,21 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v3
         with:
-          version: "0.4.22" 
-          enable-cache: true
+          version: "0.5.*" 
     
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
       
       - name: Install dependencies
-        working-directory: src/server
         run: |
-          uv sync --all-extras
+          uv sync
 
       - name: run pre-commit
         if: ${{ matrix.python-version == env.LATEST_PY_VERSION }}
-        working-directory: src/server
         run: |
           uv run pre-commit run --all-files
 
       - name: Run tests
-        working-directory: src/server
         run: uv run pytest
 
   check-client-changes:
@@ -54,7 +50,7 @@ jobs:
       - name: Check for changes in client directory
         id: client_changes
         run: |
-          if git diff --quiet HEAD^ HEAD -- src/client; then
+          if git diff --quiet HEAD^ HEAD -- src/client yarn.lock; then
             echo "changes=false" >> $GITHUB_OUTPUT
           else
             echo "changes=true" >> $GITHUB_OUTPUT
@@ -76,7 +72,7 @@ jobs:
       - name: Cache Node.js dependencies
         uses: actions/cache@v4
         with:
-          path: src/client/node_modules
+          path: node_modules
           key: node-modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             node-modules-${{ runner.os }}-
@@ -85,18 +81,16 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            src/client/node_modules
-            src/client/.yarn
-          key: yarn-cache-${{ runner.os }}-${{ hashFiles('src/client/yarn.lock') }}
+            node_modules
+            .yarn
+          key: yarn-cache-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
           restore-keys: |
             yarn-cache-${{ runner.os }}-
 
       - name: Install dependencies
-        working-directory: src/client
         run: yarn install
 
       - name: Build client application
-        working-directory: src/client
         run: yarn build
 
   publish:
@@ -115,8 +109,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v3
         with:
-          version: "0.4.22" 
-          enable-cache: true
+          version: "0.5.*" 
     
       - name: Set up Python 3.12
         run: uv python install 3.12
@@ -132,7 +125,6 @@ jobs:
 
       - name: Build package
         if: env.tag == env.version
-        working-directory: src/server
         run: |
           uv build
 
@@ -140,4 +132,4 @@ jobs:
         if: env.tag == env.version
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          packages-dir: src/server/dist/
+          packages-dir: dist/

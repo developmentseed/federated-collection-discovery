@@ -15,19 +15,30 @@ items.
 
 ## Table of Contents
 
-- [Prerequisites](#prerequisites)
-- [Setup Using Docker](#setup-using-docker)
-- [Setup Using `uv`](#setup-using-uv)
+- [Development](#development)
+- [Running with `docker compose`](#running-with-docker-compose)
+- [Running in local environment](#running-in-local-environment)
 - [API Endpoints](#api-endpoints)
 - [Example API usage](#example-api-usage)
 
-## Prerequisites
+## Development
 
-- Python 3.9 (or higher)
-- Node.js and yarn (for the React frontend)
-- Docker and Docker Compose
+### Installation
 
-## Setup Using Docker
+```bash
+uv sync
+yarn install
+```
+
+### Testing
+
+Run the python unit tests with `pytest`
+
+```bash
+uv run pytest
+```
+
+## Running with `docker compose`
 
 Ensure Docker and Docker Compose are installed. Follow the steps below to
 build and start the containers:
@@ -55,47 +66,28 @@ same endpoints:
 - Backend (FastAPI): `http://localhost:8000`
 - Frontend (React): `http://localhost:3000`
 
-## Setup Using `uv`
+## Running in local environment
 
-### 1. Install `uv`
-
-Ensure you have uv installed. If not, install it:
+### 1. Install Dependencies with `uv`
 
 ```bash
-# install uv
-
-# unix
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# or on windows
-powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+uv sync
 ```
 
-### 2. Install Dependencies
+### 2. Run the Application
 
-Navigate to the `src/server` directory and install the dependencies using `uv`:
+Start the API server
 
 ```bash
-cd src/server
-uv sync --all-extras
+uv run uvicorn federated_collection_discovery.main:app \
+  --host 0.0.0.0 --port 8000 --reload
 ```
 
-### 3. Run the Application
-
-Navigate to the `src/server` directory, activate your virtual environment, and
-run the FastAPI server using Uvicorn:
+Start the React development server:
 
 ```bash
-cd src/server
-uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-Navigate to the `src/client` directory and start the React development server:
-
-```bash
-cd src/client
-npm install  # or `yarn install`
-npm start    # or `yarn start`
+yarn install 
+yarn start 
 ```
 
 Access the application:

@@ -1,8 +1,7 @@
 services:
   server:
     build: 
-      context: ./src/server
-      dockerfile: ./docker/Dockerfile
+      dockerfile: ./docker/Dockerfile.server
     container_name: federated-collection-discovery-server
     ports:
       - "8000:8000"
@@ -19,13 +18,12 @@ services:
       - FEDERATED_CMR_URLS=https://cmr.earthdata.nasa.gov/search/
   client:
     build: 
-      context: ./src/client
-      dockerfile: ./docker/Dockerfile
+      dockerfile: ./docker/Dockerfile.client
     container_name: federated-collection-discovery-client
     ports:
       - "3000:3000"
     volumes:
-      - ./src/client:/app
+      - ./src/client:/app/src/client
 
     environment:
       - CHOKIDAR_USEPOLLING=true
