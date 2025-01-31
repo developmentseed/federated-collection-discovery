@@ -22,19 +22,17 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v3
         with:
-          version: "0.4.22" 
-          enable-cache: true
+          version: "0.5.*" 
     
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
       
       - name: Install dependencies
         run: |
-          uv sync --all-extras
+          uv sync
 
       - name: run pre-commit
         if: ${{ matrix.python-version == env.LATEST_PY_VERSION }}
-        working-directory: src/server
         run: |
           uv run pre-commit run --all-files
 
@@ -111,8 +109,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v3
         with:
-          version: "0.4.22" 
-          enable-cache: true
+          version: "0.5.*" 
     
       - name: Set up Python 3.12
         run: uv python install 3.12
