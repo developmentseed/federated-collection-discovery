@@ -49,14 +49,18 @@ interface SpatialExtentArrayFormat {
 }
 
 const convertToSpatialExtent = (
-  extents: [number, number, number, number][],
+  extents: ([number, number, number, number] | null)[],
 ): SpatialExtentArrayFormat[] => {
-  return extents.map(([west, south, east, north]) => ({
-    west,
-    south,
-    east,
-    north,
-  }));
+  return extents
+    .filter(
+      (extent): extent is [number, number, number, number] => extent !== null,
+    )
+    .map(([west, south, east, north]) => ({
+      west,
+      south,
+      east,
+      north,
+    }));
 };
 
 const formatTemporalRange = (ranges: any[]): string => {

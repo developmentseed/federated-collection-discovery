@@ -1,0 +1,154 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.32.3
+    method: GET
+    uri: https://cmr.earthdata.nasa.gov/search/collections.json?keyword=OPERA%20Coregistered%20Single-Look%20Complex&page_size=2000
+  response:
+    body:
+      string: "{\"feed\":{\"updated\":\"2025-01-31T02:30:26.870Z\",\"id\":\"https://cmr.earthdata.nasa.gov:443/search/collections.json?keyword=OPERA%20Coregistered%20Single-Look%20Complex&page_size=2000\",\"title\":\"ECHO
+        dataset metadata\",\"entry\":[{\"processing_level_id\":\"2\",\"cloud_hosted\":true,\"has_combine\":false,\"time_start\":\"2014-04-03T00:00:00.000Z\",\"version_id\":\"1\",\"dataset_id\":\"OPERA
+        Coregistered Single-Look Complex from Sentinel-1 Static Layers validated product
+        (Version 1)\",\"entry_id\":\"OPERA_L2_CSLC-S1-STATIC_V1_1\",\"has_spatial_subsetting\":false,\"has_transforms\":false,\"has_variables\":false,\"data_center\":\"ASF\",\"short_name\":\"OPERA_L2_CSLC-S1-STATIC_V1\",\"organizations\":[\"ASF\",\"NASA/JPL/OPERA\"],\"title\":\"OPERA
+        Coregistered Single-Look Complex from Sentinel-1 Static Layers validated product
+        (Version 1)\",\"coordinate_system\":\"CARTESIAN\",\"summary\":\"The Observational
+        Products for End-Users from Remote Sensing Analysis (OPERA) Coregistered Single-Look
+        Complex (CSLC) from Sentinel-1 (S1) Static Layers (CSLC-S1-STATIC) validated
+        product contains static radar geometry layers associated with the OPERA Coregistered
+        Single-Look Complex (CSLC) from Sentinel-1 (S1) validated product. Due to
+        the S1 mission\u2019s narrow orbital tube, radar-geometry layers vary slightly
+        over time for each position on the ground, and therefore are considered static.
+        These static layers are provided separately from the OPERA CSLC-S1 product,
+        as they are produced only once or a limited number of times, to account for
+        changes in the DEM, in the S1 orbit, or in the static layers generation algorithm.
+        Each OPERA CSLC-S1-STATIC product is distributed as a Hierarchical Data Format
+        version 5 (HDF5) file following the CF-1.8 convention containing both data
+        raster layers and product metadata and corresponds to matching CSLC-S1 products
+        with the same burst ID. OPERA CSLC-S1 products are available over North America
+        which includes the USA and U.S. Territories, Canada within 200 km of the U.S.
+        border, and all mainland countries from the southern U.S. border down to and
+        including Panama. The CSLC-S1 products are available in the associated OPERA
+        Coregistered Single-Look Complex from Sentinel-1 validated product (Version
+        1) dataset.\",\"service_features\":{\"opendap\":{\"has_formats\":false,\"has_variables\":false,\"has_transforms\":false,\"has_combine\":false,\"has_spatial_subsetting\":false,\"has_temporal_subsetting\":false},\"esi\":{\"has_formats\":false,\"has_variables\":false,\"has_transforms\":false,\"has_combine\":false,\"has_spatial_subsetting\":false,\"has_temporal_subsetting\":false},\"harmony\":{\"has_formats\":false,\"has_variables\":false,\"has_transforms\":false,\"has_combine\":false,\"has_spatial_subsetting\":false,\"has_temporal_subsetting\":false}},\"orbit_parameters\":{},\"id\":\"C2795135668-ASF\",\"has_formats\":false,\"score\":1.1,\"consortiums\":[\"GEOSS\",\"EOSDIS\"],\"original_format\":\"UMM_JSON\",\"collection_data_type\":\"SCIENCE_QUALITY\",\"archive_center\":\"ASF\",\"has_temporal_subsetting\":false,\"browse_flag\":true,\"polygons\":[[\"62.5015467
+        -139.0996574 69.6867168 -139.3803251 71.2183663 -157.141417 68.3735763 -167.228812
+        65.4323808 -168.8440651 60.338896 -173.9306256 52.6155773 -180 50.8611463
+        -180 51.6129878 -170.6297483 56.0163229 -152.9114355 59.267895 -149.1913018
+        58.8520427 -140.3770183 56.9878841 -136.2583689 51.3393627 -131.6506428 48.4661107
+        -125.7549673 40.3311808 -124.4241493 34.7676709 -121.9778478 22.4311968 -110.234396
+        14.4339613 -97.1649601 13.1145391 -90.922636 8.0382063 -84.6585484 6.4264529
+        -82.198433 4.9744342 -79.0975897 6.6985362 -76.3425468 15.9928118 -83.7301124
+        21.8738063 -87.1827257 19.4394223 -93.6858487 26.8405583 -96.431852 28.7047067
+        -92.0810441 28.6812513 -88.09344 28.4115341 -85.094922 28.8151876 -83.4597433
+        23.5415141 -81.7506224 25.1215118 -78.2162044 29.3000106 -79.6727284 31.2954845
+        -79.6466319 34.8887882 -75.0796609 40.946987 -69.3403609 43.3742252 -64.4225561
+        48.2959502 -65.1335857 48.9438707 -71.4417716 45.7238643 -79.6545994 50.6822691
+        -88.2638649 50.3596533 -90.7298952 51.3673723 -95.3439882 51.22781 -104.3228708
+        51.0180252 -121.4385551 61.4158182 -134.3936582 62.5015467 -139.0996574\"]],\"platforms\":[\"Sentinel-1A\",\"Sentinel-1B\"],\"online_access_flag\":true,\"links\":[{\"rel\":\"http://esipfed.org/ns/fedsearch/1.1/data#\",\"hreflang\":\"en-US\",\"href\":\"https://search.asf.alaska.edu/\"},{\"rel\":\"http://esipfed.org/ns/fedsearch/1.1/metadata#\",\"hreflang\":\"en-US\",\"href\":\"https://www.jpl.nasa.gov/go/opera/\"},{\"rel\":\"http://esipfed.org/ns/fedsearch/1.1/metadata#\",\"hreflang\":\"en-US\",\"href\":\"https://asf.alaska.edu/datasets/daac/opera/\"},{\"rel\":\"http://esipfed.org/ns/fedsearch/1.1/browse#\",\"hreflang\":\"en-US\",\"href\":\"https://datapool.asf.alaska.edu/BROWSE/OPERA-S1/OPERA_L2_CSLC-S1_T027-056657-IW3_20231008T132530Z_20240510T050226Z_S1A_VV_v1.1_BROWSE.png\"}]},{\"processing_level_id\":\"2\",\"cloud_hosted\":true,\"has_combine\":false,\"time_start\":\"2014-06-15T00:00:00.000Z\",\"version_id\":\"1\",\"dataset_id\":\"OPERA
+        Coregistered Single-Look Complex from Sentinel-1 validated product (Version
+        1)\",\"entry_id\":\"OPERA_L2_CSLC-S1_V1_1\",\"has_spatial_subsetting\":false,\"has_transforms\":false,\"has_variables\":false,\"data_center\":\"ASF\",\"short_name\":\"OPERA_L2_CSLC-S1_V1\",\"organizations\":[\"ASF\",\"NASA/JPL/OPERA\"],\"title\":\"OPERA
+        Coregistered Single-Look Complex from Sentinel-1 validated product (Version
+        1)\",\"coordinate_system\":\"CARTESIAN\",\"summary\":\"The Observational Products
+        for End-Users from Remote Sensing Analysis (OPERA) Coregistered Single-Look
+        Complex (CSLC) from Sentinel-1 validated product consists of Single Look Complex
+        (SLC) images which contain both amplitude and phase information of the complex
+        radar return. The amplitude is primarily determined by ground surface properties
+        (e.g., terrain slope, surface roughness, and physical properties), and phase
+        primarily represents the distance between the radar and ground targets corrected
+        for the geometrical distance between the two based on the knowledge from Digital
+        Elevation Model and platform\u2019s position, i.e., the CSLC phase represents
+        residual geometrical distance between the sensor and target, the atmospheric
+        propagation delay and the target movements. The CSLC-S1 product is derived
+        from Copernicus Sentinel-1A and Sentinel-1B Interferometric Wide (IW) SLC
+        data.  \\n\\nThe CSLC images are precisely aligned or \u201Ccoregistered\u201D
+        to a pre-defined UTM/Polar stereographic map projection systems and posted
+        at 5x10 m spacing in east and north direction, respectively.  Each CSLC-S1
+        product corresponds to a single S1 burst and is distributed as a Hierarchical
+        Data Format version 5 (HDF5) file following the CF-1.8 convention containing
+        both data raster layers (e.g., geocoded complex backscatter, low-resolution
+        correction look-up tables) and product metadata. OPERA CSLC-S1 products are
+        available over North America which includes the USA and U.S. Territories,
+        Canada within 200 km of the U.S. border, and all mainland countries from the
+        southern U.S. border down to and including Panama.  The OPERA CSLC-S1 product
+        contains modified Copernicus Sentinel data (2016-2025).\\n\\nDue to the S1
+        mission\u2019s narrow orbital tube, radar-geometry layers vary slightly over
+        time for each position on the ground, and therefore are considered static.
+        These static layers are provided separately from the OPERA CLSLC-S1 product,
+        as they are produced only once or a limited number of times. The static layers
+        are available in the associated OPERA Coregistered Single-Look Complex from
+        Sentinel-1 Static Layers validated product (Version 1).\",\"service_features\":{\"opendap\":{\"has_formats\":false,\"has_variables\":false,\"has_transforms\":false,\"has_combine\":false,\"has_spatial_subsetting\":false,\"has_temporal_subsetting\":false},\"esi\":{\"has_formats\":false,\"has_variables\":false,\"has_transforms\":false,\"has_combine\":false,\"has_spatial_subsetting\":false,\"has_temporal_subsetting\":false},\"harmony\":{\"has_formats\":false,\"has_variables\":false,\"has_transforms\":false,\"has_combine\":false,\"has_spatial_subsetting\":false,\"has_temporal_subsetting\":false}},\"orbit_parameters\":{},\"id\":\"C2777443834-ASF\",\"has_formats\":false,\"score\":1.1,\"consortiums\":[\"GEOSS\",\"EOSDIS\"],\"original_format\":\"UMM_JSON\",\"collection_data_type\":\"SCIENCE_QUALITY\",\"archive_center\":\"ASF\",\"has_temporal_subsetting\":false,\"browse_flag\":true,\"polygons\":[[\"62.5015467
+        -139.0996574 69.6867168 -139.3803251 71.2183663 -157.141417 68.3735763 -167.228812
+        65.4323808 -168.8440651 60.338896 -173.9306256 52.6155773 -180 50.8611463
+        -180 51.6129878 -170.6297483 56.0163229 -152.9114355 59.267895 -149.1913018
+        58.8520427 -140.3770183 56.9878841 -136.2583689 51.3393627 -131.6506428 48.4661107
+        -125.7549673 40.3311808 -124.4241493 34.7676709 -121.9778478 22.4311968 -110.234396
+        14.4339613 -97.1649601 13.1145391 -90.922636 8.0382063 -84.6585484 6.4264529
+        -82.198433 4.9744342 -79.0975897 6.6985362 -76.3425468 15.9928118 -83.7301124
+        21.8738063 -87.1827257 19.4394223 -93.6858487 26.8405583 -96.431852 28.7047067
+        -92.0810441 28.6812513 -88.09344 28.4115341 -85.094922 28.8151876 -83.4597433
+        23.5415141 -81.7506224 25.1215118 -78.2162044 29.3000106 -79.6727284 31.2954845
+        -79.6466319 34.8887882 -75.0796609 40.946987 -69.3403609 43.3742252 -64.4225561
+        48.2959502 -65.1335857 48.9438707 -71.4417716 45.7238643 -79.6545994 50.6822691
+        -88.2638649 50.3596533 -90.7298952 51.3673723 -95.3439882 51.22781 -104.3228708
+        51.0180252 -121.4385551 61.4158182 -134.3936582 62.5015467 -139.0996574\"]],\"platforms\":[\"Sentinel-1A\",\"Sentinel-1B\"],\"online_access_flag\":true,\"links\":[{\"rel\":\"http://esipfed.org/ns/fedsearch/1.1/data#\",\"hreflang\":\"en-US\",\"href\":\"https://search.asf.alaska.edu/\"},{\"rel\":\"http://esipfed.org/ns/fedsearch/1.1/metadata#\",\"hreflang\":\"en-US\",\"href\":\"https://www.jpl.nasa.gov/go/opera/\"},{\"rel\":\"http://esipfed.org/ns/fedsearch/1.1/metadata#\",\"hreflang\":\"en-US\",\"href\":\"https://asf.alaska.edu/datasets/daac/opera/\"},{\"rel\":\"http://esipfed.org/ns/fedsearch/1.1/browse#\",\"hreflang\":\"en-US\",\"href\":\"https://datapool.asf.alaska.edu/BROWSE/OPERA-S1/OPERA_L2_CSLC-S1_T131-279951-IW3_20231015T163036Z_20240510T141750Z_S1A_VV_v1.1_BROWSE.png\"}]}]}}"
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Access-Control-Expose-Headers:
+      - CMR-Hits, CMR-Request-Id, X-Request-Id, CMR-Scroll-Id, CMR-Search-After, CMR-Timed-Out,
+        CMR-Shapefile-Original-Point-Count, CMR-Shapefile-Simplified-Point-Count
+      CMR-Hits:
+      - '2'
+      CMR-Request-Id:
+      - 1e8fd514-a6f9-41df-8a4f-5d8b11559220
+      CMR-Search-After:
+      - '[1.2,0.0,1738290626817,"2 - geophys. variables, sensor coordinates","OPERA_L2_CSLC-S1_V1","1",2777443834,10]'
+      CMR-Took:
+      - '55'
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-MD5:
+      - ab8c25869059e2113d02eca07329a21c
+      Content-SHA1:
+      - cf7d1bd2388dc5428d8b9e70589808242d65413b
+      Content-Type:
+      - application/json;charset=utf-8
+      Date:
+      - Fri, 31 Jan 2025 02:30:26 GMT
+      Server:
+      - ServerTokens ProductOnly
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding, User-Agent
+      Via:
+      - 1.1 55111e952110eb701257618e8e013998.cloudfront.net (CloudFront)
+      X-Amz-Cf-Id:
+      - 0Va4h17USpPxhCjUm3aetXuCjXk35nHXPcS-Rk3DZGZFPZPf3LppVA==
+      X-Amz-Cf-Pop:
+      - MSP50-P2
+      X-Cache:
+      - Miss from cloudfront
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Request-Id:
+      - 0Va4h17USpPxhCjUm3aetXuCjXk35nHXPcS-Rk3DZGZFPZPf3LppVA==
+      X-XSS-Protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+version: 1

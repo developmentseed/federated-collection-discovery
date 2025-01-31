@@ -80,10 +80,29 @@ class CMRCollectionSearch(CollectionSearch):
     ) -> CollectionMetadata:
         # parse the output of the CMR search
         boxes = collection.get("boxes")
-        bbox_parsed = None
+        spatial_extent = []
         if boxes:
-            bbox_split = [float(i) for i in boxes[0].split(" ")]
-            bbox_parsed = (bbox_split[1], bbox_split[0], bbox_split[3], bbox_split[2])
+            for box in boxes:
+                print("box", box)
+                bbox_split = [float(i) for i in box.split(" ")]
+                spatial_extent.append(
+                    (bbox_split[1], bbox_split[0], bbox_split[3], bbox_split[2])
+                )
+        elif polygons := collection.get("polygons", None):
+            assert isinstance(polygons, list)
+            for polygon in polygons:
+                lats = []
+                lons = []
+                for i, coord in enumerate(
+                    float(coord) for coord in polygon[0].split(" ")
+                ):
+                    # coords are space-separated lat lon pairs so even indices are lats
+                    if i % 2:
+                        lons.append(coord)
+                    else:
+                        lats.append(coord)
+
+                spatial_extent.append((min(lons), min(lats), max(lons), max(lats)))
 
         short_name = collection.get("short_name")
         if not short_name:
@@ -153,7 +172,7 @@ class CMRCollectionSearch(CollectionSearch):
             catalog_url=self.base_url,
             id=collection_id,
             title=title,
-            spatial_extent=[bbox_parsed],
+            spatial_extent=spatial_extent,
             temporal_extent=[
                 [collection.get("time_start"), collection.get("time_end")]
             ],
