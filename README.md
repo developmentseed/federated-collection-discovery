@@ -71,6 +71,23 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
+## Testing
+
+You can then run the tests with the following command:
+
+```bash
+uv run pytest
+```
+
+The tests use `vcrpy <https://vcrpy.readthedocs.io/en/latest/>`_ to mock API calls
+with "pre-recorded" API responses. When adding new tests that incur actual network
+traffic, use the ``@pytest.mark.vcr`` decorator function to indicate ``vcrpy``
+should be used. Record the new responses and commit them to the repository.
+
+```bash
+uv run pytest -v -s --record-mode new_episodes
+```
+
 ### 2. Install Dependencies
 
 Navigate to the `src/server` directory and install the dependencies using `uv`:

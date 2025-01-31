@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## Unreleased
+
+- use `polygons` if `boxes` field is missing from CMR results
+
+- skip collection map if `spatial_extent` is empty in details page
+
 ## 0.1.8
 
 - add earthaccess and rstac code hints
