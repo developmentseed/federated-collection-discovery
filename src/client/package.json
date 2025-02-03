@@ -55,7 +55,7 @@
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
-    "@types/leaflet": "^1.9.12",
+    "@types/leaflet": "^1.9.16",
     "@types/react": "^18.0.9",
     "@types/react-dom": "^19.0.3",
     "@types/react-syntax-highlighter": "^15.5.13",
