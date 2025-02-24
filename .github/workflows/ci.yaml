@@ -102,6 +102,9 @@ jobs:
       url: https://pypi.org/p/federated-collection-discovery
     permissions:
       id-token: write
+    defaults:
+      run:
+        working-directory: src/server
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -119,7 +122,6 @@ jobs:
         run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
       - name: Set module version
-        working-directory: src/server
         id: module
         run: echo "version=$(python federated_collection_discovery/__init__.py)" >> $GITHUB_ENV
 
@@ -132,4 +134,4 @@ jobs:
         if: env.tag == env.version
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          packages-dir: dist/
+          packages-dir: src/server/dist/
