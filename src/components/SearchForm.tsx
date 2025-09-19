@@ -11,6 +11,7 @@ import {
   FormErrorMessage,
   useDisclosure,
   Spacer,
+  Text,
 } from "@chakra-ui/react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -30,11 +31,22 @@ interface Props {
   apiDocs: any;
   apiError?: string | null; // API-level errors
   isLoading?: boolean;
+  conformanceCapabilities?: {
+    hasCollectionSearch: boolean;
+    hasFreeText: boolean;
+  } | null;
+  conformanceLoading?: boolean;
 }
 
 const GitHubLogo = require("../assets/github-mark.svg").default;
 
-const SearchForm: React.FC<Props> = ({ onSubmit, apiDocs, isLoading }) => {
+const SearchForm: React.FC<Props> = ({
+  onSubmit,
+  apiDocs,
+  isLoading,
+  conformanceCapabilities,
+  conformanceLoading
+}) => {
   const {
     isOpen: isMapOpen,
     onOpen: onMapOpen,
@@ -159,6 +171,9 @@ const SearchForm: React.FC<Props> = ({ onSubmit, apiDocs, isLoading }) => {
 
   const today = new Date(); // Get today's date for maxDate
 
+  // Check if text search should be disabled - only disable when we have explicit conformance data showing no support
+  const isTextSearchDisabled = conformanceCapabilities ? !conformanceCapabilities.hasFreeText : false;
+
   return (
     <form onKeyDown={handleKeyDown} onSubmit={handleSubmit}>
       <VStack spacing={4} align="stretch">
@@ -168,8 +183,14 @@ const SearchForm: React.FC<Props> = ({ onSubmit, apiDocs, isLoading }) => {
             name="q"
             value={formData.q}
             onChange={handleChange}
-            placeholder="Enter text"
+            placeholder={isTextSearchDisabled ? "Text search not available" : "Enter text"}
+            disabled={isTextSearchDisabled}
           />
+          {isTextSearchDisabled && (
+            <Text fontSize="sm" color="gray.500" mt={1}>
+              Text search is disabled - no upstream APIs support free-text search
+            </Text>
+          )}
         </FormControl>
         <FormControl id="bbox" isInvalid={!!bboxError}>
           <strong>bounding box</strong> (xmin, ymin , xmax, ymax; EPSG:4326)
@@ -189,7 +210,6 @@ const SearchForm: React.FC<Props> = ({ onSubmit, apiDocs, isLoading }) => {
           <strong>temporal range</strong>
           <Flex direction="row">
             <FormControl id="startDatetime" maxWidth="45%">
-              <FormLabel>start date</FormLabel>
               <DatePicker
                 selected={formData.startDatetime}
                 onChange={(date) => handleDateChange(date, "startDatetime")}
@@ -200,7 +220,6 @@ const SearchForm: React.FC<Props> = ({ onSubmit, apiDocs, isLoading }) => {
             </FormControl>
             <Spacer />
             <FormControl id="endDatetime" maxWidth="45%">
-              <FormLabel>end date</FormLabel>
               <DatePicker
                 selected={formData.endDatetime}
                 onChange={(date) => handleDateChange(date, "endDatetime")}
@@ -211,8 +230,8 @@ const SearchForm: React.FC<Props> = ({ onSubmit, apiDocs, isLoading }) => {
             </FormControl>
           </Flex>
         </FormControl>
-        <HStack justify="space-between" width="100%">
-          <Button onClick={onDocOpen} colorScheme="blue">
+        <HStack justify="space-between" width="100%" wrap="wrap" spacing={2}>
+          <Button onClick={onDocOpen} colorScheme="blue" size="sm">
             API docs
           </Button>
           <Button
@@ -222,10 +241,11 @@ const SearchForm: React.FC<Props> = ({ onSubmit, apiDocs, isLoading }) => {
             leftIcon={<Image src={GitHubLogo} boxSize="1.5em" alt="GitHub" />}
             target="_blank"
             rel="noopener noreferrer"
+            size="sm"
           >
             source
           </Button>
-          <Button type="submit" colorScheme="teal" isLoading={isLoading}>
+          <Button type="submit" colorScheme="teal" isLoading={isLoading} size="sm">
             Search
           </Button>
         </HStack>

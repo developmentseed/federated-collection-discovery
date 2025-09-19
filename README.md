@@ -1,23 +1,63 @@
 # Federated Collection Discovery
 
 <img
-    src="src/client/src/assets/logo.svg"
+    src="public/logo.svg"
     alt="federated collection discovery logo is a modified version of the
     proposed Fediverse logo but with a geographic theme"
     width="200"
 />
 
-This project makes it possible to search across multiple
-geospatial metadata catalogs, such as STAC and NASA CMR, based on provided
-search parameters like bounding box (bbox), datetime, and free-text
-criteria to return collection-level metadata and code hints for accessing
-items.
+A client-side React application for discovering and searching geospatial
+collections across multiple STAC (SpatioTemporal Asset Catalog) API endpoints.
+This tool allows you to configure multiple STAC APIs, search across them
+simultaneously, and get comprehensive collection metadata with code generation
+capabilities.
+
+## Features
+
+- **Multi-API Search**: Configure and search across multiple STAC API
+  endpoints simultaneously
+- **Client-Side Architecture**: Pure React application with no backend
+  dependencies - connects directly to STAC APIs
+- **Interactive Collection Details**: Comprehensive modal with collection
+  metadata, spatial/temporal extents, providers, and links
+- **Code Generation**: Client-generated STAC item search examples in Python and
+  R with dynamic values
+- **Pagination Support**: Load more results with STAC-compliant pagination
+  using `rel=next` links
+- **API Management**: Configure, add, remove, and monitor STAC API endpoints
+  with health diagnostics
+- **Conformance Checking**: Automatic detection of STAC API capabilities
+  (collection search, free-text search)
+- **Client-Side Filtering**: Configurable per-API filtering for deployment
+  customization
+- **Responsive Design**: Mobile-friendly interface with sorting and filtering
+  capabilities
+- **Visual Mapping**: Interactive maps showing spatial extents for collections
+- **Health Monitoring**: Real-time API health status with detailed conformance
+  and capability information
+
+## Architecture
+
+This application is a **client-only** React application that directly
+communicates with STAC APIs. It does not require a backend server and can be
+deployed as a static site. The application:
+
+- Connects directly to configured STAC API endpoints
+- Performs client-side aggregation of search results
+- Handles STAC API conformance checking and capability detection
+- Provides configurable filtering per API endpoint
+- Manages pagination across multiple APIs
 
 ## Table of Contents
 
+- [Features](#features)
+- [Architecture](#architecture)
 - [Development](#development)
-- [Running with `docker compose`](#running-with-docker-compose)
+- [Running with Docker](#running-with-docker)
 - [Running in local environment](#running-in-local-environment)
+- [Configuration](#configuration)
+- [Usage](#usage)
 
 ## Development
 
@@ -31,10 +71,10 @@ yarn install
 
 TODO: write tests for client app
 
-## Running with `docker compose`
+## Running with Docker
 
-Ensure Docker and Docker Compose are installed. Follow the steps below to
-build and start the containers:
+For development and testing, a Docker setup is provided that includes both
+the client application and an optional backend service for advanced use cases.
 
 Build and start the services:
 
@@ -42,10 +82,14 @@ Build and start the services:
 docker compose up --build
 ```
 
-This will use the `FEDERATED_STAC_API_URLS` and
-`FEDERATED_CMR_URLS` environment variables
-defined in [docker-compose.yaml](./docker-compose.yaml) to search across
-NASA's MAAP STAC API and VEDA STAC API, and ESA's STAC API
+This will start:
+
+- **Client application**: `http://localhost:3000`
+- **Backend service** (optional): `http://localhost:8000`
+
+The application will use the STAC APIs configured in the
+`REACT_APP_DEFAULT_STAC_APIS` environment variable, which defaults to NASA's
+MAAP STAC API and VEDA STAC API.
 
 Stop the services:
 
@@ -53,37 +97,153 @@ Stop the services:
 docker compose down
 ```
 
-Once the Docker containers are running, you can access the application at the
-same endpoints:
-
-- Backend (FastAPI): `http://localhost:8000`
-- Frontend (React): `http://localhost:3000`
-
 ## Running in local environment
 
-### 1. Install Dependencies with `uv`
+### Option 1: Client-Only (Recommended)
+
+Start the React development server:
+
+```bash
+yarn install
+yarn start
+```
+
+Access the application at `http://localhost:3000`
+
+### Option 2: With Optional Backend Service
+
+If you need the optional backend service for development:
+
+1. Install Python dependencies:
 
 ```bash
 uv sync
 ```
 
-### 2. Run the application
-
-Start the API server
+1. Start the backend service:
 
 ```bash
 uv run uvicorn stac_fastapi.collection_discovery.app:app \
   --host 0.0.0.0 --port 8000 --reload
 ```
 
-Start the React development server:
+1. Start the React development server:
 
 ```bash
-yarn install 
-yarn start 
+yarn start
 ```
 
-Access the application:
+Access:
 
-- Backend (FastAPI): `http://localhost:8000`
-- Frontend (React): `http://localhost:3000`
+- **Client application**: `http://localhost:3000`
+- **Backend service**: `http://localhost:8000`
+
+## Configuration
+
+### API Configuration
+
+The application can be configured to work with any STAC API endpoints:
+
+#### Environment Variables
+
+- `REACT_APP_DEFAULT_STAC_APIS`: Comma-separated list of default STAC API
+  URLs
+- `REACT_APP_API_URL`: Optional backend service URL (only needed if using
+  backend features)
+
+#### Runtime Configuration
+
+Use the **Settings** button in the API Configuration panel to:
+
+- **Add/Remove APIs**: Configure which STAC API endpoints to search
+- **Health Monitoring**: View real-time health status and conformance
+  information
+- **Capability Detection**: See which APIs support collection search and
+  free-text search
+- **Default APIs**: Reset to environment-configured defaults
+
+#### Deployment Customization
+
+For deployment-specific filtering, edit `/src/config.ts` to add custom filter
+functions:
+
+```typescript
+export const DEFAULT_API_CONFIGURATIONS: ApiConfiguration[] = [
+  {
+    url: "https://your-stac-api.example.com/",
+    // Optional: Filter collections by license
+    filter: (collection) => {
+      const license = collection.license;
+      return license && license.toLowerCase().includes('cc');
+    }
+  },
+];
+```
+
+Available filter examples:
+
+- License-based filtering
+- Provider-based filtering
+- Date-based filtering (e.g., only recent collections)
+- Spatial resolution filtering
+- Keyword-based filtering
+
+## Usage
+
+### API Configuration & Health
+
+1. **Configure APIs**: Click the **Settings** button in the API Configuration
+   panel
+2. **Health Status**: Monitor the status indicator (green=healthy, red=issues,
+   orange=limited functionality)
+3. **Diagnostics**: Use the Diagnostics tab to see detailed API health and
+   conformance information
+
+### Search Collections
+
+1. **Basic Search**: Enter search parameters in the left panel:
+   - **Bounding Box**: Define spatial area of interest using the map or
+     coordinates
+   - **Date Range**: Specify temporal coverage with date pickers
+   - **Free Text**: Add keywords or collection names (if supported by
+     configured APIs)
+
+2. **View Results**: Collections appear in the right panel table with:
+   - Sortable columns (title, ID, API source)
+   - Click "Details" button for comprehensive collection information
+   - Results from all configured APIs are aggregated
+
+### Collection Details Modal
+
+The comprehensive collection details modal provides:
+
+- **Core Information**: Collection ID, source API, title, and description
+- **Spatial/Temporal Extents**: Interactive maps showing collection coverage
+  and formatted date ranges
+- **Providers**: Enhanced display with roles, descriptions, and contact links
+- **Code Generation**: Ready-to-use Python and R examples for STAC item
+  searches with your specific search parameters
+- **Collapsible Sections**:
+  - **Links**: All collection relationships and associated resources
+  - **Raw JSON**: Complete collection metadata for developers
+
+### Pagination & Results
+
+- **Progressive Loading**: Results from all APIs are loaded and combined
+- **Load More**: When available, a "Load More" button appears to fetch
+  additional results
+- **Cross-API Pagination**: Seamlessly handles pagination across multiple STAC
+  APIs
+- **Result Persistence**: New results are appended without losing your current
+  position
+
+### Advanced Features
+
+- **Conformance Checking**: Automatic detection of STAC API capabilities with
+  warnings for unsupported features
+- **Error Handling**: Graceful handling of API outages with partial results
+  from healthy endpoints
+- **Client-Side Filtering**: Apply custom filters per API for
+  deployment-specific requirements
+- **Responsive Design**: Full functionality on desktop, tablet, and mobile
+  devices

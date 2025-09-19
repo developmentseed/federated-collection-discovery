@@ -21,16 +21,22 @@ import {
   getApiDocs,
   searchApi,
   fetchNextPage,
-  API_URL,
   FederatedSearchError,
+  getApiHealth,
+  getApiConformance,
+  ConformanceResponse,
+  hasCollectionSearchSupport,
+  hasFreeTextSupport,
 } from "./api/search";
+import { API_URL } from "./config";
+import { getApiConfigurations } from "./utils/api-config";
 
 type ApiError = string | null;
 type SearchErrors = FederatedSearchError[];
 
-const HealthStatus = React.lazy(() => import("./components/HealthStatus"));
 const SearchForm = React.lazy(() => import("./components/SearchForm"));
 const ResultsTable = React.lazy(() => import("./components/ResultsTable"));
+const ApiConfigPanel = React.lazy(() => import("./components/ApiConfigPanel"));
 
 export const App = () => {
   const [results, setResults] = React.useState<Array<Record<string, any>>>([]);
@@ -43,6 +49,20 @@ export const App = () => {
   const [docsLoading, setDocsLoading] = React.useState(true);
   const [apiDocs, setApiDocs] = React.useState<any | null>(null);
   const [docsError, setDocsError] = React.useState<string | null>(null);
+
+  // STAC APIs management
+  const [stacApis, setStacApis] = React.useState<string[]>([]);
+
+  // Conformance management
+  const [conformanceLoading, setConformanceLoading] = React.useState(true);
+  const [conformanceData, setConformanceData] = React.useState<ConformanceResponse | null>(null);
+  const [conformanceError, setConformanceError] = React.useState<string | null>(null);
+
+  // Initialize STAC APIs from config (session-based, no localStorage)
+  React.useEffect(() => {
+    const defaultApis = getApiConfigurations().map(config => config.url);
+    setStacApis(defaultApis);
+  }, []);
 
   React.useEffect(() => {
     async function fetchApiDocs() {
@@ -64,6 +84,31 @@ export const App = () => {
     fetchApiDocs();
   }, []);
 
+  // Fetch conformance data when STAC APIs change
+  React.useEffect(() => {
+    async function fetchConformanceData() {
+      if (stacApis.length === 0) {
+        setConformanceLoading(false);
+        return;
+      }
+
+      try {
+        setConformanceLoading(true);
+        setConformanceError(null);
+        const conformance = await getApiConformance(stacApis);
+        setConformanceData(conformance);
+      } catch (err) {
+        setConformanceError(
+          "Failed to load API conformance. Collection search features may not work as expected."
+        );
+      } finally {
+        setConformanceLoading(false);
+      }
+    }
+
+    fetchConformanceData();
+  }, [stacApis]);
+
   const handleSearch = async (formData: {
     bbox: string;
     datetime: string;
@@ -75,7 +120,7 @@ export const App = () => {
     setResults([]);
 
     try {
-      const data = await searchApi(formData);
+      const data = await searchApi(formData, stacApis);
       setResults(data.collections);
 
       // Extract next page URL from links
@@ -125,6 +170,23 @@ export const App = () => {
     }
   };
 
+  const handleUpdateStacApis = (newApis: string[]) => {
+    setStacApis(newApis);
+  };
+
+  // Calculate conformance capabilities
+  const conformanceCapabilities = React.useMemo(() => {
+    // Only restrict features when we have explicit conformance data showing lack of support
+    if (!conformanceData || stacApis.length === 0) {
+      return null; // No restrictions
+    }
+
+    return {
+      hasCollectionSearch: hasCollectionSearchSupport(conformanceData.conformsTo),
+      hasFreeText: hasFreeTextSupport(conformanceData.conformsTo)
+    };
+  }, [conformanceData, stacApis]);
+
   const flexDirection: SystemProps["flexDirection"] = {
     base: "column",
     xl: "row",
@@ -146,6 +208,13 @@ export const App = () => {
                   </Alert>
                 )}
 
+                {conformanceError && (
+                  <Alert status="warning">
+                    <AlertIcon />
+                    <AlertDescription>{conformanceError}</AlertDescription>
+                  </Alert>
+                )}
+
                 {docsLoading ? (
                   <Spinner />
                 ) : (
@@ -154,14 +223,27 @@ export const App = () => {
                   )
                 )}
 
-                <Heading size="md" textAlign="left">
-                  API Health ({API_URL})
-                </Heading>
+                <Heading size="md">API Configuration:</Heading>
                 <React.Suspense fallback={<Spinner size="md" />}>
-                  <HealthStatus />
+                  <ApiConfigPanel
+                    stacApis={stacApis}
+                    onUpdate={handleUpdateStacApis}
+                  />
                 </React.Suspense>
 
                 <Heading size="md">Collection search:</Heading>
+
+                {/* Show conformance warnings only when we have conformance data showing lack of support */}
+                {conformanceCapabilities && !conformanceCapabilities.hasCollectionSearch && (
+                  <Alert status="warning" mb={4}>
+                    <AlertIcon />
+                    <AlertDescription>
+                      The current set of configured upstream APIs does not support collection search.
+                      Please check your STAC API configuration.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
                 {/* Show API-level errors (these are blocking errors) */}
                 {apiError && (
                   <Alert status="error" mb={4}>
@@ -195,6 +277,8 @@ export const App = () => {
                     apiDocs={apiDocs}
                     apiError={apiError}
                     isLoading={loading}
+                    conformanceCapabilities={conformanceCapabilities}
+                    conformanceLoading={conformanceLoading}
                   />
                 </React.Suspense>
 
@@ -236,6 +320,7 @@ export const App = () => {
           <Spacer />
           <ColorModeSwitcher />
         </Flex>
+
       </Box>
     </ChakraProvider>
   );
