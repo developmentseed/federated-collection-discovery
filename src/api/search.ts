@@ -59,6 +59,31 @@ export async function searchApi(params: SearchParams): Promise<SearchResponse> {
   }
 }
 
+export async function fetchNextPage(nextUrl: string): Promise<SearchResponse> {
+  try {
+    const response = await fetch(nextUrl, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data?.detail ||
+          `Failed to fetch next page with status ${response.status}: ${response.statusText}`,
+      );
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error encountered while fetching next page:", error);
+    throw error;
+  }
+}
+
 export async function getApiHealth() {
   const url = `${API_URL}/_mgmt/health`;
 

@@ -33,6 +33,7 @@ import {
   HStack,
   Divider,
   Link,
+  Spinner,
 } from "@chakra-ui/react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import {
@@ -194,6 +195,9 @@ items <- catalog |>
 
 interface Props {
   data: Array<Record<string, any>>;
+  hasNextPage?: boolean;
+  isLoadingMore?: boolean;
+  onLoadMore?: () => void;
 }
 
 type ColumnBreakpoints = {
@@ -225,7 +229,7 @@ const formatKeyName = (key: string): string => {
   return key;
 };
 
-const ResultsTable: React.FC<Props> = ({ data }) => {
+const ResultsTable: React.FC<Props> = ({ data, hasNextPage = false, isLoadingMore = false, onLoadMore }) => {
   const bgColor = useColorModeValue("white", "gray.800");
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { colorMode } = useColorMode();
@@ -340,6 +344,22 @@ const ResultsTable: React.FC<Props> = ({ data }) => {
             ))}
           </Tbody>
         </Table>
+
+        {/* Load More Button */}
+        {hasNextPage && (
+          <Box textAlign="center" p={4}>
+            <Button
+              onClick={onLoadMore}
+              isLoading={isLoadingMore}
+              loadingText="Loading more..."
+              size="md"
+              colorScheme="blue"
+              disabled={isLoadingMore}
+            >
+              {isLoadingMore ? <Spinner size="sm" /> : "Load More"}
+            </Button>
+          </Box>
+        )}
       </Box>
 
       {selectedRecord && (

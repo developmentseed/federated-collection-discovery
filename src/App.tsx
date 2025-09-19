@@ -20,6 +20,7 @@ import { ColorModeSwitcher } from "./ColorModeSwitcher";
 import {
   getApiDocs,
   searchApi,
+  fetchNextPage,
   API_URL,
   FederatedSearchError,
 } from "./api/search";
@@ -34,8 +35,10 @@ const ResultsTable = React.lazy(() => import("./components/ResultsTable"));
 export const App = () => {
   const [results, setResults] = React.useState<Array<Record<string, any>>>([]);
   const [loading, setLoading] = React.useState<boolean>(false);
+  const [loadingMore, setLoadingMore] = React.useState<boolean>(false);
   const [apiError, setApiError] = React.useState<ApiError>(null); // For 400/500 errors
   const [searchErrors, setSearchErrors] = React.useState<SearchErrors>([]); // For search-level errors
+  const [nextPageUrl, setNextPageUrl] = React.useState<string | null>(null);
 
   const [docsLoading, setDocsLoading] = React.useState(true);
   const [apiDocs, setApiDocs] = React.useState<any | null>(null);
@@ -74,6 +77,11 @@ export const App = () => {
     try {
       const data = await searchApi(formData);
       setResults(data.collections);
+
+      // Extract next page URL from links
+      const nextLink = data.links?.find((link: any) => link.rel === "next");
+      setNextPageUrl(nextLink?.href || null);
+
       // if (data.errors && data.errors.length > 0) {
       //   setSearchErrors(data.errors);
       // }
@@ -84,6 +92,36 @@ export const App = () => {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLoadMore = async () => {
+    if (!nextPageUrl || loadingMore) return;
+
+    setLoadingMore(true);
+    setApiError(null);
+    setSearchErrors([]);
+
+    try {
+      const data = await fetchNextPage(nextPageUrl);
+
+      // Append new results to existing ones
+      setResults(prevResults => [...prevResults, ...data.collections]);
+
+      // Update next page URL for potential further pagination
+      const nextLink = data.links?.find((link: any) => link.rel === "next");
+      setNextPageUrl(nextLink?.href || null);
+
+      // if (data.errors && data.errors.length > 0) {
+      //   setSearchErrors(prevErrors => [...prevErrors, ...data.errors]);
+      // }
+    } catch (error) {
+      console.error("Load more error:", error);
+      setApiError(
+        error instanceof Error ? error.message : "An unexpected error occurred while loading more results",
+      );
+    } finally {
+      setLoadingMore(false);
     }
   };
 
@@ -184,7 +222,12 @@ export const App = () => {
               ) : (
                 <React.Suspense fallback={<Spinner size="xl" />}>
                   <Box w="100%" height="95vh" overflowY="auto">
-                    <ResultsTable data={results} />
+                    <ResultsTable
+                      data={results}
+                      hasNextPage={!!nextPageUrl}
+                      isLoadingMore={loadingMore}
+                      onLoadMore={handleLoadMore}
+                    />
                   </Box>
                 </React.Suspense>
               )}
