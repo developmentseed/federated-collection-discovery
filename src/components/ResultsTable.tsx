@@ -42,6 +42,7 @@ import {
 } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import { MapContainer, Rectangle } from "react-leaflet";
 import CommonTileLayer from "./CommonTileLayer";
+import ReactMarkdown from "react-markdown";
 
 interface HintFormat {
   [hint_package: string]: string;
@@ -437,7 +438,17 @@ const ResultsTable: React.FC<Props> = ({ data, hasNextPage = false, isLoadingMor
                   {selectedRecord.description && (
                     <Box mb={2}>
                       <Text fontWeight="semibold">Description:</Text>
-                      <Text>{selectedRecord.description}</Text>
+                      <ReactMarkdown
+                        components={{
+                          a: ({ href, children }) => (
+                            <Link href={href} color="blue.500" textDecoration="underline" isExternal>
+                              {children}
+                            </Link>
+                          ),
+                        }}
+                      >
+                        {selectedRecord.description}
+                      </ReactMarkdown>
                     </Box>
                   )}
                 </Box>
