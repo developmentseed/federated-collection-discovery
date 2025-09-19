@@ -7,15 +7,11 @@ services:
       - "8000:8000"
     develop:
       watch:
-        - action: sync+restart
-          path: ./src/server/federated_collection_discovery/
-          target: /app/federated_collection_discovery/
         - action: rebuild
           path: ./pyproject.toml
     environment:
       - PORT=8000
-      - FEDERATED_STAC_API_URLS=https://stac.maap-project.org/,https://openveda.cloud/api/stac/,https://catalogue.dataspace.copernicus.eu/stac
-      - FEDERATED_CMR_URLS=https://cmr.earthdata.nasa.gov/search/
+      - UPSTREAM_API_URLS=https://stac.maap-project.org/,https://staging.openveda.cloud/api/stac/
   client:
     build: 
       dockerfile: ./docker/Dockerfile.client
@@ -23,7 +19,8 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./src/client:/app/src/client
+      - ./public:/app/public
+      - ./src:/app/src
 
     environment:
       - CHOKIDAR_USEPOLLING=true

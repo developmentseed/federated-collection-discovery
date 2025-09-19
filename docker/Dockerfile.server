@@ -2,12 +2,10 @@ FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
 WORKDIR /app
 
-COPY README.md pyproject.toml uv.lock ./
-COPY src/server ./src/server
-
-RUN uv sync --frozen --no-dev --extra uvicorn
+COPY pyproject.toml uv.lock ./
+RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/* && uv sync
 
 ENV HOST 0.0.0.0
 ENV PORT 80
-CMD uv run uvicorn federated_collection_discovery.main:app --host ${HOST} --port ${PORT} --log-level debug
+CMD uv run uvicorn stac_fastapi.collection_discovery.app:app --host ${HOST} --port ${PORT} --log-level debug
 

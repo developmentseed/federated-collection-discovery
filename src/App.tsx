@@ -73,10 +73,10 @@ export const App = () => {
 
     try {
       const data = await searchApi(formData);
-      setResults(data.results);
-      if (data.errors && data.errors.length > 0) {
-        setSearchErrors(data.errors);
-      }
+      setResults(data.collections);
+      // if (data.errors && data.errors.length > 0) {
+      //   setSearchErrors(data.errors);
+      // }
     } catch (error) {
       console.error("Search error:", error);
       setApiError(

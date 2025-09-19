@@ -7,7 +7,13 @@ type SearchParams = {
 export const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
 
 function buildQuery(params: SearchParams): string {
-  const urlParams = new URLSearchParams(params as any);
+  const filteredParams = Object.fromEntries(
+    Object.entries(params).filter(
+      ([_, value]) => value != null && value !== "",
+    ),
+  );
+
+  const urlParams = new URLSearchParams(filteredParams);
   return urlParams.toString();
 }
 
@@ -17,14 +23,15 @@ export interface FederatedSearchError {
 }
 
 type SearchResponse = {
-  results: any[];
+  collections: any[];
+  links: any[];
   errors?: FederatedSearchError[]; // Update this type
 };
 
 export async function searchApi(params: SearchParams): Promise<SearchResponse> {
   console.log(`${params.datetime}`);
   const queryString = buildQuery(params);
-  const url = `${API_URL}/search?${queryString}`;
+  const url = `${API_URL}/collections?${queryString}`;
 
   try {
     const response = await fetch(url, {
@@ -35,6 +42,7 @@ export async function searchApi(params: SearchParams): Promise<SearchResponse> {
     });
 
     const data = await response.json();
+    console.log(data.collections[0]);
 
     if (!response.ok) {
       // Handle API-level errors (400/500)
@@ -44,15 +52,7 @@ export async function searchApi(params: SearchParams): Promise<SearchResponse> {
       );
     }
 
-    // Log search-level errors to console for debugging
-    if (data.errors && data.errors.length > 0) {
-      console.log("Search encountered the following errors:", data.errors);
-    }
-
-    return {
-      results: data.results || [],
-      errors: data.errors || [],
-    };
+    return data;
   } catch (error) {
     console.error("Error encountered while performing search:", error);
     throw error;
@@ -60,7 +60,7 @@ export async function searchApi(params: SearchParams): Promise<SearchResponse> {
 }
 
 export async function getApiHealth() {
-  const url = `${API_URL}/health`;
+  const url = `${API_URL}/_mgmt/health`;
 
   try {
     const response = await fetch(url, {
@@ -82,7 +82,7 @@ export async function getApiHealth() {
   }
 }
 export async function getApiDocs() {
-  const url = `${API_URL}/openapi.json`;
+  const url = `${API_URL}/api`;
 
   try {
     const response = await fetch(url, {
@@ -93,13 +93,13 @@ export async function getApiDocs() {
     });
 
     if (!response.ok) {
-      throw new Error("Health check failed");
+      throw new Error("Failed to fetch API docs");
     }
 
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error("Error encountered while performing health check:", error);
+    console.error("Failed to fetch API docs", error);
     throw error;
   }
 }
