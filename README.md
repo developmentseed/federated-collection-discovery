@@ -7,18 +7,16 @@
     width="200"
 />
 
-A client-side React application for discovering and searching geospatial
-collections across multiple STAC (SpatioTemporal Asset Catalog) API endpoints.
-This tool allows you to configure multiple STAC APIs, search across them
-simultaneously, and get comprehensive collection metadata with code generation
-capabilities.
+A React application for discovering and searching geospatial
+collections using a [STAC FastAPI Collection Discovery API](http://developmentseed.org/stac-fastapi-collection-discovery/)
+that provides federated search across multiple STAC API endpoints.
+This tool allows you to configure which STAC APIs the backend searches,
+view comprehensive collection metadata, and get item-search code hints.
 
 ## Features
 
-- **Multi-API Search**: Configure and search across multiple STAC API
-  endpoints simultaneously
-- **Client-Side Architecture**: Pure React application with no backend
-  dependencies - connects directly to STAC APIs
+- **Federated Search**: Configure which STAC APIs the backend searches
+  across for comprehensive results
 - **Interactive Collection Details**: Comprehensive modal with collection
   metadata, spatial/temporal extents, providers, and links
 - **Code Generation**: Client-generated STAC item search examples in Python and
@@ -37,22 +35,9 @@ capabilities.
 - **Health Monitoring**: Real-time API health status with detailed conformance
   and capability information
 
-## Architecture
-
-This application is a **client-only** React application that directly
-communicates with STAC APIs. It does not require a backend server and can be
-deployed as a static site. The application:
-
-- Connects directly to configured STAC API endpoints
-- Performs client-side aggregation of search results
-- Handles STAC API conformance checking and capability detection
-- Provides configurable filtering per API endpoint
-- Manages pagination across multiple APIs
-
 ## Table of Contents
 
 - [Features](#features)
-- [Architecture](#architecture)
 - [Development](#development)
 - [Running with Docker](#running-with-docker)
 - [Running in local environment](#running-in-local-environment)
@@ -86,10 +71,6 @@ This will start:
 
 - **Client application**: `http://localhost:3000`
 - **Backend service** (optional): `http://localhost:8000`
-
-The application will use the STAC APIs configured in the
-`REACT_APP_DEFAULT_STAC_APIS` environment variable, which defaults to NASA's
-MAAP STAC API and VEDA STAC API.
 
 Stop the services:
 
@@ -146,26 +127,25 @@ The application can be configured to work with any STAC API endpoints:
 
 #### Environment Variables
 
-- `REACT_APP_DEFAULT_STAC_APIS`: Comma-separated list of default STAC API
-  URLs
-- `REACT_APP_API_URL`: Optional backend service URL (only needed if using
-  backend features)
+- `REACT_APP_API_URL`: URL to the STAC FastAPI Collection Discovery API
 
 #### Runtime Configuration
 
 Use the **Settings** button in the API Configuration panel to:
 
-- **Add/Remove APIs**: Configure which STAC API endpoints to search
+- **Add/Remove APIs**: Configure which STAC API endpoints the backend searches
 - **Health Monitoring**: View real-time health status and conformance
   information
 - **Capability Detection**: See which APIs support collection search and
   free-text search
-- **Default APIs**: Reset to environment-configured defaults
+- **Default APIs**: Reset to the APIs configured in config.ts
 
-#### Deployment Customization
+#### Default STAC APIs Configuration
 
-For deployment-specific filtering, edit `/src/config.ts` to add custom filter
-functions:
+The default STAC APIs that the application queries are configured in
+`/src/config.ts` in the `DEFAULT_API_CONFIGURATIONS` array.
+Edit this file to specify which STAC APIs should be available by default
+and optionally add custom filter functions:
 
 ```typescript
 export const DEFAULT_API_CONFIGURATIONS: ApiConfiguration[] = [
@@ -211,7 +191,7 @@ Available filter examples:
 2. **View Results**: Collections appear in the right panel table with:
    - Sortable columns (title, ID, API source)
    - Click "Details" button for comprehensive collection information
-   - Results from all configured APIs are aggregated
+   - Results from all backend-configured APIs are displayed
 
 ### Collection Details Modal
 
@@ -229,21 +209,20 @@ The comprehensive collection details modal provides:
 
 ### Pagination & Results
 
-- **Progressive Loading**: Results from all APIs are loaded and combined
+- **Progressive Loading**: Results are loaded from the Collection Discovery API
 - **Load More**: When available, a "Load More" button appears to fetch
-  additional results
-- **Cross-API Pagination**: Seamlessly handles pagination across multiple STAC
-  APIs
+  additional results from the backend
+- **Pagination Support**: The backend handles pagination across multiple STAC
+  APIs seamlessly
 - **Result Persistence**: New results are appended without losing your current
   position
 
 ### Advanced Features
 
-- **Conformance Checking**: Automatic detection of STAC API capabilities with
-  warnings for unsupported features
-- **Error Handling**: Graceful handling of API outages with partial results
-  from healthy endpoints
-- **Client-Side Filtering**: Apply custom filters per API for
-  deployment-specific requirements
+- **Conformance Checking**: Backend performs automatic detection of STAC API capabilities
+- **Error Handling**: Backend provides graceful handling of API outages with
+  partial results from healthy endpoints
+- **Client-Side Filtering**: Apply custom filters per API based on
+  deployment-specific requirements configured in config.ts
 - **Responsive Design**: Full functionality on desktop, tablet, and mobile
   devices

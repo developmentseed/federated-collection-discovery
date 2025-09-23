@@ -21,18 +21,14 @@ import {
   getApiDocs,
   searchApi,
   fetchNextPage,
-  FederatedSearchError,
-  getApiHealth,
   getApiConformance,
   ConformanceResponse,
   hasCollectionSearchSupport,
   hasFreeTextSupport,
 } from "./api/search";
-import { API_URL } from "./config";
 import { getApiConfigurations } from "./utils/api-config";
 
 type ApiError = string | null;
-type SearchErrors = FederatedSearchError[];
 
 const SearchForm = React.lazy(() => import("./components/SearchForm"));
 const ResultsTable = React.lazy(() => import("./components/ResultsTable"));
@@ -43,7 +39,6 @@ export const App = () => {
   const [loading, setLoading] = React.useState<boolean>(false);
   const [loadingMore, setLoadingMore] = React.useState<boolean>(false);
   const [apiError, setApiError] = React.useState<ApiError>(null); // For 400/500 errors
-  const [searchErrors, setSearchErrors] = React.useState<SearchErrors>([]); // For search-level errors
   const [nextPageUrl, setNextPageUrl] = React.useState<string | null>(null);
 
   const [docsLoading, setDocsLoading] = React.useState(true);
@@ -55,12 +50,15 @@ export const App = () => {
 
   // Conformance management
   const [conformanceLoading, setConformanceLoading] = React.useState(true);
-  const [conformanceData, setConformanceData] = React.useState<ConformanceResponse | null>(null);
-  const [conformanceError, setConformanceError] = React.useState<string | null>(null);
+  const [conformanceData, setConformanceData] =
+    React.useState<ConformanceResponse | null>(null);
+  const [conformanceError, setConformanceError] = React.useState<string | null>(
+    null,
+  );
 
   // Initialize STAC APIs from config (session-based, no localStorage)
   React.useEffect(() => {
-    const defaultApis = getApiConfigurations().map(config => config.url);
+    const defaultApis = getApiConfigurations().map((config) => config.url);
     setStacApis(defaultApis);
   }, []);
 
@@ -99,7 +97,7 @@ export const App = () => {
         setConformanceData(conformance);
       } catch (err) {
         setConformanceError(
-          "Failed to load API conformance. Collection search features may not work as expected."
+          "Failed to load API conformance. Collection search features may not work as expected.",
         );
       } finally {
         setConformanceLoading(false);
@@ -116,7 +114,6 @@ export const App = () => {
   }) => {
     setLoading(true);
     setApiError(null);
-    setSearchErrors([]);
     setResults([]);
 
     try {
@@ -126,10 +123,6 @@ export const App = () => {
       // Extract next page URL from links
       const nextLink = data.links?.find((link: any) => link.rel === "next");
       setNextPageUrl(nextLink?.href || null);
-
-      // if (data.errors && data.errors.length > 0) {
-      //   setSearchErrors(data.errors);
-      // }
     } catch (error) {
       console.error("Search error:", error);
       setApiError(
@@ -145,25 +138,22 @@ export const App = () => {
 
     setLoadingMore(true);
     setApiError(null);
-    setSearchErrors([]);
 
     try {
       const data = await fetchNextPage(nextPageUrl);
 
       // Append new results to existing ones
-      setResults(prevResults => [...prevResults, ...data.collections]);
+      setResults((prevResults) => [...prevResults, ...data.collections]);
 
       // Update next page URL for potential further pagination
       const nextLink = data.links?.find((link: any) => link.rel === "next");
       setNextPageUrl(nextLink?.href || null);
-
-      // if (data.errors && data.errors.length > 0) {
-      //   setSearchErrors(prevErrors => [...prevErrors, ...data.errors]);
-      // }
     } catch (error) {
       console.error("Load more error:", error);
       setApiError(
-        error instanceof Error ? error.message : "An unexpected error occurred while loading more results",
+        error instanceof Error
+          ? error.message
+          : "An unexpected error occurred while loading more results",
       );
     } finally {
       setLoadingMore(false);
@@ -182,8 +172,10 @@ export const App = () => {
     }
 
     return {
-      hasCollectionSearch: hasCollectionSearchSupport(conformanceData.conformsTo),
-      hasFreeText: hasFreeTextSupport(conformanceData.conformsTo)
+      hasCollectionSearch: hasCollectionSearchSupport(
+        conformanceData.conformsTo,
+      ),
+      hasFreeText: hasFreeTextSupport(conformanceData.conformsTo),
     };
   }, [conformanceData, stacApis]);
 
@@ -234,40 +226,23 @@ export const App = () => {
                 <Heading size="md">Collection search:</Heading>
 
                 {/* Show conformance warnings only when we have conformance data showing lack of support */}
-                {conformanceCapabilities && !conformanceCapabilities.hasCollectionSearch && (
-                  <Alert status="warning" mb={4}>
-                    <AlertIcon />
-                    <AlertDescription>
-                      The current set of configured upstream APIs does not support collection search.
-                      Please check your STAC API configuration.
-                    </AlertDescription>
-                  </Alert>
-                )}
+                {conformanceCapabilities &&
+                  !conformanceCapabilities.hasCollectionSearch && (
+                    <Alert status="warning" mb={4}>
+                      <AlertIcon />
+                      <AlertDescription>
+                        The current set of configured upstream APIs does not
+                        support collection search. Please check your STAC API
+                        configuration.
+                      </AlertDescription>
+                    </Alert>
+                  )}
 
                 {/* Show API-level errors (these are blocking errors) */}
                 {apiError && (
                   <Alert status="error" mb={4}>
                     <AlertIcon />
                     <AlertDescription>{apiError}</AlertDescription>
-                  </Alert>
-                )}
-
-                {/* Show search-level errors (these are warnings, as we still got results) */}
-                {searchErrors.length > 0 && (
-                  <Alert status="warning" mb={4}>
-                    <AlertIcon />
-                    <AlertDescription>
-                      {`${searchErrors.length} error${
-                        searchErrors.length === 1 ? "" : "s"
-                      } occurred during the search. The search results may be incomplete.`}
-                      <Box mt={2}>
-                        {searchErrors.map((error, index) => (
-                          <Text key={index} fontSize="sm">
-                            • {error.error_message} (from {error.catalog_url})
-                          </Text>
-                        ))}
-                      </Box>
-                    </AlertDescription>
                   </Alert>
                 )}
 
@@ -320,7 +295,6 @@ export const App = () => {
           <Spacer />
           <ColorModeSwitcher />
         </Flex>
-
       </Box>
     </ChakraProvider>
   );

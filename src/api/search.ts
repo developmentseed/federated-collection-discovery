@@ -123,11 +123,6 @@ function buildQuery(params: SearchParams, stacApis?: string[]): string {
   return urlParams.toString();
 }
 
-export interface FederatedSearchError {
-  catalog_url: string;
-  error_message: string;
-}
-
 export interface ConformanceResponse {
   conformsTo: string[];
 }
@@ -135,7 +130,6 @@ export interface ConformanceResponse {
 type SearchResponse = {
   collections: any[];
   links: any[];
-  errors?: FederatedSearchError[]; // Update this type
 };
 
 export async function searchApi(
