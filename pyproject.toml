@@ -3,25 +3,17 @@ name = "federated-collection-discovery-application"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.10"
-dependencies = ["federated-collection-discovery"]
-
+requires-python = ">=3.12"
+dependencies = [
+    "stac-fastapi-collection-discovery[server]",
+]
 
 [tool.uv.sources]
-federated-collection-discovery = { path = "src/server" }
+stac-fastapi-collection-discovery = { git = "https://github.com/developmentseed/stac-fastapi-collection-discovery", rev = "v0.2.2" }
 
 [dependency-groups]
 dev = [
-    "asgi-lifespan>=2.1.0",
-    "jupyterlab>=4.2.5",
-    "pre-commit>=4.0.1",
-    "pytest-asyncio>=0.24.0",
-    "pytest-cov>=5.0.0",
-    "pytest-mock>=3.14.0",
-    "pytest-recording>=0.13.2",
-    "pytest>=8.3.3",
-    "requests-mock>=1.12.1",
-    "ruff>=0.6.9",
-    "types-requests>=2.32.0.20241016",
-    "uvicorn>=0.30.1"
+    "pre-commit>=4.3.0",
 ]
+
+

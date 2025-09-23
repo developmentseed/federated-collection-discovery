@@ -11,9 +11,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.10', '3.11', '3.12', '3.13']
 
     steps:
       - name: Check out repository
@@ -22,44 +19,21 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v3
         with:
-          version: "0.5.*" 
+          version: "0.8.*" 
     
-      - name: Set up Python ${{ matrix.python-version }}
-        run: uv python install ${{ matrix.python-version }}
+      - name: Set up Python 
+        run: uv python install 3.13
       
       - name: Install dependencies
         run: |
           uv sync
 
       - name: run pre-commit
-        if: ${{ matrix.python-version == env.LATEST_PY_VERSION }}
         run: |
           uv run pre-commit run --all-files
 
-      - name: Run tests
-        run: uv run pytest
-
-  check-client-changes:
-    runs-on: ubuntu-latest
-    outputs:
-      changes: ${{ steps.client_changes.outputs.changes }}
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Check for changes in client directory
-        id: client_changes
-        run: |
-          if git diff --quiet HEAD^ HEAD -- src/client yarn.lock; then
-            echo "changes=false" >> $GITHUB_OUTPUT
-          else
-            echo "changes=true" >> $GITHUB_OUTPUT
-          fi
-
   build-client:
-    needs: [check-client-changes]
     runs-on: ubuntu-latest
-    if: needs.check-client-changes.outputs.changes == 'true'
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -93,45 +67,3 @@ jobs:
       - name: Build client application
         run: yarn build
 
-  publish:
-    needs: [test]
-    runs-on: ubuntu-latest
-    if: startsWith(github.event.ref, 'refs/tags') || github.event_name == 'release'
-    environment:
-      name: pypi
-      url: https://pypi.org/p/federated-collection-discovery
-    permissions:
-      id-token: write
-    defaults:
-      run:
-        working-directory: src/server
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-      
-      - name: Install uv
-        uses: astral-sh/setup-uv@v3
-        with:
-          version: "0.5.*" 
-    
-      - name: Set up Python 3.12
-        run: uv python install 3.12
-      
-      - name: Set tag version
-        id: tag
-        run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-
-      - name: Set module version
-        id: module
-        run: echo "version=$(python federated_collection_discovery/__init__.py)" >> $GITHUB_ENV
-
-      - name: Build package
-        if: env.tag == env.version
-        run: |
-          uv build
-
-      - name: Publish to pypi
-        if: env.tag == env.version
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: src/server/dist/
