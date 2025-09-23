@@ -19,7 +19,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v3
         with:
-          version: "0.5.*" 
+          version: "0.8.*" 
     
       - name: Set up Python 
         run: uv python install 3.13
@@ -29,7 +29,6 @@ jobs:
           uv sync
 
       - name: run pre-commit
-        if: ${{ matrix.python-version == env.LATEST_PY_VERSION }}
         run: |
           uv run pre-commit run --all-files
 
