@@ -1,7 +1,7 @@
 # Federated Collection Discovery
 
 <img
-    src="public/logo.svg"
+    src="src/assets/logo.svg"
     alt="federated collection discovery logo is a modified version of the
     proposed Fediverse logo but with a geographic theme"
     width="200"
