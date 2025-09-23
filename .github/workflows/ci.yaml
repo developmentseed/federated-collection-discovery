@@ -34,7 +34,6 @@ jobs:
 
   build-client:
     runs-on: ubuntu-latest
-    if: needs.check-client-changes.outputs.changes == 'true'
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
