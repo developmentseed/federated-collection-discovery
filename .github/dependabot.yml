@@ -1,13 +1,20 @@
 version: 2
 updates:
-  # Client package.json
   - package-ecosystem: "npm"
-    directory: "/src/client"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
     versioning-strategy: "auto"
     groups:
+    ignore:
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-scripts"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-leaflet"
+        update-types: ["version-update:semver-major"]
       all-dependencies:
         patterns:
           - "*"
@@ -16,21 +23,9 @@ updates:
       prefix-development: "chore"
       include: "scope"
 
-  # Server pyproject.toml
-  - package-ecosystem: "pip"
-    directory: "/src/server"
+  - package-ecosystem: "github-actions"
+    directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 10
-    versioning-strategy: "auto"
-    groups:
-      all-dependencies:
-        patterns:
-          - "*"
-    commit-message:
-      prefix: "chore"
-      prefix-development: "chore"
-      include: "scope"
-
-
+    open-pull-requests-limit: 5
 
