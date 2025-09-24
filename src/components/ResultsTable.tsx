@@ -42,12 +42,10 @@ import {
 } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import { OSM } from "ol/source";
 import Map from "ol/Map";
+import FullScreen from "ol/control/FullScreen.js";
 import View from "ol/View";
 import TileLayer from "ol/layer/Tile";
-import { Layer } from "ol/layer";
 import { defaults as defaultControls } from "ol/control";
-import LayerSwitcher from "ol-layerswitcher";
-import { BaseLayerOptions, GroupLayerOptions } from "ol-layerswitcher";
 import STAC from "ol-stac";
 import proj4 from "proj4";
 import { register } from "ol/proj/proj4";
@@ -594,9 +592,7 @@ const MapDisplay: React.FC<MapDisplayProps> = ({ stacData }) => {
     if (mapRef.current && !mapInstanceRef.current) {
       const background = new TileLayer({
         source: new OSM(),
-        title: "OpenStreetMap",
-        type: "base",
-      } as BaseLayerOptions);
+      });
 
       const layers: any[] = [background];
       let stacLayer: any = null;
@@ -619,22 +615,8 @@ const MapDisplay: React.FC<MapDisplayProps> = ({ stacData }) => {
           center: [0, 0],
           zoom: 0,
         }),
-        controls: defaultControls(),
+        controls: defaultControls().extend([new FullScreen()]),
       });
-
-      // Add layer switcher
-      // const layerSwitcher = new LayerSwitcher({
-      //   reverse: true,
-      //   groupSelectStyle: "group",
-      //   startActive: true,
-      //   activationMode: "click",
-      //   tipLabel: "Layers",
-      //   collapseTipLabel: "Collapse layer panel",
-      // });
-      //
-      // // Position layer switcher at bottom left
-      // layerSwitcher.setMap(map);
-      // map.addControl(layerSwitcher);
 
       if (stacLayer) {
         // Try to fit extent from STAC data directly
@@ -685,7 +667,7 @@ const MapDisplay: React.FC<MapDisplayProps> = ({ stacData }) => {
     };
   }, [stacData]);
 
-  return <Box height="300px" ref={mapRef} />;
+  return <Box height="500px" ref={mapRef} />;
 };
 
 export default ResultsTable;
