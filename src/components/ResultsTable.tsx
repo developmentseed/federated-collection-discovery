@@ -373,10 +373,6 @@ const ResultsTable: React.FC<Props> = ({
               <VStack align="start" spacing={4}>
                 {/* Core Information */}
                 <Box>
-                  <Text fontWeight="bold" fontSize="lg" mb={2}>
-                    Collection Information
-                  </Text>
-
                   {/* ID */}
                   {selectedRecord.id && (
                     <Box mb={2}>
