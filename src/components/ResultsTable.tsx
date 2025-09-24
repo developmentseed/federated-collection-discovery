@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Table,
   Thead,
@@ -40,35 +40,27 @@ import {
   coldarkCold,
   coldarkDark,
 } from "react-syntax-highlighter/dist/cjs/styles/prism";
-import { MapContainer, Rectangle } from "react-leaflet";
-import CommonTileLayer from "./CommonTileLayer";
+import { OSM } from "ol/source";
+import Map from "ol/Map";
+import View from "ol/View";
+import TileLayer from "ol/layer/Tile";
+import { Layer } from "ol/layer";
+import { defaults as defaultControls } from "ol/control";
+import LayerSwitcher from "ol-layerswitcher";
+import { BaseLayerOptions, GroupLayerOptions } from "ol-layerswitcher";
+import STAC from "ol-stac";
+import proj4 from "proj4";
+import { register } from "ol/proj/proj4";
+import { transformExtent } from "ol/proj";
+import "ol/ol.css";
+import "ol-layerswitcher/dist/ol-layerswitcher.css";
+
+register(proj4);
 import ReactMarkdown from "react-markdown";
 
 interface HintFormat {
   [hint_package: string]: string;
 }
-
-interface SpatialExtentArrayFormat {
-  west: number;
-  south: number;
-  east: number;
-  north: number;
-}
-
-const convertToSpatialExtent = (
-  extents: ([number, number, number, number] | null)[],
-): SpatialExtentArrayFormat[] => {
-  return extents
-    .filter(
-      (extent): extent is [number, number, number, number] => extent !== null,
-    )
-    .map(([west, south, east, north]) => ({
-      west,
-      south,
-      east,
-      north,
-    }));
-};
 
 const formatTemporalRange = (ranges: any[]): string => {
   const formatDate = (dateString: string | null | undefined): string => {
@@ -106,7 +98,6 @@ const formatTemporalRange = (ranges: any[]): string => {
   return ranges.map(formatSingleRange).join(", ");
 };
 
-
 const extractCatalogUrl = (collection: Record<string, any>): string => {
   // First check if there's already a catalog_url key (backward compatibility)
   if (collection.catalog_url) {
@@ -134,7 +125,9 @@ const formatProviders = (providers: any[]): JSX.Element => {
       {providers.map((provider: any, index: number) => (
         <Box key={index}>
           <HStack spacing={2}>
-            <Text fontWeight="semibold">{provider.name || "Unknown Provider"}</Text>
+            <Text fontWeight="semibold">
+              {provider.name || "Unknown Provider"}
+            </Text>
             {provider.roles && Array.isArray(provider.roles) && (
               <Wrap>
                 {provider.roles.map((role: string, roleIndex: number) => (
@@ -230,7 +223,12 @@ const formatKeyName = (key: string): string => {
   return key;
 };
 
-const ResultsTable: React.FC<Props> = ({ data, hasNextPage = false, isLoadingMore = false, onLoadMore }) => {
+const ResultsTable: React.FC<Props> = ({
+  data,
+  hasNextPage = false,
+  isLoadingMore = false,
+  onLoadMore,
+}) => {
   const bgColor = useColorModeValue("white", "gray.800");
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { colorMode } = useColorMode();
@@ -272,7 +270,11 @@ const ResultsTable: React.FC<Props> = ({ data, hasNextPage = false, isLoadingMor
     return sortedArray;
   }, [sortColumn, sortOrder, data]);
 
-  const renderCell = (header: string, value: any, row?: Record<string, any>) => {
+  const renderCell = (
+    header: string,
+    value: any,
+    row?: Record<string, any>,
+  ) => {
     if (header === "catalog_url" && row) {
       return extractCatalogUrl(row);
     } else if (header === "temporal_range" && Array.isArray(value)) {
@@ -373,7 +375,9 @@ const ResultsTable: React.FC<Props> = ({ data, hasNextPage = false, isLoadingMor
               <VStack align="start" spacing={4}>
                 {/* Core Information */}
                 <Box>
-                  <Text fontWeight="bold" fontSize="lg" mb={2}>Collection Information</Text>
+                  <Text fontWeight="bold" fontSize="lg" mb={2}>
+                    Collection Information
+                  </Text>
 
                   {/* ID */}
                   {selectedRecord.id && (
@@ -386,7 +390,11 @@ const ResultsTable: React.FC<Props> = ({ data, hasNextPage = false, isLoadingMor
                   {/* Source API */}
                   <Box mb={2}>
                     <Text fontWeight="semibold">API:</Text>
-                    <Link href={extractCatalogUrl(selectedRecord)} color="blue.500" isExternal>
+                    <Link
+                      href={extractCatalogUrl(selectedRecord)}
+                      color="blue.500"
+                      isExternal
+                    >
                       {extractCatalogUrl(selectedRecord)}
                     </Link>
                   </Box>
@@ -407,16 +415,16 @@ const ResultsTable: React.FC<Props> = ({ data, hasNextPage = false, isLoadingMor
                         {selectedRecord.extent?.spatial?.bbox && (
                           <Box mb={2}>
                             <Text fontWeight="semibold">Spatial:</Text>
-                            <MapDisplay
-                              spatialExtents={convertToSpatialExtent(selectedRecord.extent.spatial.bbox)}
-                            />
+                            <MapDisplay stacData={selectedRecord} />
                           </Box>
                         )}
                         {selectedRecord.extent?.temporal?.interval && (
                           <Box mb={2}>
                             <Text fontWeight="semibold">Temporal:</Text>
                             <Text>
-                              {formatTemporalRange(selectedRecord.extent.temporal.interval)}
+                              {formatTemporalRange(
+                                selectedRecord.extent.temporal.interval,
+                              )}
                             </Text>
                           </Box>
                         )}
@@ -441,7 +449,12 @@ const ResultsTable: React.FC<Props> = ({ data, hasNextPage = false, isLoadingMor
                       <ReactMarkdown
                         components={{
                           a: ({ href, children }) => (
-                            <Link href={href} color="blue.500" textDecoration="underline" isExternal>
+                            <Link
+                              href={href}
+                              color="blue.500"
+                              textDecoration="underline"
+                              isExternal
+                            >
                               {children}
                             </Link>
                           ),
@@ -457,7 +470,9 @@ const ResultsTable: React.FC<Props> = ({ data, hasNextPage = false, isLoadingMor
 
                 {/* STAC Item Search Code Hints */}
                 <Box width="100%">
-                  <Text fontWeight="semibold" mb={2}>STAC Item Search Code Hints:</Text>
+                  <Text fontWeight="semibold" mb={2}>
+                    STAC Item Search Code Hints:
+                  </Text>
                   <Tabs>
                     <TabList>
                       <Tab>Python</Tab>
@@ -465,19 +480,19 @@ const ResultsTable: React.FC<Props> = ({ data, hasNextPage = false, isLoadingMor
                     </TabList>
                     <TabPanels>
                       <TabPanel p={0} pt={4}>
-                        <SyntaxHighlighter
-                          language="python"
-                          style={hintStyle}
-                        >
-                          {getPythonCodeHint(extractCatalogUrl(selectedRecord), selectedRecord.id || 'collection-id')}
+                        <SyntaxHighlighter language="python" style={hintStyle}>
+                          {getPythonCodeHint(
+                            extractCatalogUrl(selectedRecord),
+                            selectedRecord.id || "collection-id",
+                          )}
                         </SyntaxHighlighter>
                       </TabPanel>
                       <TabPanel p={0} pt={4}>
-                        <SyntaxHighlighter
-                          language="r"
-                          style={hintStyle}
-                        >
-                          {getRCodeHint(extractCatalogUrl(selectedRecord), selectedRecord.id || 'collection-id')}
+                        <SyntaxHighlighter language="r" style={hintStyle}>
+                          {getRCodeHint(
+                            extractCatalogUrl(selectedRecord),
+                            selectedRecord.id || "collection-id",
+                          )}
                         </SyntaxHighlighter>
                       </TabPanel>
                     </TabPanels>
@@ -485,40 +500,54 @@ const ResultsTable: React.FC<Props> = ({ data, hasNextPage = false, isLoadingMor
                 </Box>
 
                 {/* Collapsible Links Section */}
-                {selectedRecord.links && Array.isArray(selectedRecord.links) && (
-                  <Box width="100%">
-                    <Button
-                      variant="ghost"
-                      onClick={() => setShowLinks(!showLinks)}
-                      size="sm"
-                    >
-                      {showLinks ? "Hide" : "Show"} Links ({selectedRecord.links.length})
-                    </Button>
-                    <Collapse in={showLinks} animateOpacity>
-                      <Box mt={2} p={3} bg={useColorModeValue("gray.50", "gray.700")} borderRadius="md">
-                        {selectedRecord.links.map((link: any, index: number) => (
-                          <Box key={index} mb={2}>
-                            <HStack spacing={2}>
-                              <Tag size="sm" colorScheme="gray">
-                                <TagLabel>{link.rel || "unknown"}</TagLabel>
-                              </Tag>
-                              {link.href && (
-                                <Link href={link.href} color="blue.500" fontSize="sm" isExternal>
-                                  {link.href}
-                                </Link>
-                              )}
-                            </HStack>
-                            {link.title && (
-                              <Text fontSize="sm" color="gray.600" ml={2}>
-                                {link.title}
-                              </Text>
-                            )}
-                          </Box>
-                        ))}
-                      </Box>
-                    </Collapse>
-                  </Box>
-                )}
+                {selectedRecord.links &&
+                  Array.isArray(selectedRecord.links) && (
+                    <Box width="100%">
+                      <Button
+                        variant="ghost"
+                        onClick={() => setShowLinks(!showLinks)}
+                        size="sm"
+                      >
+                        {showLinks ? "Hide" : "Show"} Links (
+                        {selectedRecord.links.length})
+                      </Button>
+                      <Collapse in={showLinks} animateOpacity>
+                        <Box
+                          mt={2}
+                          p={3}
+                          bg={useColorModeValue("gray.50", "gray.700")}
+                          borderRadius="md"
+                        >
+                          {selectedRecord.links.map(
+                            (link: any, index: number) => (
+                              <Box key={index} mb={2}>
+                                <HStack spacing={2}>
+                                  <Tag size="sm" colorScheme="gray">
+                                    <TagLabel>{link.rel || "unknown"}</TagLabel>
+                                  </Tag>
+                                  {link.href && (
+                                    <Link
+                                      href={link.href}
+                                      color="blue.500"
+                                      fontSize="sm"
+                                      isExternal
+                                    >
+                                      {link.href}
+                                    </Link>
+                                  )}
+                                </HStack>
+                                {link.title && (
+                                  <Text fontSize="sm" color="gray.600" ml={2}>
+                                    {link.title}
+                                  </Text>
+                                )}
+                              </Box>
+                            ),
+                          )}
+                        </Box>
+                      </Collapse>
+                    </Box>
+                  )}
 
                 {/* Collapsible JSON Section */}
                 <Box width="100%">
@@ -554,118 +583,109 @@ const ResultsTable: React.FC<Props> = ({ data, hasNextPage = false, isLoadingMor
 };
 
 interface MapDisplayProps {
-  spatialExtents: SpatialExtentArrayFormat[];
+  stacData?: any;
 }
 
-const normalizeExtent = (
-  extent: SpatialExtentArrayFormat,
-): SpatialExtentArrayFormat | null => {
-  let { south, north, east, west } = extent;
+const MapDisplay: React.FC<MapDisplayProps> = ({ stacData }) => {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<Map | null>(null);
 
-  // Swap if south is greater than north
-  if (south > north) {
-    [south, north] = [north, south];
-  }
+  useEffect(() => {
+    if (mapRef.current && !mapInstanceRef.current) {
+      const background = new TileLayer({
+        source: new OSM(),
+        title: "OpenStreetMap",
+        type: "base",
+      } as BaseLayerOptions);
 
-  // Handle longitude wrap-around
-  if (west > east) {
-    // If the difference is greater than 360, it's invalid
-    if (west - east >= 360) {
-      return null;
+      const layers: any[] = [background];
+      let stacLayer: any = null;
+
+      if (stacData) {
+        stacLayer = new STAC({
+          displayWebMapLink: true,
+          data: stacData,
+        });
+        // Configure STAC layer properties for layer switcher
+        stacLayer.set("title", stacData.title || stacData.id || "STAC Layer");
+        stacLayer.set("type", "overlay");
+        layers.push(stacLayer);
+      }
+
+      const map = new Map({
+        target: mapRef.current,
+        layers,
+        view: new View({
+          center: [0, 0],
+          zoom: 0,
+        }),
+        controls: defaultControls(),
+      });
+
+      // Add layer switcher
+      // const layerSwitcher = new LayerSwitcher({
+      //   reverse: true,
+      //   groupSelectStyle: "group",
+      //   startActive: true,
+      //   activationMode: "click",
+      //   tipLabel: "Layers",
+      //   collapseTipLabel: "Collapse layer panel",
+      // });
+      //
+      // // Position layer switcher at bottom left
+      // layerSwitcher.setMap(map);
+      // map.addControl(layerSwitcher);
+
+      if (stacLayer) {
+        // Try to fit extent from STAC data directly
+        if (
+          stacData.extent &&
+          stacData.extent.spatial &&
+          stacData.extent.spatial.bbox
+        ) {
+          const bbox = stacData.extent.spatial.bbox[0]; // Get first bbox
+          if (bbox && bbox.length === 4) {
+            const [minX, minY, maxX, maxY] = bbox;
+            const extent4326 = [minX, minY, maxX, maxY];
+            const extent3857 = transformExtent(
+              extent4326,
+              "EPSG:4326",
+              "EPSG:3857",
+            );
+            console.log("Fitting to extent from STAC data (4326):", extent4326);
+            console.log("Transformed extent (3857):", extent3857);
+            map.getView().fit(extent3857, {
+              padding: [20, 20, 20, 20],
+              maxZoom: 18,
+            });
+          }
+        }
+
+        // Also listen for ready event as fallback
+        stacLayer.on("ready", () => {
+          console.log("STAC layer ready event fired");
+          const extent = stacLayer.getExtent();
+          console.log("STAC layer extent:", extent);
+          if (extent) {
+            map.getView().fit(extent, {
+              padding: [20, 20, 20, 20],
+              maxZoom: 18,
+            });
+          }
+        });
+      }
+      mapInstanceRef.current = map;
     }
-    // If crossing the date line, we'll use the shorter path
-    if (west - east > 180) {
-      west -= 360;
-    }
-  }
 
-  // Handle degenerate cases (point or line)
-  const EPSILON = 1e-10; // Small value to prevent degenerate rectangles
-  if (Math.abs(north - south) < EPSILON) {
-    north += EPSILON;
-    south -= EPSILON;
-  }
-  if (Math.abs(east - west) < EPSILON) {
-    east += EPSILON;
-    west -= EPSILON;
-  }
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.dispose();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [stacData]);
 
-  return { south, north, east, west };
-};
-
-const MapDisplay: React.FC<MapDisplayProps> = ({ spatialExtents }) => {
-  // Try to normalize all extents
-  const validExtents = spatialExtents
-    .map(normalizeExtent)
-    .filter((extent): extent is SpatialExtentArrayFormat => extent !== null);
-
-  if (validExtents.length === 0) {
-    return <Text>Could not normalize spatial extent data</Text>;
-  }
-
-  // Log any extents that couldn't be normalized
-  const invalidCount = spatialExtents.length - validExtents.length;
-  if (invalidCount > 0) {
-    console.warn(
-      `${invalidCount} spatial extent(s) could not be normalized and were excluded.`,
-    );
-  }
-
-  const allBounds: [number, number][][] = validExtents.map((extent) => [
-    [extent.south, extent.west],
-    [extent.north, extent.east],
-  ]);
-
-  // Calculate the overall bounds to fit all rectangles
-  const overallBounds = allBounds.reduce((acc, bounds) => {
-    return [
-      [Math.min(acc[0][0], bounds[0][0]), Math.min(acc[0][1], bounds[0][1])],
-      [Math.max(acc[1][0], bounds[1][0]), Math.max(acc[1][1], bounds[1][1])],
-    ];
-  }, allBounds[0]);
-
-  // Add some padding to the bounds for better visualization
-  const padBounds = (bounds: [number, number][]): [number, number][] => {
-    const PAD = 0.1; // 10% padding
-    const latDiff = bounds[1][0] - bounds[0][0];
-    const lonDiff = bounds[1][1] - bounds[0][1];
-    return [
-      [
-        Math.max(-90, bounds[0][0] - latDiff * PAD),
-        Math.max(-180, bounds[0][1] - lonDiff * PAD),
-      ],
-      [
-        Math.min(90, bounds[1][0] + latDiff * PAD),
-        Math.min(180, bounds[1][1] + lonDiff * PAD),
-      ],
-    ];
-  };
-
-  const paddedBounds = padBounds(overallBounds);
-
-  return (
-    <Box height="300px">
-      <MapContainer
-        style={{ height: "100%", width: "100%" }}
-        bounds={paddedBounds}
-        maxBounds={[
-          [-90, -180],
-          [90, 180],
-        ]}
-        maxBoundsViscosity={1.0}
-        scrollWheelZoom={true}
-      >
-        <CommonTileLayer />
-        {allBounds.map((bounds, index) => (
-          <Rectangle
-            key={index}
-            bounds={bounds}
-            pathOptions={{ color: "purple", fillOpacity: 0.1 }}
-          />
-        ))}
-      </MapContainer>
-    </Box>
-  );
+  return <Box height="300px" ref={mapRef} />;
 };
 
 export default ResultsTable;

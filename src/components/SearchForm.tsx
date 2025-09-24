@@ -253,7 +253,10 @@ const SearchForm: React.FC<Props> = ({
         <MapModal
           isOpen={isMapOpen}
           onClose={onMapClose}
-          onSubmit={updateBoundingBox}
+          onSubmit={(bbox) => {
+            updateBoundingBox(bbox);
+            onMapClose();
+          }}
         />
         <ApiDocModal
           isOpen={isDocOpen}
