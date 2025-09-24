@@ -1,9 +1,32 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
-
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## 1.0.0
+
+### User-facing changes
+
+- Now users can specify which STAC APIs get searched
+  - A new configuration modal where users can add new APIs,
+    disable/enable pre-configured APIs
+- text-search will be disabled if any of the upstream APIs does not have
+  free-text + collection search capability
+
+### Backend changes
+
+- The main change is that the collection search API is being removed from
+  this repo and now the discovery app queries a STAC API (that runs a
+  federated collection search).
+- API-specific filters can be applied to limit the results that get
+  displayed from each upstream API (e.g. exclude NASA-hosted collections
+  when returning results from an ESA STAC API)
+  - these filters can be defined per-deployment using a config.ts file
+    that gets used at build time
+- item-search code hints are generated in the client app instead of
+  returned with the search results in the search API
+
+All notable changes to this project will be documented in this file.
 
 ## 0.1.9
 
