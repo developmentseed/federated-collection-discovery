@@ -1,11 +1,15 @@
 version: 2
 updates:
   - package-ecosystem: "npm"
+    directory: "/"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
     versioning-strategy: "auto"
     groups:
+      all-dependencies:
+        patterns:
+          - "*"
     ignore:
       - dependency-name: "react"
         update-types: ["version-update:semver-major"]
@@ -15,9 +19,6 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "react-leaflet"
         update-types: ["version-update:semver-major"]
-      all-dependencies:
-        patterns:
-          - "*"
     commit-message:
       prefix: "chore"
       prefix-development: "chore"
@@ -28,4 +29,3 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
-

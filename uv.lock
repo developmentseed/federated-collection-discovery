@@ -161,7 +161,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "stac-fastapi-collection-discovery", extras = ["server"], git = "https://github.com/developmentseed/stac-fastapi-collection-discovery?rev=v0.2.1" }]
+requires-dist = [{ name = "stac-fastapi-collection-discovery", extras = ["server"], git = "https://github.com/developmentseed/stac-fastapi-collection-discovery?rev=v0.2.2" }]
 
 [package.metadata.requires-dev]
 dev = [{ name = "pre-commit", specifier = ">=4.3.0" }]
@@ -431,8 +431,8 @@ wheels = [
 
 [[package]]
 name = "stac-fastapi-collection-discovery"
-version = "0.2.1"
-source = { git = "https://github.com/developmentseed/stac-fastapi-collection-discovery?rev=v0.2.1#3377e1b3f4cc3772ea3607e4e9f41f8879975f9c" }
+version = "0.2.2"
+source = { git = "https://github.com/developmentseed/stac-fastapi-collection-discovery?rev=v0.2.2#2e9158ad0d6c8a323f646884973df2a839b833a4" }
 dependencies = [
     { name = "httpx" },
     { name = "stac-fastapi-api" },
