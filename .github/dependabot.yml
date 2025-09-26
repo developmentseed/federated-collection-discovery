@@ -19,8 +19,6 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "react-scripts"
         update-types: ["version-update:semver-major"]
-      - dependency-name: "react-leaflet"
-        update-types: ["version-update:semver-major"]
     commit-message:
       prefix: "chore"
       prefix-development: "chore"
