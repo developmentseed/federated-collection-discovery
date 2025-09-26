@@ -11,6 +11,8 @@ updates:
         patterns:
           - "*"
     ignore:
+      - dependency-name: "@chakra-ui/react"
+        update-types: ["version-update:semver-major"]
       - dependency-name: "react"
         update-types: ["version-update:semver-major"]
       - dependency-name: "react-dom"
