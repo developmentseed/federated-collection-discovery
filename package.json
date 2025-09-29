@@ -25,7 +25,7 @@
     "react-scripts": "5.0.1",
     "react-syntax-highlighter": "^15.6.6",
     "source-map-explorer": "^2.5.3",
-    "swagger-ui-react": "^5.29.0",
+    "swagger-ui-react": "^5.29.1",
     "typescript": "^5.9.2"
   },
   "scripts": {
