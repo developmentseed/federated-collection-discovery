@@ -139,12 +139,16 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
 
   // Calculate overall status
   const getOverallStatus = () => {
-    if (healthLoading || stacApis.length === 0) {
-      return { color: "gray", status: "Unknown", hasIssues: false };
+    if (healthLoading) {
+      return { color: "gray", status: "Checking", isLoading: true, hasIssues: false };
+    }
+
+    if (stacApis.length === 0) {
+      return { color: "gray", status: "Unknown", isLoading: false, hasIssues: false };
     }
 
     if (!healthData) {
-      return { color: "red", status: "Error", hasIssues: true };
+      return { color: "red", status: "Error", isLoading: false, hasIssues: true };
     }
 
     const isHealthy = healthData.status === "UP";
@@ -158,17 +162,17 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
     );
 
     if (!isHealthy || apisLackingCollectionSearch.length > 0) {
-      return { color: "red", status: "Issues", hasIssues: true };
+      return { color: "red", status: "Issues", isLoading: false, hasIssues: true };
     }
 
     if (apisLackingFreeText.length > 0) {
-      return { color: "orange", status: "Limited", hasIssues: true };
+      return { color: "orange", status: "Limited", isLoading: false, hasIssues: true };
     }
 
-    return { color: "green", status: "Healthy", hasIssues: false };
+    return { color: "green", status: "Healthy", isLoading: false, hasIssues: false };
   };
 
-  const { color, status, hasIssues } = getOverallStatus();
+  const { color, status, isLoading, hasIssues } = getOverallStatus();
 
   // API management functions
   const validateUrl = (url: string): boolean => {
@@ -271,12 +275,16 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
         border="1px solid"
         borderColor="gray.200"
       >
-        <Box
-          width="12px"
-          height="12px"
-          bg={`${color}.500`}
-          borderRadius="50%"
-        />
+        {isLoading ? (
+          <Spinner size="sm" color={`${color}.500`} />
+        ) : (
+          <Box
+            width="12px"
+            height="12px"
+            bg={`${color}.500`}
+            borderRadius="50%"
+          />
+        )}
         <Text fontWeight="medium" flex={1}>
           {stacApis.length} API{stacApis.length !== 1 ? "s" : ""} configured •{" "}
           {status}

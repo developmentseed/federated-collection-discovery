@@ -113,6 +113,18 @@ function buildQuery(params: SearchParams, stacApis?: string[]): string {
     ),
   );
 
+  if (filteredParams.q) {
+    const query = filteredParams.q.trim();
+    const hasOperators = /AND|OR|[+"()\-]/.test(query);
+
+    if (!hasOperators) {
+      const words = query.split(/\s+/).filter((word) => word.length > 0);
+      if (words.length > 0) {
+        filteredParams.q = words.join(" AND ");
+      }
+    }
+  }
+
   const urlParams = new URLSearchParams(filteredParams);
 
   // Add apis parameter if provided
