@@ -1,15 +1,12 @@
 import React, { useRef, useEffect } from "react";
 import {
-  Box,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
-  Button,
-} from "@chakra-ui/react";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import Map from "ol/Map";
 import View from "ol/View";
 import TileLayer from "ol/layer/Tile";
@@ -184,38 +181,34 @@ const MapModal: React.FC<MapModalProps> = ({ isOpen, onClose, onSubmit }) => {
   }, [isOpen]);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl">
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>Draw Bounding Box</ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>
-          <Box height="500px" width="100%">
-            <div
-              ref={mapRef}
-              style={{
-                height: "500px",
-                width: "100%",
-                position: "relative",
-                backgroundColor: "#f5f5f5",
-                border: "1px solid #ccc",
-              }}
-            />
-          </Box>
-        </ModalBody>
-        <ModalFooter>
-          <Button colorScheme="blue" onClick={handleDrawStop}>
-            Submit
-          </Button>
-          <Button onClick={handleClearAll} ml={3}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl">
+        <DialogHeader>
+          <DialogTitle>Draw Bounding Box</DialogTitle>
+        </DialogHeader>
+        <div className="h-[500px] w-full">
+          <div
+            ref={mapRef}
+            style={{
+              height: "500px",
+              width: "100%",
+              position: "relative",
+              backgroundColor: "#f5f5f5",
+              border: "1px solid #ccc",
+            }}
+          />
+        </div>
+        <DialogFooter>
+          <Button onClick={handleDrawStop}>Submit</Button>
+          <Button variant="outline" onClick={handleClearAll}>
             Clear All
           </Button>
-          <Button variant="ghost" onClick={onClose} ml={3}>
+          <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 

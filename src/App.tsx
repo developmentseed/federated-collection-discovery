@@ -1,20 +1,9 @@
 import * as React from "react";
 import ReactMarkdown from "react-markdown";
-import {
-  ChakraProvider,
-  Box,
-  Flex,
-  Heading,
-  theme,
-  Spinner,
-  VStack,
-  Text,
-  SystemProps,
-  Spacer,
-  Alert,
-  AlertIcon,
-  AlertDescription,
-} from "@chakra-ui/react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { AlertCircle, Loader2 } from "lucide-react";
+import GitHubLogo from "./assets/github-mark.svg";
 
 import { ColorModeSwitcher } from "./ColorModeSwitcher";
 import {
@@ -33,6 +22,7 @@ type ApiError = string | null;
 const SearchForm = React.lazy(() => import("./components/SearchForm"));
 const ResultsTable = React.lazy(() => import("./components/ResultsTable"));
 const ApiConfigPanel = React.lazy(() => import("./components/ApiConfigPanel"));
+const ApiDocModal = React.lazy(() => import("./components/ApiDocModal"));
 
 export const App = () => {
   const [results, setResults] = React.useState<Array<Record<string, any>>>([]);
@@ -47,6 +37,9 @@ export const App = () => {
 
   // STAC APIs management
   const [stacApis, setStacApis] = React.useState<string[]>([]);
+
+  // API docs modal state
+  const [isDocOpen, setIsDocOpen] = React.useState(false);
 
   // Conformance management
   const [conformanceLoading, setConformanceLoading] = React.useState(true);
@@ -179,123 +172,159 @@ export const App = () => {
     };
   }, [conformanceData, stacApis]);
 
-  const flexDirection: SystemProps["flexDirection"] = {
-    base: "column",
-    xl: "row",
-  };
-
   return (
-    <ChakraProvider theme={theme}>
-      <Box textAlign="left" fontSize="large" minH="100vh" p={1}>
-        <Flex direction="column">
-          <Flex direction={flexDirection}>
-            <Box mb={{ base: 4, lg: 0 }} flex="1" maxWidth="500px" height="90%">
-              <VStack align="left" spacing={4}>
-                <Heading>Federated Collection Discovery</Heading>
+    <div className="min-h-screen bg-background text-foreground pb-16">
+      <div className="flex flex-col lg:flex-row gap-6 p-4 lg:p-6 max-w-[2000px] mx-auto">
+        {/* Left sidebar - Search and Configuration */}
+        <div className="w-full lg:w-[420px] xl:w-[480px] flex-shrink-0 space-y-6">
+          <div className="space-y-4">
+            <h1 className="text-3xl lg:text-4xl font-bold tracking-tight">
+              Federated Collection Discovery
+            </h1>
 
-                {docsError && (
-                  <Alert status="error">
-                    <AlertIcon />
-                    <AlertDescription>{docsError}</AlertDescription>
-                  </Alert>
-                )}
+            {docsError && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{docsError}</AlertDescription>
+              </Alert>
+            )}
 
-                {conformanceError && (
-                  <Alert status="warning">
-                    <AlertIcon />
-                    <AlertDescription>{conformanceError}</AlertDescription>
-                  </Alert>
-                )}
+            {conformanceError && (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{conformanceError}</AlertDescription>
+              </Alert>
+            )}
 
-                {docsLoading ? (
-                  <Spinner />
-                ) : (
-                  apiDocs && (
-                    <ReactMarkdown>{apiDocs.info.summary}</ReactMarkdown>
-                  )
-                )}
+            {docsLoading ? (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span className="text-sm">Loading API documentation...</span>
+              </div>
+            ) : (
+              apiDocs && (
+                <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground">
+                  <ReactMarkdown>{apiDocs.info.summary}</ReactMarkdown>
+                </div>
+              )
+            )}
+          </div>
 
-                <Heading size="md">API Configuration:</Heading>
-                <React.Suspense fallback={<Spinner size="md" />}>
-                  <ApiConfigPanel
-                    stacApis={stacApis}
-                    onUpdate={handleUpdateStacApis}
-                  />
-                </React.Suspense>
+          <div className="space-y-3">
+            <h2 className="text-lg font-semibold">API Configuration</h2>
+            <React.Suspense fallback={<Loader2 className="h-6 w-6 animate-spin" />}>
+              <ApiConfigPanel
+                stacApis={stacApis}
+                onUpdate={handleUpdateStacApis}
+              />
+            </React.Suspense>
+          </div>
 
-                <Heading size="md">Collection search:</Heading>
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold">Collection Search</h2>
 
-                {/* Show conformance warnings only when we have conformance data showing lack of support */}
-                {conformanceCapabilities &&
-                  !conformanceCapabilities.hasCollectionSearch && (
-                    <Alert status="warning" mb={4}>
-                      <AlertIcon />
-                      <AlertDescription>
-                        The current set of configured upstream APIs does not
-                        support collection search. Please check your STAC API
-                        configuration.
-                      </AlertDescription>
-                    </Alert>
-                  )}
-
-                {/* Show API-level errors (these are blocking errors) */}
-                {apiError && (
-                  <Alert status="error" mb={4}>
-                    <AlertIcon />
-                    <AlertDescription>{apiError}</AlertDescription>
-                  </Alert>
-                )}
-
-                <React.Suspense fallback={<Spinner size="md" />}>
-                  <SearchForm
-                    onSubmit={handleSearch}
-                    apiDocs={apiDocs}
-                    apiError={apiError}
-                    isLoading={loading}
-                    conformanceCapabilities={conformanceCapabilities}
-                    conformanceLoading={conformanceLoading}
-                  />
-                </React.Suspense>
-
-                {!apiError && (
-                  <Text>
-                    {results.length > 0
-                      ? `Found ${results.length} results`
-                      : "No results found"}
-                  </Text>
-                )}
-
-                <Box mt={6}></Box>
-              </VStack>
-            </Box>
-            <Box flex="1">
-              {loading ? (
-                <Box
-                  position="absolute"
-                  top="50%"
-                  left="50%"
-                  transform="translate(-50%, -50%)"
-                >
-                  <Spinner size="xl" />
-                </Box>
-              ) : (
-                <React.Suspense fallback={<Spinner size="xl" />}>
-                  <Box w="100%" height="95vh" overflowY="auto">
-                    <ResultsTable
-                      data={results}
-                      hasNextPage={!!nextPageUrl}
-                      isLoadingMore={loadingMore}
-                      onLoadMore={handleLoadMore}
-                    />
-                  </Box>
-                </React.Suspense>
+            {/* Show conformance warnings only when we have conformance data showing lack of support */}
+            {conformanceCapabilities &&
+              !conformanceCapabilities.hasCollectionSearch && (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    The current set of configured upstream APIs does not
+                    support collection search. Please check your STAC API
+                    configuration.
+                  </AlertDescription>
+                </Alert>
               )}
-            </Box>
-          </Flex>
-          <Spacer />
+
+            {/* Show API-level errors (these are blocking errors) */}
+            {apiError && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{apiError}</AlertDescription>
+              </Alert>
+            )}
+
+            <React.Suspense fallback={<Loader2 className="h-6 w-6 animate-spin" />}>
+              <SearchForm
+                onSubmit={handleSearch}
+                apiError={apiError}
+                isLoading={loading}
+                conformanceCapabilities={conformanceCapabilities}
+                conformanceLoading={conformanceLoading}
+              />
+            </React.Suspense>
+
+            {!apiError && results.length > 0 && (
+              <p className="text-sm text-muted-foreground">
+                Found {results.length} {results.length === 1 ? "result" : "results"}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Right panel - Results */}
+        <div className="flex-1 min-w-0">
+          {loading ? (
+            <div className="flex items-center justify-center h-[400px] lg:h-[calc(100vh-8rem)]">
+              <div className="text-center space-y-4">
+                <Loader2 className="h-10 w-10 animate-spin mx-auto text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">Searching collections...</p>
+              </div>
+            </div>
+          ) : (
+            <React.Suspense fallback={<Loader2 className="h-12 w-12 animate-spin" />}>
+              <div className="w-full h-[600px] lg:h-[calc(100vh-8rem)] overflow-y-auto rounded-lg border bg-card">
+                <ResultsTable
+                  data={results}
+                  hasNextPage={!!nextPageUrl}
+                  isLoadingMore={loadingMore}
+                  onLoadMore={handleLoadMore}
+                />
+              </div>
+            </React.Suspense>
+          )}
+        </div>
+      </div>
+
+      {/* Fixed footer with links */}
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t z-40">
+        <div className="flex items-center justify-between gap-2 p-3 max-w-[2000px] mx-auto">
+          <div className="flex flex-wrap gap-2">
+            <Button
+              onClick={() => setIsDocOpen(true)}
+              variant="outline"
+              size="sm"
+            >
+              API Documentation
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+            >
+              <a
+                href="https://github.com/developmentseed/federated-collection-discovery"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2"
+              >
+                <img src={GitHubLogo} className="size-4 dark:invert" alt="GitHub" />
+                Source Code
+              </a>
+            </Button>
+          </div>
           <ColorModeSwitcher />
-        </Flex>
-      </Box>
-    </ChakraProvider>
+        </div>
+      </div>
+
+      {/* API Documentation Modal */}
+      <React.Suspense fallback={null}>
+        <ApiDocModal
+          isOpen={isDocOpen}
+          onClose={() => setIsDocOpen(false)}
+          apiDocs={apiDocs}
+        />
+      </React.Suspense>
+    </div>
   );
 };

@@ -1,40 +1,33 @@
 import React, { useState, useRef, useEffect } from "react";
 import {
   Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  Box,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
-  Button,
-  useBreakpointValue,
-  useDisclosure,
-  useColorMode,
-  useColorModeValue,
-  Text,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
   Tabs,
-  TabList,
-  TabPanels,
-  TabPanel,
-  Tab,
-  Tag,
-  TagLabel,
-  Wrap,
-  Collapse,
-  VStack,
-  HStack,
-  Divider,
-  Link,
-  Spinner,
-} from "@chakra-ui/react";
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import {
   coldarkCold,
@@ -52,9 +45,11 @@ import { register } from "ol/proj/proj4";
 import { transformExtent } from "ol/proj";
 import "ol/ol.css";
 import "ol-layerswitcher/dist/ol-layerswitcher.css";
+import ReactMarkdown from "react-markdown";
+import { ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 register(proj4);
-import ReactMarkdown from "react-markdown";
 
 interface HintFormat {
   [hint_package: string]: string;
@@ -115,40 +110,45 @@ const extractCatalogUrl = (collection: Record<string, any>): string => {
 
 const formatProviders = (providers: any[]): JSX.Element => {
   if (!Array.isArray(providers) || providers.length === 0) {
-    return <Text>No providers</Text>;
+    return <p className="text-sm">No providers</p>;
   }
 
   return (
-    <VStack align="start" spacing={2}>
+    <div className="space-y-3">
       {providers.map((provider: any, index: number) => (
-        <Box key={index}>
-          <HStack spacing={2}>
-            <Text fontWeight="semibold">
+        <div key={index}>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-semibold">
               {provider.name || "Unknown Provider"}
-            </Text>
+            </span>
             {provider.roles && Array.isArray(provider.roles) && (
-              <Wrap>
+              <div className="flex flex-wrap gap-1">
                 {provider.roles.map((role: string, roleIndex: number) => (
-                  <Tag key={roleIndex} size="sm" colorScheme="blue">
-                    <TagLabel>{role}</TagLabel>
-                  </Tag>
+                  <Badge key={roleIndex} variant="secondary">
+                    {role}
+                  </Badge>
                 ))}
-              </Wrap>
+              </div>
             )}
-          </HStack>
+          </div>
           {provider.description && (
-            <Text fontSize="sm" color="gray.600">
+            <p className="text-sm text-muted-foreground mt-1">
               {provider.description}
-            </Text>
+            </p>
           )}
           {provider.url && (
-            <Link href={provider.url} color="blue.500" fontSize="sm" isExternal>
+            <a
+              href={provider.url}
+              className="text-sm text-primary hover:underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               {provider.url}
-            </Link>
+            </a>
           )}
-        </Box>
+        </div>
       ))}
-    </VStack>
+    </div>
   );
 };
 
@@ -221,21 +221,68 @@ const formatKeyName = (key: string): string => {
   return key;
 };
 
+// Custom hook for dark mode detection
+const useDarkMode = () => {
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return (
+      localStorage.getItem("theme") === "dark" ||
+      (!localStorage.getItem("theme") &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches)
+    );
+  });
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains("dark"));
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  return isDark;
+};
+
+// Custom hook for responsive breakpoints
+const useBreakpoint = () => {
+  const [columns, setColumns] = useState<string[]>(specificColumns.base);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1280) {
+        setColumns(specificColumns.xl);
+      } else {
+        setColumns(specificColumns.base);
+      }
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  return columns;
+};
+
 const ResultsTable: React.FC<Props> = ({
   data,
   hasNextPage = false,
   isLoadingMore = false,
   onLoadMore,
 }) => {
-  const bgColor = useColorModeValue("white", "gray.800");
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const { colorMode } = useColorMode();
+  const isDark = useDarkMode();
+  const [isOpen, setIsOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<Record<
     string,
     any | HintFormat
   > | null>(null);
-  const hintStyle = colorMode === "dark" ? coldarkDark : coldarkCold;
-  const columns = useBreakpointValue(specificColumns) ?? [];
+  const hintStyle = isDark ? coldarkDark : coldarkCold;
+  const columns = useBreakpoint();
 
   // State for collapsible sections
   const [showLinks, setShowLinks] = useState(false);
@@ -279,13 +326,13 @@ const ResultsTable: React.FC<Props> = ({
       return formatTemporalRange(value);
     } else if (header === "keywords" && Array.isArray(value)) {
       return (
-        <Wrap>
+        <div className="flex flex-wrap gap-1">
           {value.map((keyword, index) => (
-            <Tag key={index} colorScheme="blue">
-              <TagLabel>{keyword}</TagLabel>
-            </Tag>
+            <Badge key={index} variant="secondary">
+              {keyword}
+            </Badge>
           ))}
-        </Wrap>
+        </div>
       );
     } else if (Array.isArray(value)) {
       return value.join(", ");
@@ -295,7 +342,7 @@ const ResultsTable: React.FC<Props> = ({
 
   const handleButtonClick = (record: Record<string, any>) => {
     setSelectedRecord(record);
-    onOpen();
+    setIsOpen(true);
   };
 
   const PACKAGE_LANGUAGE_MAP: Record<string, string> = {
@@ -303,274 +350,275 @@ const ResultsTable: React.FC<Props> = ({
     "python-cmr": "python",
     rstac: "r",
   };
+
   return (
     <>
-      <Box overflow="auto" maxHeight="100%">
-        <Table variant="simple">
-          <Thead>
-            <Tr>
+      <div className="overflow-auto max-h-full">
+        <Table>
+          <TableHeader>
+            <TableRow>
               {columns.map((header) => (
-                <Th
+                <TableHead
                   key={header}
-                  position="sticky"
-                  top={0}
-                  zIndex={1}
-                  bg={bgColor}
-                  cursor="pointer"
+                  className="sticky top-0 z-10 bg-background cursor-pointer"
                   onClick={() => handleSort(header)}
                 >
-                  {header}{" "}
-                  {sortColumn === header
-                    ? sortOrder === "asc"
-                      ? "🔼"
-                      : "🔽"
-                    : ""}
-                </Th>
+                  <div className="flex items-center gap-1">
+                    {header}
+                    {sortColumn === header && (
+                      <span>{sortOrder === "asc" ? "🔼" : "🔽"}</span>
+                    )}
+                  </div>
+                </TableHead>
               ))}
-              <Th position="sticky" top={0} zIndex={1} bg={bgColor}></Th>
-            </Tr>
-          </Thead>
-          <Tbody>
+              <TableHead className="sticky top-0 z-10 bg-background"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {sortedData.map((row, rowIndex) => (
-              <Tr key={rowIndex}>
+              <TableRow key={rowIndex} className="hover:bg-muted/50">
                 {columns.map((header) => (
-                  <Td key={header}>{renderCell(header, row[header], row)}</Td>
+                  <TableCell key={header}>
+                    {renderCell(header, row[header], row)}
+                  </TableCell>
                 ))}
-                <Td>
-                  <Button size="sm" onClick={() => handleButtonClick(row)}>
+                <TableCell>
+                  <Button size="sm" variant="outline" onClick={() => handleButtonClick(row)}>
                     Details
                   </Button>
-                </Td>
-              </Tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </Tbody>
+          </TableBody>
         </Table>
 
         {/* Load More Button */}
         {hasNextPage && (
-          <Box textAlign="center" p={4}>
+          <div className="text-center p-4">
             <Button
               onClick={onLoadMore}
-              isLoading={isLoadingMore}
-              loadingText="Loading more..."
-              size="md"
-              colorScheme="blue"
               disabled={isLoadingMore}
+              variant="outline"
+              size="sm"
             >
-              {isLoadingMore ? <Spinner size="sm" /> : "Load More"}
+              {isLoadingMore ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Loading more...
+                </>
+              ) : (
+                "Load More"
+              )}
             </Button>
-          </Box>
+          </div>
         )}
-      </Box>
+      </div>
 
       {selectedRecord && (
-        <Modal isOpen={isOpen} onClose={onClose}>
-          <ModalOverlay />
-          <ModalContent maxWidth="50%" width="50%">
-            <ModalHeader>Collection Details</ModalHeader>
-            <ModalCloseButton />
-            <ModalBody>
-              <VStack align="start" spacing={4}>
-                {/* Core Information */}
-                <Box>
-                  {/* ID */}
-                  {selectedRecord.id && (
-                    <Box mb={2}>
-                      <Text fontWeight="semibold">ID:</Text>
-                      <Text>{selectedRecord.id}</Text>
-                    </Box>
-                  )}
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogContent className="max-w-[50%] w-[50%] max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Collection Details</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              {/* Core Information */}
+              <div>
+                {/* ID */}
+                {selectedRecord.id && (
+                  <div className="mb-3">
+                    <p className="font-semibold">ID:</p>
+                    <p className="text-sm">{selectedRecord.id}</p>
+                  </div>
+                )}
 
-                  {/* Source API */}
-                  <Box mb={2}>
-                    <Text fontWeight="semibold">API:</Text>
-                    <Link
-                      href={extractCatalogUrl(selectedRecord)}
-                      color="blue.500"
-                      isExternal
-                    >
-                      {extractCatalogUrl(selectedRecord)}
-                    </Link>
-                  </Box>
+                {/* Source API */}
+                <div className="mb-3">
+                  <p className="font-semibold">API:</p>
+                  <a
+                    href={extractCatalogUrl(selectedRecord)}
+                    className="text-sm text-primary hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {extractCatalogUrl(selectedRecord)}
+                  </a>
+                </div>
 
-                  {/* Title */}
-                  {selectedRecord.title && (
-                    <Box mb={2}>
-                      <Text fontWeight="semibold">Title:</Text>
-                      <Text>{selectedRecord.title}</Text>
-                    </Box>
-                  )}
+                {/* Title */}
+                {selectedRecord.title && (
+                  <div className="mb-3">
+                    <p className="font-semibold">Title:</p>
+                    <p className="text-sm">{selectedRecord.title}</p>
+                  </div>
+                )}
 
-                  {/* Spatial and Temporal Extents */}
-                  {selectedRecord.extent && (
-                    <Box mb={2}>
-                      <Text fontWeight="semibold">Extents:</Text>
-                      <Box ml={2}>
-                        {selectedRecord.extent?.spatial?.bbox && (
-                          <Box mb={2}>
-                            <Text fontWeight="semibold">Spatial:</Text>
-                            <MapDisplay stacData={selectedRecord} />
-                          </Box>
-                        )}
-                        {selectedRecord.extent?.temporal?.interval && (
-                          <Box mb={2}>
-                            <Text fontWeight="semibold">Temporal:</Text>
-                            <Text>
-                              {formatTemporalRange(
-                                selectedRecord.extent.temporal.interval,
-                              )}
-                            </Text>
-                          </Box>
-                        )}
-                      </Box>
-                    </Box>
-                  )}
+                {/* Spatial and Temporal Extents */}
+                {selectedRecord.extent && (
+                  <div className="mb-3">
+                    <p className="font-semibold">Extents:</p>
+                    <div className="ml-3 space-y-3">
+                      {selectedRecord.extent?.spatial?.bbox && (
+                        <div>
+                          <p className="font-semibold text-sm">Spatial:</p>
+                          <MapDisplay stacData={selectedRecord} />
+                        </div>
+                      )}
+                      {selectedRecord.extent?.temporal?.interval && (
+                        <div>
+                          <p className="font-semibold text-sm">Temporal:</p>
+                          <p className="text-sm">
+                            {formatTemporalRange(
+                              selectedRecord.extent.temporal.interval,
+                            )}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
-                  {/* Providers */}
-                  {selectedRecord.providers && (
-                    <Box mb={2}>
-                      <Text fontWeight="semibold">Providers:</Text>
-                      <Box ml={2}>
-                        {formatProviders(selectedRecord.providers)}
-                      </Box>
-                    </Box>
-                  )}
+                {/* Providers */}
+                {selectedRecord.providers && (
+                  <div className="mb-3">
+                    <p className="font-semibold">Providers:</p>
+                    <div className="ml-3">
+                      {formatProviders(selectedRecord.providers)}
+                    </div>
+                  </div>
+                )}
 
-                  {/* Description */}
-                  {selectedRecord.description && (
-                    <Box mb={2}>
-                      <Text fontWeight="semibold">Description:</Text>
+                {/* Description */}
+                {selectedRecord.description && (
+                  <div className="mb-3">
+                    <p className="font-semibold">Description:</p>
+                    <div className="prose prose-sm dark:prose-invert max-w-none">
                       <ReactMarkdown
                         components={{
                           a: ({ href, children }) => (
-                            <Link
+                            <a
                               href={href}
-                              color="blue.500"
-                              textDecoration="underline"
-                              isExternal
+                              className="text-primary underline"
+                              target="_blank"
+                              rel="noopener noreferrer"
                             >
                               {children}
-                            </Link>
+                            </a>
                           ),
                         }}
                       >
                         {selectedRecord.description}
                       </ReactMarkdown>
-                    </Box>
-                  )}
-                </Box>
+                    </div>
+                  </div>
+                )}
+              </div>
 
-                <Divider />
+              <div className="border-t border-border" />
 
-                {/* STAC Item Search Code Hints */}
-                <Box width="100%">
-                  <Text fontWeight="semibold" mb={2}>
-                    STAC Item Search Code Hints:
-                  </Text>
-                  <Tabs>
-                    <TabList>
-                      <Tab>Python</Tab>
-                      <Tab>R</Tab>
-                    </TabList>
-                    <TabPanels>
-                      <TabPanel p={0} pt={4}>
-                        <SyntaxHighlighter language="python" style={hintStyle}>
-                          {getPythonCodeHint(
-                            extractCatalogUrl(selectedRecord),
-                            selectedRecord.id || "collection-id",
-                          )}
-                        </SyntaxHighlighter>
-                      </TabPanel>
-                      <TabPanel p={0} pt={4}>
-                        <SyntaxHighlighter language="r" style={hintStyle}>
-                          {getRCodeHint(
-                            extractCatalogUrl(selectedRecord),
-                            selectedRecord.id || "collection-id",
-                          )}
-                        </SyntaxHighlighter>
-                      </TabPanel>
-                    </TabPanels>
-                  </Tabs>
-                </Box>
+              {/* STAC Item Search Code Hints */}
+              <div>
+                <p className="font-semibold mb-2">
+                  STAC Item Search Code Hints:
+                </p>
+                <Tabs defaultValue="python">
+                  <TabsList>
+                    <TabsTrigger value="python">Python</TabsTrigger>
+                    <TabsTrigger value="r">R</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="python" className="mt-4">
+                    <SyntaxHighlighter language="python" style={hintStyle}>
+                      {getPythonCodeHint(
+                        extractCatalogUrl(selectedRecord),
+                        selectedRecord.id || "collection-id",
+                      )}
+                    </SyntaxHighlighter>
+                  </TabsContent>
+                  <TabsContent value="r" className="mt-4">
+                    <SyntaxHighlighter language="r" style={hintStyle}>
+                      {getRCodeHint(
+                        extractCatalogUrl(selectedRecord),
+                        selectedRecord.id || "collection-id",
+                      )}
+                    </SyntaxHighlighter>
+                  </TabsContent>
+                </Tabs>
+              </div>
 
-                {/* Collapsible Links Section */}
-                {selectedRecord.links &&
-                  Array.isArray(selectedRecord.links) && (
-                    <Box width="100%">
-                      <Button
-                        variant="ghost"
-                        onClick={() => setShowLinks(!showLinks)}
-                        size="sm"
-                      >
+              {/* Collapsible Links Section */}
+              {selectedRecord.links && Array.isArray(selectedRecord.links) && (
+                <Collapsible open={showLinks} onOpenChange={setShowLinks}>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm" className="w-full justify-between">
+                      <span>
                         {showLinks ? "Hide" : "Show"} Links (
                         {selectedRecord.links.length})
-                      </Button>
-                      <Collapse in={showLinks} animateOpacity>
-                        <Box
-                          mt={2}
-                          p={3}
-                          bg={useColorModeValue("gray.50", "gray.700")}
-                          borderRadius="md"
-                        >
-                          {selectedRecord.links.map(
-                            (link: any, index: number) => (
-                              <Box key={index} mb={2}>
-                                <HStack spacing={2}>
-                                  <Tag size="sm" colorScheme="gray">
-                                    <TagLabel>{link.rel || "unknown"}</TagLabel>
-                                  </Tag>
-                                  {link.href && (
-                                    <Link
-                                      href={link.href}
-                                      color="blue.500"
-                                      fontSize="sm"
-                                      isExternal
-                                    >
-                                      {link.href}
-                                    </Link>
-                                  )}
-                                </HStack>
-                                {link.title && (
-                                  <Text fontSize="sm" color="gray.600" ml={2}>
-                                    {link.title}
-                                  </Text>
-                                )}
-                              </Box>
-                            ),
+                      </span>
+                      {showLinks ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="mt-2">
+                    <div className="rounded-md bg-muted p-3 space-y-2">
+                      {selectedRecord.links.map((link: any, index: number) => (
+                        <div key={index}>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Badge variant="outline">
+                              {link.rel || "unknown"}
+                            </Badge>
+                            {link.href && (
+                              <a
+                                href={link.href}
+                                className="text-sm text-primary hover:underline break-all"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                {link.href}
+                              </a>
+                            )}
+                          </div>
+                          {link.title && (
+                            <p className="text-sm text-muted-foreground ml-2 mt-1">
+                              {link.title}
+                            </p>
                           )}
-                        </Box>
-                      </Collapse>
-                    </Box>
-                  )}
+                        </div>
+                      ))}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
 
-                {/* Collapsible JSON Section */}
-                <Box width="100%">
-                  <Button
-                    variant="ghost"
-                    onClick={() => setShowJSON(!showJSON)}
-                    size="sm"
-                  >
-                    {showJSON ? "Hide" : "Show"} Raw JSON
+              {/* Collapsible JSON Section */}
+              <Collapsible open={showJSON} onOpenChange={setShowJSON}>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm" className="w-full justify-between">
+                    <span>{showJSON ? "Hide" : "Show"} Raw JSON</span>
+                    {showJSON ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
                   </Button>
-                  <Collapse in={showJSON} animateOpacity>
-                    <Box mt={2}>
-                      <SyntaxHighlighter
-                        language="json"
-                        style={hintStyle}
-                        customStyle={{ fontSize: "12px" }}
-                      >
-                        {JSON.stringify(selectedRecord, null, 2)}
-                      </SyntaxHighlighter>
-                    </Box>
-                  </Collapse>
-                </Box>
-              </VStack>
-            </ModalBody>
-            <ModalFooter>
-              <Button onClick={onClose}>Close</Button>
-            </ModalFooter>
-          </ModalContent>
-        </Modal>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-2">
+                  <SyntaxHighlighter
+                    language="json"
+                    style={hintStyle}
+                    customStyle={{ fontSize: "12px" }}
+                  >
+                    {JSON.stringify(selectedRecord, null, 2)}
+                  </SyntaxHighlighter>
+                </CollapsibleContent>
+              </Collapsible>
+            </div>
+            <DialogFooter>
+              <Button onClick={() => setIsOpen(false)}>Close</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </>
   );
@@ -663,7 +711,7 @@ const MapDisplay: React.FC<MapDisplayProps> = ({ stacData }) => {
     };
   }, [stacData]);
 
-  return <Box height="500px" ref={mapRef} />;
+  return <div className="h-[500px]" ref={mapRef} />;
 };
 
 export default ResultsTable;
