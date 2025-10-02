@@ -1,41 +1,21 @@
 import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
-  Box,
-  Button,
-  Flex,
-  Text,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalCloseButton,
-  ModalFooter,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
   Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel,
-  VStack,
-  HStack,
-  Input,
-  IconButton,
-  Alert,
-  AlertIcon,
-  AlertDescription,
-  Divider,
-  Badge,
-  Spinner,
-  useDisclosure,
-  useColorMode,
-} from "@chakra-ui/react";
-import {
-  DeleteIcon,
-  AddIcon,
-  RepeatIcon,
-  SettingsIcon,
-  InfoIcon,
-} from "@chakra-ui/icons";
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import {
   coldarkCold,
@@ -52,6 +32,14 @@ import {
   hasCustomFilter,
   getFilterInfo,
 } from "../utils/api-config";
+import {
+  Settings,
+  Trash2,
+  Plus,
+  RotateCcw,
+  Info,
+  Loader2,
+} from "lucide-react";
 
 interface HealthResponse {
   status: string;
@@ -72,19 +60,42 @@ interface ApiConfigPanelProps {
   onUpdate: (apis: string[]) => void;
 }
 
+// Custom hook for dark mode detection
+const useDarkMode = () => {
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return (
+      localStorage.getItem("theme") === "dark" ||
+      (!localStorage.getItem("theme") &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches)
+    );
+  });
+
+  React.useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains("dark"));
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  return isDark;
+};
+
 const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
   stacApis,
   onUpdate,
 }) => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const {
-    isOpen: isFilterInfoOpen,
-    onOpen: onFilterInfoOpen,
-    onClose: onFilterInfoClose,
-  } = useDisclosure();
-  const { colorMode } = useColorMode();
-  const [activeTab, setActiveTab] = useState(0);
-  const syntaxStyle = colorMode === "dark" ? coldarkDark : coldarkCold;
+  const [isOpen, setIsOpen] = useState(false);
+  const [isFilterInfoOpen, setIsFilterInfoOpen] = useState(false);
+  const isDark = useDarkMode();
+  const [activeTab, setActiveTab] = useState("configuration");
+  const syntaxStyle = isDark ? coldarkDark : coldarkCold;
   const [selectedFilterInfo, setSelectedFilterInfo] = useState<{
     url: string;
     description: string;
@@ -140,11 +151,21 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
   // Calculate overall status
   const getOverallStatus = () => {
     if (healthLoading) {
-      return { color: "gray", status: "Checking", isLoading: true, hasIssues: false };
+      return {
+        color: "gray",
+        status: "Checking",
+        isLoading: true,
+        hasIssues: false,
+      };
     }
 
     if (stacApis.length === 0) {
-      return { color: "gray", status: "Unknown", isLoading: false, hasIssues: false };
+      return {
+        color: "gray",
+        status: "Unknown",
+        isLoading: false,
+        hasIssues: false,
+      };
     }
 
     if (!healthData) {
@@ -166,10 +187,20 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
     }
 
     if (apisLackingFreeText.length > 0) {
-      return { color: "orange", status: "Limited", isLoading: false, hasIssues: true };
+      return {
+        color: "orange",
+        status: "Limited",
+        isLoading: false,
+        hasIssues: true,
+      };
     }
 
-    return { color: "green", status: "Healthy", isLoading: false, hasIssues: false };
+    return {
+      color: "green",
+      status: "Healthy",
+      isLoading: false,
+      hasIssues: false,
+    };
   };
 
   const { color, status, isLoading, hasIssues } = getOverallStatus();
@@ -228,7 +259,7 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
     }
 
     onUpdate(validApis);
-    onClose();
+    setIsOpen(false);
   };
 
   const handleResetToDefaults = () => {
@@ -261,440 +292,370 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
         description: filterInfo.description,
         code: filterInfo.code,
       });
-      onFilterInfoOpen();
+      setIsFilterInfoOpen(true);
     }
   };
 
   return (
     <>
-      <Flex
-        align="center"
-        gap={3}
-        p={3}
-        borderRadius="md"
-        border="1px solid"
-        borderColor="gray.200"
-      >
+      <div className="flex items-center gap-3 p-3 rounded-md border border-border">
         {isLoading ? (
-          <Spinner size="sm" color={`${color}.500`} />
+          <Loader2 className={`h-3 w-3 animate-spin text-${color}-500`} />
         ) : (
-          <Box
-            width="12px"
-            height="12px"
-            bg={`${color}.500`}
-            borderRadius="50%"
+          <div
+            className={`w-3 h-3 rounded-full bg-${color}-500`}
+            style={{
+              backgroundColor:
+                color === "green"
+                  ? "rgb(34 197 94)"
+                  : color === "orange"
+                    ? "rgb(249 115 22)"
+                    : color === "red"
+                      ? "rgb(239 68 68)"
+                      : "rgb(107 114 128)",
+            }}
           />
         )}
-        <Text fontWeight="medium" flex={1}>
+        <span className="font-medium flex-1">
           {stacApis.length} API{stacApis.length !== 1 ? "s" : ""} configured •{" "}
           {status}
-        </Text>
-        <Button
-          size="sm"
-          variant="outline"
-          leftIcon={<SettingsIcon />}
-          onClick={onOpen}
-        >
+        </span>
+        <Button size="sm" variant="outline" onClick={() => setIsOpen(true)}>
+          <Settings className="mr-2 h-4 w-4" />
           Settings
         </Button>
-      </Flex>
+      </div>
 
-      <Modal isOpen={isOpen} onClose={onClose} size="xl">
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>API Configuration & Diagnostics</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <Tabs index={activeTab} onChange={setActiveTab}>
-              <TabList>
-                <Tab>Configuration</Tab>
-                <Tab>Diagnostics</Tab>
-              </TabList>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>API Configuration & Diagnostics</DialogTitle>
+          </DialogHeader>
+          <div>
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList>
+                <TabsTrigger value="configuration">Configuration</TabsTrigger>
+                <TabsTrigger value="diagnostics">Diagnostics</TabsTrigger>
+              </TabsList>
 
-              <TabPanels>
-                {/* Configuration Tab */}
-                <TabPanel px={0}>
-                  <VStack spacing={4} align="stretch">
-                    <Text fontSize="sm" color="gray.600">
-                      Configure which STAC APIs to include in your search.
-                      Enable/disable default APIs or add custom endpoints.
-                    </Text>
+              <TabsContent value="configuration" className="space-y-4 mt-4">
+                <p className="text-sm text-muted-foreground">
+                  Configure which STAC APIs to include in your search.
+                  Enable/disable default APIs or add custom endpoints.
+                </p>
 
-                    {errors.length > 0 && (
-                      <Alert status="error">
-                        <AlertIcon />
-                        <AlertDescription>
-                          {errors.map((error, index) => (
-                            <div key={index}>{error}</div>
-                          ))}
-                        </AlertDescription>
-                      </Alert>
-                    )}
+                {errors.length > 0 && (
+                  <Alert variant="destructive">
+                    <AlertDescription>
+                      {errors.map((error, index) => (
+                        <div key={index}>{error}</div>
+                      ))}
+                    </AlertDescription>
+                  </Alert>
+                )}
 
-                    <Box>
-                      <HStack justify="space-between" align="center" mb={2}>
-                        <Text fontWeight="bold">Default APIs:</Text>
-                        <Button
-                          size="xs"
-                          colorScheme="blue"
-                          variant="outline"
-                          leftIcon={<RepeatIcon />}
-                          onClick={handleResetToDefaults}
-                        >
-                          Reset to Defaults
-                        </Button>
-                      </HStack>
-                      <VStack spacing={2} align="stretch">
-                        {defaultApis.map((api) => (
-                          <HStack key={api}>
-                            <Text fontSize="sm" flex="1" noOfLines={1}>
-                              {api}
-                            </Text>
-                            {hasCustomFilter(api) && (
-                              <>
-                                <Badge colorScheme="purple" fontSize="xs">
-                                  filtered
-                                </Badge>
-                                <IconButton
-                                  aria-label="View filter details"
-                                  icon={<InfoIcon />}
-                                  size="sm"
-                                  variant="ghost"
-                                  colorScheme="purple"
-                                  onClick={() => handleShowFilterInfo(api)}
-                                />
-                              </>
-                            )}
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-bold">Default APIs:</span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleResetToDefaults}
+                    >
+                      <RotateCcw className="mr-2 h-4 w-4" />
+                      Reset to Defaults
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    {defaultApis.map((api) => (
+                      <div key={api} className="flex items-center gap-2">
+                        <span className="text-sm flex-1 truncate">{api}</span>
+                        {hasCustomFilter(api) && (
+                          <>
+                            <Badge variant="secondary" className="bg-purple-100 dark:bg-purple-900">
+                              filtered
+                            </Badge>
                             <Button
+                              variant="ghost"
                               size="sm"
-                              colorScheme={
-                                editableApis.includes(api) ? "red" : "teal"
-                              }
-                              variant="outline"
-                              onClick={() =>
-                                handleToggleDefaultApi(
-                                  api,
-                                  !editableApis.includes(api),
-                                )
-                              }
+                              onClick={() => handleShowFilterInfo(api)}
                             >
-                              {editableApis.includes(api)
-                                ? "Disable"
-                                : "Enable"}
+                              <Info className="h-4 w-4" />
                             </Button>
-                          </HStack>
-                        ))}
-                      </VStack>
-                    </Box>
-
-                    <Divider />
-
-                    <Box>
-                      <Text fontWeight="bold" mb={2}>
-                        Custom APIs:
-                      </Text>
-                      <VStack spacing={2} align="stretch">
-                        {editableApis
-                          .filter((api) => !defaultApis.includes(api))
-                          .map((api, index) => {
-                            const actualIndex = editableApis.indexOf(api);
-                            return (
-                              <HStack key={actualIndex}>
-                                <Input
-                                  value={api}
-                                  onChange={(e) =>
-                                    handleUpdateApi(actualIndex, e.target.value)
-                                  }
-                                  placeholder="API URL"
-                                  size="sm"
-                                />
-                                <IconButton
-                                  aria-label="Remove API"
-                                  icon={<DeleteIcon />}
-                                  size="sm"
-                                  colorScheme="red"
-                                  variant="outline"
-                                  onClick={() => handleRemoveApi(actualIndex)}
-                                />
-                              </HStack>
-                            );
-                          })}
-                        {editableApis.filter(
-                          (api) => !defaultApis.includes(api),
-                        ).length === 0 && (
-                          <Text
-                            fontSize="sm"
-                            color="gray.500"
-                            textAlign="center"
-                            py={2}
-                          >
-                            No custom APIs added
-                          </Text>
+                          </>
                         )}
-                      </VStack>
-                    </Box>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() =>
+                            handleToggleDefaultApi(
+                              api,
+                              !editableApis.includes(api),
+                            )
+                          }
+                        >
+                          {editableApis.includes(api) ? "Disable" : "Enable"}
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
-                    <Divider />
+                <div className="border-t border-border my-4" />
 
-                    <Box>
-                      <Text fontWeight="bold" mb={2}>
-                        Add Custom API:
-                      </Text>
-                      <HStack>
-                        <Input
-                          placeholder="Enter STAC API URL"
-                          value={newApiUrl}
-                          onChange={(e) => setNewApiUrl(e.target.value)}
-                          onKeyDown={handleKeyDown}
-                        />
-                        <IconButton
-                          aria-label="Add API"
-                          icon={<AddIcon />}
-                          colorScheme="teal"
-                          onClick={handleAddApi}
-                        />
-                      </HStack>
-                    </Box>
-                  </VStack>
-                </TabPanel>
-
-                {/* Diagnostics Tab */}
-                <TabPanel px={0}>
-                  <VStack spacing={4} align="stretch">
-                    {healthLoading ? (
-                      <Spinner />
-                    ) : healthData ? (
-                      <>
-                        <Flex alignItems="center">
-                          <Box
-                            width="10px"
-                            height="10px"
-                            bg={healthData.status === "UP" ? "green" : "red"}
-                            borderRadius="50%"
-                            marginRight="8px"
-                          />
-                          <Text fontWeight="semibold">
-                            Overall Status: {healthData.status}
-                          </Text>
-                        </Flex>
-
-                        <Text fontWeight="medium">Upstream APIs:</Text>
-                        {Object.entries(healthData.upstream_apis).map(
-                          ([url, api]) => {
-                            const conformance =
-                              api.collection_search_conformance || [];
-                            const hasCollectionSearch =
-                              hasCollectionSearchSupport(conformance);
-                            const hasFreeText = hasFreeTextSupport(conformance);
-
-                            return (
-                              <Box
-                                key={url}
-                                marginLeft="16px"
-                                p={2}
-                                border="1px solid"
-                                borderColor="gray.200"
-                                borderRadius="md"
-                              >
-                                <Flex alignItems="center" marginBottom="4px">
-                                  <Box
-                                    width="10px"
-                                    height="10px"
-                                    bg={api.healthy ? "green" : "red"}
-                                    borderRadius="50%"
-                                    marginRight="8px"
-                                  />
-                                  <Text fontSize="sm" fontWeight="semibold">
-                                    {url}
-                                  </Text>
-                                </Flex>
-
-                                <Flex gap={2} marginLeft="18px" flexWrap="wrap">
-                                  <Badge
-                                    colorScheme={
-                                      hasCollectionSearch ? "green" : "red"
-                                    }
-                                    size="sm"
-                                  >
-                                    {hasCollectionSearch
-                                      ? "Collection Search ✓"
-                                      : "No Collection Search"}
-                                  </Badge>
-                                  <Badge
-                                    colorScheme={
-                                      hasFreeText ? "green" : "orange"
-                                    }
-                                    size="sm"
-                                  >
-                                    {hasFreeText
-                                      ? "Free Text ✓"
-                                      : "No Free Text"}
-                                  </Badge>
-                                </Flex>
-
-                                {conformance.length > 0 && (
-                                  <Text
-                                    fontSize="xs"
-                                    color="gray.600"
-                                    marginLeft="18px"
-                                    marginTop="2px"
-                                  >
-                                    Conformance: {conformance.join(", ")}
-                                  </Text>
-                                )}
-                              </Box>
-                            );
-                          },
-                        )}
-
-                        <Divider />
-
-                        {/* Summary of limitations */}
-                        {(() => {
-                          const apisLackingCollectionSearch =
-                            getApisLackingCapability(
-                              healthData,
-                              "collection-search",
-                            );
-                          const apisLackingFreeText = getApisLackingCapability(
-                            healthData,
-                            "free-text",
-                          );
-
-                          return (
-                            <>
-                              {apisLackingCollectionSearch.length > 0 && (
-                                <Box>
-                                  <Text
-                                    fontSize="sm"
-                                    fontWeight="medium"
-                                    color="red.600"
-                                  >
-                                    APIs lacking collection search support:
-                                  </Text>
-                                  <Text
-                                    fontSize="xs"
-                                    color="gray.600"
-                                    marginLeft="16px"
-                                  >
-                                    {apisLackingCollectionSearch.join(", ")}
-                                  </Text>
-                                </Box>
-                              )}
-
-                              {apisLackingFreeText.length > 0 && (
-                                <Box>
-                                  <Text
-                                    fontSize="sm"
-                                    fontWeight="medium"
-                                    color="orange.600"
-                                  >
-                                    APIs lacking free-text search support:
-                                  </Text>
-                                  <Text
-                                    fontSize="xs"
-                                    color="gray.600"
-                                    marginLeft="16px"
-                                  >
-                                    {apisLackingFreeText.join(", ")}
-                                  </Text>
-                                </Box>
-                              )}
-
-                              {apisLackingCollectionSearch.length === 0 &&
-                                apisLackingFreeText.length === 0 && (
-                                  <Text
-                                    fontSize="sm"
-                                    color="green.600"
-                                    fontWeight="medium"
-                                  >
-                                    All configured APIs support collection
-                                    search and free-text search! ✓
-                                  </Text>
-                                )}
-                            </>
-                          );
-                        })()}
-                      </>
-                    ) : (
-                      <Text>No health data available.</Text>
+                <div>
+                  <span className="font-bold mb-2 block">Custom APIs:</span>
+                  <div className="space-y-2">
+                    {editableApis
+                      .filter((api) => !defaultApis.includes(api))
+                      .map((api, index) => {
+                        const actualIndex = editableApis.indexOf(api);
+                        return (
+                          <div key={actualIndex} className="flex items-center gap-2">
+                            <Input
+                              value={api}
+                              onChange={(e) =>
+                                handleUpdateApi(actualIndex, e.target.value)
+                              }
+                              placeholder="API URL"
+                              className="flex-1"
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleRemoveApi(actualIndex)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    {editableApis.filter((api) => !defaultApis.includes(api))
+                      .length === 0 && (
+                      <p className="text-sm text-muted-foreground text-center py-2">
+                        No custom APIs added
+                      </p>
                     )}
-                  </VStack>
-                </TabPanel>
-              </TabPanels>
-            </Tabs>
-          </ModalBody>
+                  </div>
+                </div>
 
-          <ModalFooter>
-            {activeTab === 0 && (
+                <div className="border-t border-border my-4" />
+
+                <div>
+                  <span className="font-bold mb-2 block">Add Custom API:</span>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Enter STAC API URL"
+                      value={newApiUrl}
+                      onChange={(e) => setNewApiUrl(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      className="flex-1"
+                    />
+                    <Button onClick={handleAddApi}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add
+                    </Button>
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="diagnostics" className="space-y-4 mt-4">
+                {healthLoading ? (
+                  <div className="flex justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                  </div>
+                ) : healthData ? (
+                  <>
+                    <div className="flex items-center">
+                      <div
+                        className={`w-2.5 h-2.5 rounded-full mr-2`}
+                        style={{
+                          backgroundColor:
+                            healthData.status === "UP"
+                              ? "rgb(34 197 94)"
+                              : "rgb(239 68 68)",
+                        }}
+                      />
+                      <span className="font-semibold">
+                        Overall Status: {healthData.status}
+                      </span>
+                    </div>
+
+                    <p className="font-medium">Upstream APIs:</p>
+                    {Object.entries(healthData.upstream_apis).map(
+                      ([url, api]) => {
+                        const conformance =
+                          api.collection_search_conformance || [];
+                        const hasCollectionSearch =
+                          hasCollectionSearchSupport(conformance);
+                        const hasFreeText = hasFreeTextSupport(conformance);
+
+                        return (
+                          <div
+                            key={url}
+                            className="ml-4 p-3 border border-border rounded-md"
+                          >
+                            <div className="flex items-center mb-2">
+                              <div
+                                className="w-2.5 h-2.5 rounded-full mr-2"
+                                style={{
+                                  backgroundColor: api.healthy
+                                    ? "rgb(34 197 94)"
+                                    : "rgb(239 68 68)",
+                                }}
+                              />
+                              <span className="text-sm font-semibold">
+                                {url}
+                              </span>
+                            </div>
+
+                            <div className="flex gap-2 ml-5 flex-wrap">
+                              <Badge
+                                variant={
+                                  hasCollectionSearch ? "default" : "destructive"
+                                }
+                              >
+                                {hasCollectionSearch
+                                  ? "Collection Search ✓"
+                                  : "No Collection Search"}
+                              </Badge>
+                              <Badge
+                                variant={
+                                  hasFreeText ? "default" : "secondary"
+                                }
+                                className={
+                                  !hasFreeText
+                                    ? "bg-orange-100 dark:bg-orange-900"
+                                    : ""
+                                }
+                              >
+                                {hasFreeText
+                                  ? "Free Text ✓"
+                                  : "No Free Text"}
+                              </Badge>
+                            </div>
+
+                            {conformance.length > 0 && (
+                              <p className="text-xs text-muted-foreground ml-5 mt-1">
+                                Conformance: {conformance.join(", ")}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      },
+                    )}
+
+                    <div className="border-t border-border my-4" />
+
+                    {/* Summary of limitations */}
+                    {(() => {
+                      const apisLackingCollectionSearch =
+                        getApisLackingCapability(
+                          healthData,
+                          "collection-search",
+                        );
+                      const apisLackingFreeText = getApisLackingCapability(
+                        healthData,
+                        "free-text",
+                      );
+
+                      return (
+                        <>
+                          {apisLackingCollectionSearch.length > 0 && (
+                            <div>
+                              <p className="text-sm font-medium text-destructive">
+                                APIs lacking collection search support:
+                              </p>
+                              <p className="text-xs text-muted-foreground ml-4">
+                                {apisLackingCollectionSearch.join(", ")}
+                              </p>
+                            </div>
+                          )}
+
+                          {apisLackingFreeText.length > 0 && (
+                            <div>
+                              <p className="text-sm font-medium text-orange-600 dark:text-orange-400">
+                                APIs lacking free-text search support:
+                              </p>
+                              <p className="text-xs text-muted-foreground ml-4">
+                                {apisLackingFreeText.join(", ")}
+                              </p>
+                            </div>
+                          )}
+
+                          {apisLackingCollectionSearch.length === 0 &&
+                            apisLackingFreeText.length === 0 && (
+                              <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+                                All configured APIs support collection search
+                                and free-text search! ✓
+                              </p>
+                            )}
+                        </>
+                      );
+                    })()}
+                  </>
+                ) : (
+                  <p>No health data available.</p>
+                )}
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          <DialogFooter>
+            {activeTab === "configuration" && (
               <>
-                <Button variant="ghost" mr={3} onClick={onClose}>
+                <Button variant="ghost" onClick={() => setIsOpen(false)}>
                   Cancel
                 </Button>
-                <Button colorScheme="teal" onClick={handleSave}>
-                  Save Changes
-                </Button>
+                <Button onClick={handleSave}>Save Changes</Button>
               </>
             )}
-            {activeTab === 1 && (
-              <Button colorScheme="blue" onClick={onClose}>
-                Close
-              </Button>
+            {activeTab === "diagnostics" && (
+              <Button onClick={() => setIsOpen(false)}>Close</Button>
             )}
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Filter Info Modal */}
-      <Modal isOpen={isFilterInfoOpen} onClose={onFilterInfoClose} size="lg">
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Filter Details</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            {selectedFilterInfo && (
-              <VStack spacing={4} align="stretch">
-                <Box>
-                  <Text fontWeight="bold" mb={2}>
-                    API URL:
-                  </Text>
-                  <Text fontSize="sm" color="gray.600">
-                    {selectedFilterInfo.url}
-                  </Text>
-                </Box>
+      <Dialog open={isFilterInfoOpen} onOpenChange={setIsFilterInfoOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Filter Details</DialogTitle>
+          </DialogHeader>
+          {selectedFilterInfo && (
+            <div className="space-y-4">
+              <div>
+                <p className="font-bold mb-2">API URL:</p>
+                <p className="text-sm text-muted-foreground">
+                  {selectedFilterInfo.url}
+                </p>
+              </div>
 
-                <Box>
-                  <Text fontWeight="bold" mb={2}>
-                    Filter Description:
-                  </Text>
-                  <Text fontSize="sm">{selectedFilterInfo.description}</Text>
-                </Box>
+              <div>
+                <p className="font-bold mb-2">Filter Description:</p>
+                <p className="text-sm">{selectedFilterInfo.description}</p>
+              </div>
 
-                <Box>
-                  <Text fontWeight="bold" mb={2}>
-                    Filter Code:
-                  </Text>
-                  <SyntaxHighlighter
-                    language="javascript"
-                    style={syntaxStyle}
-                    customStyle={{ fontSize: "12px", borderRadius: "6px" }}
-                  >
-                    {selectedFilterInfo.code}
-                  </SyntaxHighlighter>
-                </Box>
-              </VStack>
-            )}
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="blue" onClick={onFilterInfoClose}>
-              Close
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+              <div>
+                <p className="font-bold mb-2">Filter Code:</p>
+                <SyntaxHighlighter
+                  language="javascript"
+                  style={syntaxStyle}
+                  customStyle={{ fontSize: "12px", borderRadius: "6px" }}
+                >
+                  {selectedFilterInfo.code}
+                </SyntaxHighlighter>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setIsFilterInfoOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
 
 export default ApiConfigPanel;
-

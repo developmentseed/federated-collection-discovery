@@ -11,9 +11,9 @@
 
 /**
  * Backend API URL - Configure the base URL for your backend service
- * Can be overridden with REACT_APP_API_URL environment variable
+ * Can be overridden with VITE_API_URL environment variable
  */
-export const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
+export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 // =============================================================================
 // STAC API CONFIGURATION
