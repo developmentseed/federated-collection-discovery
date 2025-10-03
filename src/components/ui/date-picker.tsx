@@ -26,10 +26,13 @@ export function DatePicker({
   disabled,
   maxDate,
 }: DatePickerProps) {
+  const [open, setOpen] = React.useState(false)
+
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          type="button"
           variant="outline"
           className={cn(
             "w-full justify-start text-left font-normal",
@@ -45,7 +48,10 @@ export function DatePicker({
         <Calendar
           mode="single"
           selected={date || undefined}
-          onSelect={onSelect}
+          onSelect={(selectedDate) => {
+            onSelect?.(selectedDate)
+            setOpen(false)
+          }}
           disabled={maxDate ? { after: maxDate } : undefined}
           initialFocus
         />
