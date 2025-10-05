@@ -1,4 +1,4 @@
-import { ApiConfiguration, DEFAULT_API_CONFIGURATIONS } from '../config';
+import { ApiConfiguration, DEFAULT_API_CONFIGURATIONS } from "../config";
 
 export function getApiConfigurations(): ApiConfiguration[] {
   return DEFAULT_API_CONFIGURATIONS;
@@ -40,3 +40,4 @@ export function applyFilterForApi(url: string, collections: any[]): any[] {
 
   return collections.filter(config.filter);
 }
+

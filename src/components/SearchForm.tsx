@@ -5,6 +5,7 @@ import { Label } from "./ui/label";
 import { DatePicker } from "./ui/date-picker";
 import MapModal from "./MapModal";
 import { cn } from "../lib/utils";
+import { stack, touchTarget, layout } from "../lib/responsive";
 
 type FormData = {
   bbox: string;
@@ -23,11 +24,37 @@ interface Props {
   conformanceLoading?: boolean;
 }
 
+// Parse datetime interval from URL parameter
+const parseDatetimeInterval = (
+  datetime: string,
+): { start: Date | null; end: Date | null } => {
+  if (!datetime) return { start: null, end: null };
+
+  const parts = datetime.split("/");
+  const start = parts[0] && parts[0] !== ".." ? new Date(parts[0]) : null;
+  const end = parts[1] && parts[1] !== ".." ? new Date(parts[1]) : null;
+
+  return { start, end };
+};
+
+// Initialize form data from URL parameters
+const getInitialFormData = () => {
+  const params = new URLSearchParams(window.location.search);
+  const datetime = params.get("datetime") || "";
+  const { start, end } = parseDatetimeInterval(datetime);
+
+  return {
+    bbox: params.get("bbox") || "",
+    startDatetime: start,
+    endDatetime: end,
+    q: params.get("q") || "",
+  };
+};
+
 const SearchForm: React.FC<Props> = ({
   onSubmit,
   isLoading,
   conformanceCapabilities,
-  conformanceLoading
 }) => {
   const [isMapOpen, setIsMapOpen] = useState(false);
 
@@ -36,12 +63,7 @@ const SearchForm: React.FC<Props> = ({
       startDatetime: Date | null;
       endDatetime: Date | null;
     }
-  >({
-    bbox: "",
-    startDatetime: null,
-    endDatetime: null,
-    q: "",
-  });
+  >(getInitialFormData);
 
   const [bboxError, setBboxError] = useState<string>("");
 
@@ -121,6 +143,16 @@ const SearchForm: React.FC<Props> = ({
       datetime,
       q: formData.q,
     };
+
+    // Update URL with search parameters
+    const params = new URLSearchParams();
+    if (submitData.q) params.set("q", submitData.q);
+    if (submitData.bbox) params.set("bbox", submitData.bbox);
+    if (submitData.datetime) params.set("datetime", submitData.datetime);
+
+    const newUrl = `${window.location.pathname}${params.toString() ? "?" + params.toString() : ""}`;
+    window.history.pushState({}, "", newUrl);
+
     onSubmit(submitData);
   };
 
@@ -136,30 +168,45 @@ const SearchForm: React.FC<Props> = ({
   };
 
   const today = new Date();
-  const isTextSearchDisabled = conformanceCapabilities ? !conformanceCapabilities.hasFreeText : false;
+  const isTextSearchDisabled = conformanceCapabilities
+    ? !conformanceCapabilities.hasFreeText
+    : false;
 
   return (
-    <form onKeyDown={handleKeyDown} onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="q" className="font-semibold">text search</Label>
+    <form
+      onKeyDown={handleKeyDown}
+      onSubmit={handleSubmit}
+      className={stack({ gap: "md" })}
+      aria-label="Collection search form"
+    >
+      <div className={stack({ gap: "sm" })}>
+        <Label htmlFor="q" className="font-semibold">
+          text search
+        </Label>
         <Input
           id="q"
           name="q"
           value={formData.q}
           onChange={handleChange}
-          placeholder={isTextSearchDisabled ? "Text search not available" : "Enter text"}
+          placeholder={
+            isTextSearchDisabled ? "Text search not available" : "Enter text"
+          }
           disabled={isTextSearchDisabled}
+          aria-describedby={isTextSearchDisabled ? "q-help" : undefined}
         />
         {isTextSearchDisabled && (
-          <p className="text-sm text-muted-foreground">
+          <p id="q-help" className="text-sm text-muted-foreground">
             Text search is disabled - no upstream APIs support free-text search
           </p>
         )}
       </div>
 
-      <div className="space-y-2">
+      <div className={stack({ gap: "sm" })}>
         <Label htmlFor="bbox" className="font-semibold">
-          bounding box <span className="font-normal text-muted-foreground">(xmin, ymin, xmax, ymax; EPSG:4326)</span>
+          bounding box{" "}
+          <span className="font-normal text-muted-foreground">
+            (xmin, ymin, xmax, ymax; EPSG:4326)
+          </span>
         </Label>
         <Input
           id="bbox"
@@ -168,32 +215,49 @@ const SearchForm: React.FC<Props> = ({
           onChange={handleChange}
           placeholder="Enter bounding box"
           className={cn(bboxError && "border-destructive")}
+          aria-invalid={!!bboxError}
+          aria-describedby={bboxError ? "bbox-error" : "bbox-help"}
         />
+        <span id="bbox-help" className="sr-only">
+          Format: xmin, ymin, xmax, ymax in EPSG:4326
+        </span>
         {bboxError && (
-          <p className="text-sm text-destructive">{bboxError}</p>
+          <p id="bbox-error" className="text-sm text-destructive" role="alert">
+            {bboxError}
+          </p>
         )}
         <Button
           type="button"
           onClick={() => setIsMapOpen(true)}
           variant="outline"
           size="sm"
+          className={touchTarget()}
+          aria-label="Open map to draw bounding box"
         >
           Draw on Map
         </Button>
       </div>
 
-      <div className="space-y-2">
-        <Label className="font-semibold">temporal range</Label>
-        <div className="flex flex-col sm:flex-row gap-4">
+      <fieldset className={stack({ gap: "sm" })}>
+        <legend className="font-semibold">temporal range</legend>
+        <div className={cn(layout.flexColSm, "gap-4")}>
           <div className="flex-1">
+            <Label htmlFor="start-date" className="sr-only">
+              Start date
+            </Label>
             <DatePicker
               date={formData.startDatetime}
-              onSelect={(date) => handleDateChange(date || null, "startDatetime")}
+              onSelect={(date) =>
+                handleDateChange(date || null, "startDatetime")
+              }
               maxDate={today}
               placeholder="start date"
             />
           </div>
           <div className="flex-1">
+            <Label htmlFor="end-date" className="sr-only">
+              End date
+            </Label>
             <DatePicker
               date={formData.endDatetime}
               onSelect={(date) => handleDateChange(date || null, "endDatetime")}
@@ -202,7 +266,7 @@ const SearchForm: React.FC<Props> = ({
             />
           </div>
         </div>
-      </div>
+      </fieldset>
 
       <div className="flex justify-end">
         <Button
@@ -210,6 +274,10 @@ const SearchForm: React.FC<Props> = ({
           disabled={isLoading}
           variant="outline"
           size="sm"
+          className={cn(touchTarget(), "min-w-[100px]")}
+          aria-label={
+            isLoading ? "Searching collections" : "Search for collections"
+          }
         >
           {isLoading ? "Searching..." : "Search"}
         </Button>

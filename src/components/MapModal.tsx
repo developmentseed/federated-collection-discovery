@@ -10,15 +10,19 @@ import { Button } from "@/components/ui/button";
 import Map from "ol/Map";
 import View from "ol/View";
 import TileLayer from "ol/layer/Tile";
-import OSM from "ol/source/OSM";
 import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
 import Draw from "ol/interaction/Draw";
 import { fromLonLat, toLonLat } from "ol/proj";
-import { Fill, Stroke, Style } from "ol/style";
 import { Coordinate } from "ol/coordinate";
 import Polygon from "ol/geom/Polygon";
 import "ol/ol.css";
+import { useDarkMode } from "@/utils/hooks";
+import {
+  getBasemapSource,
+  createAttributionControl,
+  getTransparentPolygonStyle,
+} from "@/utils/map-utils";
 
 interface MapModalProps {
   isOpen: boolean;
@@ -31,6 +35,7 @@ const MapModal: React.FC<MapModalProps> = ({ isOpen, onClose, onSubmit }) => {
   const mapInstanceRef = useRef<Map | null>(null);
   const vectorSourceRef = useRef<VectorSource | null>(null);
   const drawRef = useRef<Draw | null>(null);
+  const isDark = useDarkMode();
 
   const handleDrawStop = () => {
     if (!vectorSourceRef.current) return;
@@ -82,29 +87,24 @@ const MapModal: React.FC<MapModalProps> = ({ isOpen, onClose, onSubmit }) => {
 
         const vectorLayer = new VectorLayer({
           source: vectorSource,
-          style: new Style({
-            fill: new Fill({
-              color: "rgba(255, 255, 255, 0.2)",
-            }),
-            stroke: new Stroke({
-              color: "#ffcc33",
-              width: 2,
-            }),
-          }),
+          style: getTransparentPolygonStyle(),
         });
+
+        // Use dark basemap in dark mode
+        const tileSource = getBasemapSource(isDark);
 
         const map = new Map({
           target: mapRef.current,
-          layers: [
-            new TileLayer({
-              source: new OSM(),
-            }),
-            vectorLayer,
-          ],
+          layers: [new TileLayer({ source: tileSource }), vectorLayer],
           view: new View({
             center: fromLonLat([0, 0]),
             zoom: 0,
+            minZoom: 0,
+            maxZoom: 28,
+            constrainResolution: false,
+            smoothResolutionConstraint: false,
           }),
+          controls: [createAttributionControl(isDark)],
         });
 
         // Use Box drawing for corner-to-corner rectangle drawing

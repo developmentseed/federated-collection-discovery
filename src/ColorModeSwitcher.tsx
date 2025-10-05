@@ -38,7 +38,7 @@ export const ColorModeSwitcher: React.FC<ColorModeSwitcherProps> = ({
       size="icon"
       onClick={toggleColorMode}
       aria-label={`Switch to ${isDark ? "light" : "dark"} mode`}
-      className={className}
+      className={`min-h-[44px] min-w-[44px] ${className || ""}`}
     >
       {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
     </Button>

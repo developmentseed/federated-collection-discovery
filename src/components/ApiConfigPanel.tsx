@@ -7,15 +7,13 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import {
   coldarkCold,
@@ -39,7 +37,12 @@ import {
   RotateCcw,
   Info,
   Loader2,
+  Wrench,
+  Activity,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { stack, hstack, dialog } from "@/lib/responsive";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface HealthResponse {
   status: string;
@@ -169,7 +172,12 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
     }
 
     if (!healthData) {
-      return { color: "red", status: "Error", isLoading: false, hasIssues: true };
+      return {
+        color: "red",
+        status: "Error",
+        isLoading: false,
+        hasIssues: true,
+      };
     }
 
     const isHealthy = healthData.status === "UP";
@@ -183,7 +191,12 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
     );
 
     if (!isHealthy || apisLackingCollectionSearch.length > 0) {
-      return { color: "red", status: "Issues", isLoading: false, hasIssues: true };
+      return {
+        color: "red",
+        status: "Issues",
+        isLoading: false,
+        hasIssues: true,
+      };
     }
 
     if (apisLackingFreeText.length > 0) {
@@ -203,7 +216,7 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
     };
   };
 
-  const { color, status, isLoading, hasIssues } = getOverallStatus();
+  const { color, status, isLoading } = getOverallStatus();
 
   // API management functions
   const validateUrl = (url: string): boolean => {
@@ -298,7 +311,12 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
 
   return (
     <>
-      <div className="flex items-center gap-3 p-3 rounded-md border border-border">
+      <div
+        className={cn(
+          "p-3 rounded-md border border-border",
+          hstack({ gap: "sm" }),
+        )}
+      >
         {isLoading ? (
           <Loader2 className={`h-3 w-3 animate-spin text-${color}-500`} />
         ) : (
@@ -327,18 +345,37 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
       </div>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className={cn(dialog({ size: "md" }), "p-4 sm:p-6")}>
           <DialogHeader>
-            <DialogTitle>API Configuration & Diagnostics</DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl">
+              API Configuration & Diagnostics
+            </DialogTitle>
           </DialogHeader>
           <div>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList>
-                <TabsTrigger value="configuration">Configuration</TabsTrigger>
-                <TabsTrigger value="diagnostics">Diagnostics</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger
+                  value="configuration"
+                  className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3"
+                >
+                  <Wrench className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Configuration</span>
+                  <span className="sm:hidden">Config</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="diagnostics"
+                  className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3"
+                >
+                  <Activity className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Diagnostics</span>
+                  <span className="sm:hidden">Diag</span>
+                </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="configuration" className="space-y-4 mt-4">
+              <TabsContent
+                value="configuration"
+                className={cn(stack({ gap: "md" }), "mt-4")}
+              >
                 <p className="text-sm text-muted-foreground">
                   Configure which STAC APIs to include in your search.
                   Enable/disable default APIs or add custom endpoints.
@@ -354,198 +391,303 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
                   </Alert>
                 )}
 
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-bold">Default APIs:</span>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={handleResetToDefaults}
-                    >
-                      <RotateCcw className="mr-2 h-4 w-4" />
-                      Reset to Defaults
-                    </Button>
-                  </div>
-                  <div className="space-y-2">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <div className="flex justify-between items-center gap-2">
+                      <CardTitle className="text-sm sm:text-base">
+                        Default APIs
+                      </CardTitle>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleResetToDefaults}
+                        className="text-xs sm:text-sm shrink-0"
+                      >
+                        <RotateCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                        <span className="hidden sm:inline">
+                          Reset to Defaults
+                        </span>
+                        <span className="sm:hidden">Reset</span>
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className={stack({ gap: "sm" })}>
                     {defaultApis.map((api) => (
-                      <div key={api} className="flex items-center gap-2">
-                        <span className="text-sm flex-1 truncate">{api}</span>
+                      <div
+                        key={api}
+                        className={cn(hstack({ gap: "sm" }), "py-1")}
+                      >
+                        <Switch
+                          id={`api-${api}`}
+                          checked={editableApis.includes(api)}
+                          onCheckedChange={(checked) =>
+                            handleToggleDefaultApi(api, checked)
+                          }
+                        />
+                        <Label
+                          htmlFor={`api-${api}`}
+                          className="text-xs sm:text-sm flex-1 truncate cursor-pointer"
+                        >
+                          {api}
+                        </Label>
                         {hasCustomFilter(api) && (
                           <>
-                            <Badge variant="secondary" className="bg-purple-100 dark:bg-purple-900">
+                            <Badge
+                              variant="secondary"
+                              className="bg-purple-100 dark:bg-purple-900 text-xs shrink-0"
+                            >
                               filtered
                             </Badge>
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => handleShowFilterInfo(api)}
+                              className="h-8 w-8 p-0 shrink-0"
                             >
-                              <Info className="h-4 w-4" />
+                              <Info className="h-3 w-3 sm:h-4 sm:w-4" />
                             </Button>
                           </>
                         )}
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() =>
-                            handleToggleDefaultApi(
-                              api,
-                              !editableApis.includes(api),
-                            )
-                          }
-                        >
-                          {editableApis.includes(api) ? "Disable" : "Enable"}
-                        </Button>
                       </div>
                     ))}
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
 
-                <div className="border-t border-border my-4" />
-
-                <div>
-                  <span className="font-bold mb-2 block">Custom APIs:</span>
-                  <div className="space-y-2">
-                    {editableApis
-                      .filter((api) => !defaultApis.includes(api))
-                      .map((api, index) => {
-                        const actualIndex = editableApis.indexOf(api);
-                        return (
-                          <div key={actualIndex} className="flex items-center gap-2">
-                            <Input
-                              value={api}
-                              onChange={(e) =>
-                                handleUpdateApi(actualIndex, e.target.value)
-                              }
-                              placeholder="API URL"
-                              className="flex-1"
-                            />
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleRemoveApi(actualIndex)}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm sm:text-base">
+                      Custom APIs
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className={stack({ gap: "md" })}>
+                    <div className={stack({ gap: "sm" })}>
+                      {editableApis
+                        .filter((api) => !defaultApis.includes(api))
+                        .map((api, _) => {
+                          const actualIndex = editableApis.indexOf(api);
+                          const isValid = validateUrl(api);
+                          return (
+                            <div
+                              key={actualIndex}
+                              className={stack({ gap: "xs" })}
                             >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        );
-                      })}
-                    {editableApis.filter((api) => !defaultApis.includes(api))
-                      .length === 0 && (
-                      <p className="text-sm text-muted-foreground text-center py-2">
-                        No custom APIs added
-                      </p>
-                    )}
-                  </div>
-                </div>
+                              <div className={hstack({ gap: "sm" })}>
+                                <Input
+                                  value={api}
+                                  onChange={(e) =>
+                                    handleUpdateApi(actualIndex, e.target.value)
+                                  }
+                                  placeholder="https://example.com/stac"
+                                  className={`flex-1 text-xs sm:text-sm ${
+                                    !isValid ? "border-destructive" : ""
+                                  }`}
+                                />
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleRemoveApi(actualIndex)}
+                                  className="h-9 w-9 p-0 shrink-0"
+                                >
+                                  <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                                </Button>
+                              </div>
+                              {!isValid && (
+                                <p className="text-xs text-destructive ml-1">
+                                  Invalid URL format
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })}
+                      {editableApis.filter((api) => !defaultApis.includes(api))
+                        .length === 0 && (
+                        <div className="text-center py-4 sm:py-6 text-muted-foreground">
+                          <p className="text-xs sm:text-sm">
+                            No custom APIs added yet
+                          </p>
+                          <p className="text-xs mt-1">
+                            Add a custom STAC API endpoint below
+                          </p>
+                        </div>
+                      )}
+                    </div>
 
-                <div className="border-t border-border my-4" />
-
-                <div>
-                  <span className="font-bold mb-2 block">Add Custom API:</span>
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Enter STAC API URL"
-                      value={newApiUrl}
-                      onChange={(e) => setNewApiUrl(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      className="flex-1"
-                    />
-                    <Button onClick={handleAddApi}>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add
-                    </Button>
-                  </div>
-                </div>
+                    <div className="border-t border-border pt-4">
+                      <Label
+                        htmlFor="new-api-url"
+                        className="text-xs sm:text-sm font-medium mb-2 block"
+                      >
+                        Add Custom API
+                      </Label>
+                      <div className={stack({ gap: "sm" })}>
+                        <div className={hstack({ gap: "sm" })}>
+                          <Input
+                            id="new-api-url"
+                            placeholder="https://example.com/stac"
+                            value={newApiUrl}
+                            onChange={(e) => setNewApiUrl(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            className={`flex-1 text-xs sm:text-sm ${
+                              newApiUrl && !validateUrl(newApiUrl)
+                                ? "border-destructive focus-visible:ring-destructive"
+                                : ""
+                            }`}
+                          />
+                          <Button
+                            onClick={handleAddApi}
+                            variant="outline"
+                            size="sm"
+                            disabled={
+                              !newApiUrl ||
+                              !validateUrl(newApiUrl) ||
+                              editableApis.includes(newApiUrl.trim())
+                            }
+                            className="text-xs sm:text-sm shrink-0"
+                          >
+                            <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                            <span className="hidden sm:inline">Add</span>
+                            <span className="sm:hidden">+</span>
+                          </Button>
+                        </div>
+                        {newApiUrl && !validateUrl(newApiUrl) && (
+                          <p className="text-xs text-destructive">
+                            Please enter a valid URL
+                          </p>
+                        )}
+                        {newApiUrl &&
+                          validateUrl(newApiUrl) &&
+                          editableApis.includes(newApiUrl.trim()) && (
+                            <p className="text-xs text-destructive">
+                              This API is already in the list
+                            </p>
+                          )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </TabsContent>
 
-              <TabsContent value="diagnostics" className="space-y-4 mt-4">
+              <TabsContent
+                value="diagnostics"
+                className={cn(stack({ gap: "md" }), "mt-4")}
+              >
                 {healthLoading ? (
-                  <div className="flex justify-center">
-                    <Loader2 className="h-8 w-8 animate-spin" />
+                  <div className="py-8 sm:py-12">
+                    <LoadingSpinner size="md" text="Checking API health..." />
                   </div>
                 ) : healthData ? (
                   <>
-                    <div className="flex items-center">
-                      <div
-                        className={`w-2.5 h-2.5 rounded-full mr-2`}
-                        style={{
-                          backgroundColor:
-                            healthData.status === "UP"
-                              ? "rgb(34 197 94)"
-                              : "rgb(239 68 68)",
-                        }}
-                      />
-                      <span className="font-semibold">
-                        Overall Status: {healthData.status}
-                      </span>
-                    </div>
-
-                    <p className="font-medium">Upstream APIs:</p>
-                    {Object.entries(healthData.upstream_apis).map(
-                      ([url, api]) => {
-                        const conformance =
-                          api.collection_search_conformance || [];
-                        const hasCollectionSearch =
-                          hasCollectionSearchSupport(conformance);
-                        const hasFreeText = hasFreeTextSupport(conformance);
-
-                        return (
+                    <Card>
+                      <CardContent className="pt-4 sm:pt-6">
+                        <div className="flex items-center gap-2 sm:gap-3">
                           <div
-                            key={url}
-                            className="ml-4 p-3 border border-border rounded-md"
+                            className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shrink-0"
+                            style={{
+                              backgroundColor:
+                                healthData.status === "UP"
+                                  ? "rgb(34 197 94)"
+                                  : "rgb(239 68 68)",
+                            }}
+                          />
+                          <span className="font-semibold text-sm sm:text-base">
+                            Overall Status
+                          </span>
+                          <Badge
+                            variant={
+                              healthData.status === "UP"
+                                ? "default"
+                                : "destructive"
+                            }
+                            className="ml-auto text-xs"
                           >
-                            <div className="flex items-center mb-2">
-                              <div
-                                className="w-2.5 h-2.5 rounded-full mr-2"
-                                style={{
-                                  backgroundColor: api.healthy
-                                    ? "rgb(34 197 94)"
-                                    : "rgb(239 68 68)",
-                                }}
-                              />
-                              <span className="text-sm font-semibold">
-                                {url}
-                              </span>
-                            </div>
+                            {healthData.status}
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
 
-                            <div className="flex gap-2 ml-5 flex-wrap">
-                              <Badge
-                                variant={
-                                  hasCollectionSearch ? "default" : "destructive"
-                                }
+                    <div className={stack({ gap: "sm" })}>
+                      <h3 className="font-semibold text-xs sm:text-sm">
+                        Upstream APIs
+                      </h3>
+                      {Object.entries(healthData.upstream_apis).map(
+                        ([url, api]) => {
+                          const conformance =
+                            api.collection_search_conformance || [];
+                          const hasCollectionSearch =
+                            hasCollectionSearchSupport(conformance);
+                          const hasFreeText = hasFreeTextSupport(conformance);
+
+                          return (
+                            <Card key={url}>
+                              <CardContent
+                                className={cn(
+                                  stack({ gap: "sm" }),
+                                  "pt-3 sm:pt-4",
+                                )}
                               >
-                                {hasCollectionSearch
-                                  ? "Collection Search ✓"
-                                  : "No Collection Search"}
-                              </Badge>
-                              <Badge
-                                variant={
-                                  hasFreeText ? "default" : "secondary"
-                                }
-                                className={
-                                  !hasFreeText
-                                    ? "bg-orange-100 dark:bg-orange-900"
-                                    : ""
-                                }
-                              >
-                                {hasFreeText
-                                  ? "Free Text ✓"
-                                  : "No Free Text"}
-                              </Badge>
-                            </div>
+                                <div className={hstack({ gap: "sm" })}>
+                                  <div
+                                    className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full flex-shrink-0"
+                                    style={{
+                                      backgroundColor: api.healthy
+                                        ? "rgb(34 197 94)"
+                                        : "rgb(239 68 68)",
+                                    }}
+                                  />
+                                  <span className="text-xs sm:text-sm font-medium break-all">
+                                    {url}
+                                  </span>
+                                </div>
 
-                            {conformance.length > 0 && (
-                              <p className="text-xs text-muted-foreground ml-5 mt-1">
-                                Conformance: {conformance.join(", ")}
-                              </p>
-                            )}
-                          </div>
-                        );
-                      },
-                    )}
+                                <div
+                                  className={cn(
+                                    hstack({ gap: "xs" }),
+                                    "flex-wrap",
+                                  )}
+                                >
+                                  <Badge
+                                    variant={
+                                      hasCollectionSearch
+                                        ? "default"
+                                        : "destructive"
+                                    }
+                                    className="text-[10px] sm:text-xs"
+                                  >
+                                    {hasCollectionSearch
+                                      ? "Collection Search ✓"
+                                      : "No Collection Search"}
+                                  </Badge>
+                                  <Badge
+                                    variant={
+                                      hasFreeText ? "default" : "secondary"
+                                    }
+                                    className={`text-[10px] sm:text-xs ${
+                                      !hasFreeText
+                                        ? "bg-orange-100 dark:bg-orange-900"
+                                        : ""
+                                    }`}
+                                  >
+                                    {hasFreeText
+                                      ? "Free Text ✓"
+                                      : "No Free Text"}
+                                  </Badge>
+                                </div>
 
-                    <div className="border-t border-border my-4" />
+                                {conformance.length > 0 && (
+                                  <p className="text-[10px] sm:text-xs text-muted-foreground">
+                                    <span className="font-medium">
+                                      Conformance:
+                                    </span>{" "}
+                                    {conformance.join(", ")}
+                                  </p>
+                                )}
+                              </CardContent>
+                            </Card>
+                          );
+                        },
+                      )}
+                    </div>
 
                     {/* Summary of limitations */}
                     {(() => {
@@ -560,58 +702,96 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
                       );
 
                       return (
-                        <>
-                          {apisLackingCollectionSearch.length > 0 && (
-                            <div>
-                              <p className="text-sm font-medium text-destructive">
-                                APIs lacking collection search support:
-                              </p>
-                              <p className="text-xs text-muted-foreground ml-4">
-                                {apisLackingCollectionSearch.join(", ")}
-                              </p>
-                            </div>
-                          )}
-
-                          {apisLackingFreeText.length > 0 && (
-                            <div>
-                              <p className="text-sm font-medium text-orange-600 dark:text-orange-400">
-                                APIs lacking free-text search support:
-                              </p>
-                              <p className="text-xs text-muted-foreground ml-4">
-                                {apisLackingFreeText.join(", ")}
-                              </p>
-                            </div>
-                          )}
-
-                          {apisLackingCollectionSearch.length === 0 &&
-                            apisLackingFreeText.length === 0 && (
-                              <p className="text-sm text-green-600 dark:text-green-400 font-medium">
-                                All configured APIs support collection search
-                                and free-text search! ✓
-                              </p>
+                        <Card>
+                          <CardHeader className="pb-3">
+                            <CardTitle className="text-sm sm:text-base">
+                              Summary
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className={stack({ gap: "sm" })}>
+                            {apisLackingCollectionSearch.length > 0 && (
+                              <Alert variant="destructive">
+                                <AlertDescription>
+                                  <p className="text-xs sm:text-sm font-medium mb-1">
+                                    APIs lacking collection search support:
+                                  </p>
+                                  <p className="text-[10px] sm:text-xs break-all">
+                                    {apisLackingCollectionSearch.join(", ")}
+                                  </p>
+                                </AlertDescription>
+                              </Alert>
                             )}
-                        </>
+
+                            {apisLackingFreeText.length > 0 && (
+                              <Alert className="border-orange-200 dark:border-orange-800">
+                                <AlertDescription>
+                                  <p className="text-xs sm:text-sm font-medium text-orange-600 dark:text-orange-400 mb-1">
+                                    APIs lacking free-text search support:
+                                  </p>
+                                  <p className="text-[10px] sm:text-xs text-muted-foreground break-all">
+                                    {apisLackingFreeText.join(", ")}
+                                  </p>
+                                </AlertDescription>
+                              </Alert>
+                            )}
+
+                            {apisLackingCollectionSearch.length === 0 &&
+                              apisLackingFreeText.length === 0 && (
+                                <Alert className="border-green-200 dark:border-green-800">
+                                  <AlertDescription className="text-xs sm:text-sm text-green-600 dark:text-green-400 font-medium">
+                                    All configured APIs support collection
+                                    search and free-text search! ✓
+                                  </AlertDescription>
+                                </Alert>
+                              )}
+                          </CardContent>
+                        </Card>
                       );
                     })()}
                   </>
                 ) : (
-                  <p>No health data available.</p>
+                  <Card>
+                    <CardContent className="pt-4 sm:pt-6">
+                      <div className="text-center py-6 sm:py-8 text-muted-foreground">
+                        <Activity className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-2 sm:mb-3 opacity-50" />
+                        <p className="text-xs sm:text-sm font-medium">
+                          No health data available
+                        </p>
+                        <p className="text-[10px] sm:text-xs mt-1">
+                          {stacApis.length === 0
+                            ? "Configure APIs in the Configuration tab to see diagnostics"
+                            : "Unable to fetch API health information"}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 )}
               </TabsContent>
             </Tabs>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className={hstack({ gap: "sm" })}>
             {activeTab === "configuration" && (
               <>
-                <Button variant="ghost" onClick={() => setIsOpen(false)}>
+                <Button
+                  variant="ghost"
+                  onClick={() => setIsOpen(false)}
+                  className="text-xs sm:text-sm"
+                >
                   Cancel
                 </Button>
-                <Button onClick={handleSave}>Save Changes</Button>
+                <Button onClick={handleSave} className="text-xs sm:text-sm">
+                  Save Changes
+                </Button>
               </>
             )}
             {activeTab === "diagnostics" && (
-              <Button onClick={() => setIsOpen(false)}>Close</Button>
+              <Button
+                onClick={() => setIsOpen(false)}
+                className="text-xs sm:text-sm"
+              >
+                Close
+              </Button>
             )}
           </DialogFooter>
         </DialogContent>
@@ -619,30 +799,40 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
 
       {/* Filter Info Modal */}
       <Dialog open={isFilterInfoOpen} onOpenChange={setIsFilterInfoOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className={cn(dialog({ size: "md" }), "p-4 sm:p-6")}>
           <DialogHeader>
-            <DialogTitle>Filter Details</DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl">
+              Filter Details
+            </DialogTitle>
           </DialogHeader>
           {selectedFilterInfo && (
-            <div className="space-y-4">
+            <div className={stack({ gap: "sm" })}>
               <div>
-                <p className="font-bold mb-2">API URL:</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="font-bold mb-1 sm:mb-2 text-xs sm:text-sm">
+                  API URL:
+                </p>
+                <p className="text-xs sm:text-sm text-muted-foreground break-all">
                   {selectedFilterInfo.url}
                 </p>
               </div>
 
               <div>
-                <p className="font-bold mb-2">Filter Description:</p>
-                <p className="text-sm">{selectedFilterInfo.description}</p>
+                <p className="font-bold mb-1 sm:mb-2 text-xs sm:text-sm">
+                  Filter Description:
+                </p>
+                <p className="text-xs sm:text-sm">
+                  {selectedFilterInfo.description}
+                </p>
               </div>
 
               <div>
-                <p className="font-bold mb-2">Filter Code:</p>
+                <p className="font-bold mb-1 sm:mb-2 text-xs sm:text-sm">
+                  Filter Code:
+                </p>
                 <SyntaxHighlighter
                   language="javascript"
                   style={syntaxStyle}
-                  customStyle={{ fontSize: "12px", borderRadius: "6px" }}
+                  customStyle={{ fontSize: "11px", borderRadius: "6px" }}
                 >
                   {selectedFilterInfo.code}
                 </SyntaxHighlighter>
@@ -650,7 +840,12 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
             </div>
           )}
           <DialogFooter>
-            <Button onClick={() => setIsFilterInfoOpen(false)}>Close</Button>
+            <Button
+              onClick={() => setIsFilterInfoOpen(false)}
+              className="text-xs sm:text-sm"
+            >
+              Close
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -13,16 +13,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Collapsible,
   CollapsibleContent,
@@ -33,7 +27,6 @@ import {
   coldarkCold,
   coldarkDark,
 } from "react-syntax-highlighter/dist/cjs/styles/prism";
-import { OSM } from "ol/source";
 import Map from "ol/Map";
 import FullScreen from "ol/control/FullScreen.js";
 import View from "ol/View";
@@ -46,8 +39,16 @@ import { transformExtent } from "ol/proj";
 import "ol/ol.css";
 import "ol-layerswitcher/dist/ol-layerswitcher.css";
 import ReactMarkdown from "react-markdown";
-import { ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { ChevronDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { stack, hstack, touchTarget, dialog } from "@/lib/responsive";
+import { useDarkMode } from "@/utils/hooks";
+import {
+  getBasemapSource,
+  createAttributionControl,
+  getStacBoundsStyle,
+} from "@/utils/map-utils";
+import logoSvg from "@/assets/logo.svg";
 
 register(proj4);
 
@@ -114,10 +115,10 @@ const formatProviders = (providers: any[]): JSX.Element => {
   }
 
   return (
-    <div className="space-y-3">
+    <div className={stack({ gap: "sm" })}>
       {providers.map((provider: any, index: number) => (
         <div key={index}>
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className={hstack({ gap: "sm" })}>
             <span className="font-semibold">
               {provider.name || "Unknown Provider"}
             </span>
@@ -190,6 +191,8 @@ interface Props {
   hasNextPage?: boolean;
   isLoadingMore?: boolean;
   onLoadMore?: () => void;
+  hasSearched?: boolean;
+  stacApis?: string[];
 }
 
 type ColumnBreakpoints = {
@@ -221,40 +224,17 @@ const formatKeyName = (key: string): string => {
   return key;
 };
 
-// Custom hook for dark mode detection
-const useDarkMode = () => {
-  const [isDark, setIsDark] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return (
-      localStorage.getItem("theme") === "dark" ||
-      (!localStorage.getItem("theme") &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches)
-    );
-  });
-
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setIsDark(document.documentElement.classList.contains("dark"));
-    });
-
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"],
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
-  return isDark;
-};
-
 // Custom hook for responsive breakpoints
 const useBreakpoint = () => {
   const [columns, setColumns] = useState<string[]>(specificColumns.base);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 1280) {
+      const width = window.innerWidth;
+      setIsMobile(width < 640);
+
+      if (width >= 1280) {
         setColumns(specificColumns.xl);
       } else {
         setColumns(specificColumns.base);
@@ -266,7 +246,7 @@ const useBreakpoint = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  return columns;
+  return { columns, isMobile };
 };
 
 const ResultsTable: React.FC<Props> = ({
@@ -274,6 +254,8 @@ const ResultsTable: React.FC<Props> = ({
   hasNextPage = false,
   isLoadingMore = false,
   onLoadMore,
+  hasSearched = false,
+  stacApis = [],
 }) => {
   const isDark = useDarkMode();
   const [isOpen, setIsOpen] = useState(false);
@@ -282,7 +264,7 @@ const ResultsTable: React.FC<Props> = ({
     any | HintFormat
   > | null>(null);
   const hintStyle = isDark ? coldarkDark : coldarkCold;
-  const columns = useBreakpoint();
+  const { columns, isMobile } = useBreakpoint();
 
   // State for collapsible sections
   const [showLinks, setShowLinks] = useState(false);
@@ -345,52 +327,236 @@ const ResultsTable: React.FC<Props> = ({
     setIsOpen(true);
   };
 
-  const PACKAGE_LANGUAGE_MAP: Record<string, string> = {
-    "pystac-client": "python",
-    "python-cmr": "python",
-    rstac: "r",
+  // Mobile card view renderer
+  const MobileCardView = () => {
+    if (data.length === 0) {
+      if (!hasSearched) {
+        return (
+          <div
+            className="flex flex-col items-center justify-center p-12 text-center"
+            role="status"
+          >
+            <img
+              src={logoSvg}
+              className="h-16 w-16 mb-4"
+              aria-hidden="true"
+              alt=""
+            />
+            <h3 className="text-lg font-semibold mb-2">
+              Search for collections
+            </h3>
+            <p className="text-sm text-muted-foreground max-w-md mb-3">
+              Search across all configured STAC APIs:
+            </p>
+            {stacApis.length > 0 && (
+              <ul className="text-xs text-muted-foreground space-y-1 max-w-md text-left">
+                {stacApis.map((api, index) => (
+                  <li key={index} className="break-all">
+                    {api}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        );
+      }
+      return (
+        <div
+          className="flex flex-col items-center justify-center p-12 text-center"
+          role="status"
+        >
+          <img
+            src={logoSvg}
+            className="h-16 w-16 mb-4"
+            aria-hidden="true"
+            alt=""
+          />
+          <h3 className="text-lg font-semibold mb-2">No collections found</h3>
+          <p className="text-sm text-muted-foreground max-w-md">
+            Try adjusting your search criteria or check your API configuration
+            to find collections.
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div
+        className={cn(stack({ gap: "md" }), "p-4")}
+        role="list"
+        aria-label="Search results"
+      >
+        {sortedData.map((row, rowIndex) => (
+          <button
+            key={rowIndex}
+            onClick={() => handleButtonClick(row)}
+            className={cn(
+              "border border-border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors duration-150 w-full text-left",
+              stack({ gap: "sm" }),
+              touchTarget(),
+            )}
+            role="listitem"
+            aria-label={`View details for ${row.title || "Untitled"}`}
+          >
+            <div>
+              <h3 className="font-medium text-base mb-1">
+                {row.title || "Untitled"}
+              </h3>
+              {row.id && (
+                <p className="text-sm text-muted-foreground font-mono">
+                  {row.id}
+                </p>
+              )}
+            </div>
+            <div className="text-sm">
+              <span className="text-muted-foreground">API: </span>
+              <span className="break-all">{extractCatalogUrl(row)}</span>
+            </div>
+            {row.description && (
+              <p className="text-sm text-muted-foreground line-clamp-2">
+                {row.description}
+              </p>
+            )}
+            <div className="text-xs text-muted-foreground">
+              Tap for details →
+            </div>
+          </button>
+        ))}
+      </div>
+    );
   };
 
   return (
     <>
       <div className="overflow-auto max-h-full">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {columns.map((header) => (
-                <TableHead
-                  key={header}
-                  className="sticky top-0 z-10 bg-background cursor-pointer"
-                  onClick={() => handleSort(header)}
-                >
-                  <div className="flex items-center gap-1">
-                    {header}
-                    {sortColumn === header && (
-                      <span>{sortOrder === "asc" ? "🔼" : "🔽"}</span>
-                    )}
-                  </div>
-                </TableHead>
-              ))}
-              <TableHead className="sticky top-0 z-10 bg-background"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sortedData.map((row, rowIndex) => (
-              <TableRow key={rowIndex} className="hover:bg-muted/50">
+        {isMobile ? (
+          <MobileCardView />
+        ) : data.length === 0 ? (
+          !hasSearched ? (
+            <div
+              className="flex flex-col items-center justify-center p-16 text-center"
+              role="status"
+            >
+              <img
+                src={logoSvg}
+                className="h-20 w-20 mb-6"
+                aria-hidden="true"
+                alt=""
+              />
+              <h3 className="text-xl font-semibold mb-3">
+                Search for collections
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-lg mb-4">
+                Search across all configured STAC APIs:
+              </p>
+              {stacApis.length > 0 && (
+                <ul className="text-sm text-muted-foreground space-y-2 max-w-lg text-left">
+                  {stacApis.map((api, index) => (
+                    <li key={index} className="break-all font-mono">
+                      {api}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ) : (
+            <div
+              className="flex flex-col items-center justify-center p-16 text-center"
+              role="status"
+            >
+              <img
+                src={logoSvg}
+                className="h-20 w-20 mb-6"
+                aria-hidden="true"
+                alt=""
+              />
+              <h3 className="text-xl font-semibold mb-3">
+                No collections found
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-lg mb-2">
+                Try adjusting your search criteria or check your API
+                configuration to find collections.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                You can modify bounding box coordinates, date ranges, or search
+                terms to broaden your search.
+              </p>
+            </div>
+          )
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
                 {columns.map((header) => (
-                  <TableCell key={header}>
-                    {renderCell(header, row[header], row)}
-                  </TableCell>
+                  <TableHead
+                    key={header}
+                    className="sticky top-0 z-10 bg-background cursor-pointer py-2 px-3 font-semibold border-b border-border"
+                    onClick={() => handleSort(header)}
+                    role="columnheader"
+                    aria-sort={
+                      sortColumn === header
+                        ? sortOrder === "asc"
+                          ? "ascending"
+                          : "descending"
+                        : "none"
+                    }
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        handleSort(header);
+                      }
+                    }}
+                  >
+                    <div className="flex items-center gap-1">
+                      {formatKeyName(header)}
+                      {sortColumn === header && (
+                        <span className="text-xs" aria-hidden="true">
+                          {sortOrder === "asc" ? "↑" : "↓"}
+                        </span>
+                      )}
+                    </div>
+                  </TableHead>
                 ))}
-                <TableCell>
-                  <Button size="sm" variant="outline" onClick={() => handleButtonClick(row)}>
-                    Details
-                  </Button>
-                </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {sortedData.map((row, rowIndex) => (
+                <TableRow
+                  key={rowIndex}
+                  onClick={() => handleButtonClick(row)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleButtonClick(row);
+                    }
+                  }}
+                  className={cn(
+                    "cursor-pointer hover:bg-muted/50 transition-colors duration-150",
+                    rowIndex % 2 === 1 && "bg-muted/20",
+                  )}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`View details for ${row.title || "Untitled"}`}
+                >
+                  {columns.map((header) => (
+                    <TableCell key={header} className="py-2 px-3">
+                      {header === "title" ? (
+                        <span className="font-medium">
+                          {renderCell(header, row[header], row)}
+                        </span>
+                      ) : (
+                        <span className="text-sm">
+                          {renderCell(header, row[header], row)}
+                        </span>
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
 
         {/* Load More Button */}
         {hasNextPage && (
@@ -400,10 +566,17 @@ const ResultsTable: React.FC<Props> = ({
               disabled={isLoadingMore}
               variant="outline"
               size="sm"
+              className={cn(touchTarget(), "min-w-[120px]")}
+              aria-label={
+                isLoadingMore ? "Loading more results" : "Load more results"
+              }
             >
               {isLoadingMore ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2
+                    className="mr-2 h-4 w-4 animate-spin"
+                    aria-hidden="true"
+                  />
                   Loading more...
                 </>
               ) : (
@@ -416,27 +589,35 @@ const ResultsTable: React.FC<Props> = ({
 
       {selectedRecord && (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogContent className="max-w-[50%] w-[50%] max-h-[90vh] overflow-y-auto">
+          <DialogContent
+            className={cn(dialog({ size: "lg" }), "overflow-x-hidden")}
+          >
             <DialogHeader>
               <DialogTitle>Collection Details</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className={cn(stack({ gap: "md" }), "overflow-x-hidden")}>
               {/* Core Information */}
-              <div>
+              <div className="grid grid-cols-1 gap-3">
                 {/* ID */}
                 {selectedRecord.id && (
-                  <div className="mb-3">
-                    <p className="font-semibold">ID:</p>
-                    <p className="text-sm">{selectedRecord.id}</p>
+                  <div>
+                    <p className="text-xs font-semibold uppercase text-muted-foreground mb-1">
+                      ID
+                    </p>
+                    <p className="text-sm font-mono break-all">
+                      {selectedRecord.id}
+                    </p>
                   </div>
                 )}
 
                 {/* Source API */}
-                <div className="mb-3">
-                  <p className="font-semibold">API:</p>
+                <div>
+                  <p className="text-xs font-semibold uppercase text-muted-foreground mb-1">
+                    API
+                  </p>
                   <a
                     href={extractCatalogUrl(selectedRecord)}
-                    className="text-sm text-primary hover:underline"
+                    className="text-sm text-primary hover:underline break-all"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -446,26 +627,36 @@ const ResultsTable: React.FC<Props> = ({
 
                 {/* Title */}
                 {selectedRecord.title && (
-                  <div className="mb-3">
-                    <p className="font-semibold">Title:</p>
-                    <p className="text-sm">{selectedRecord.title}</p>
+                  <div>
+                    <p className="text-xs font-semibold uppercase text-muted-foreground mb-1">
+                      Title
+                    </p>
+                    <p className="text-sm font-medium">
+                      {selectedRecord.title}
+                    </p>
                   </div>
                 )}
 
                 {/* Spatial and Temporal Extents */}
                 {selectedRecord.extent && (
-                  <div className="mb-3">
-                    <p className="font-semibold">Extents:</p>
-                    <div className="ml-3 space-y-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase text-muted-foreground mb-2">
+                      Extents
+                    </p>
+                    <div className={stack({ gap: "sm" })}>
                       {selectedRecord.extent?.spatial?.bbox && (
                         <div>
-                          <p className="font-semibold text-sm">Spatial:</p>
+                          <p className="text-xs font-medium text-muted-foreground mb-1">
+                            Spatial
+                          </p>
                           <MapDisplay stacData={selectedRecord} />
                         </div>
                       )}
                       {selectedRecord.extent?.temporal?.interval && (
                         <div>
-                          <p className="font-semibold text-sm">Temporal:</p>
+                          <p className="text-xs font-medium text-muted-foreground mb-1">
+                            Temporal
+                          </p>
                           <p className="text-sm">
                             {formatTemporalRange(
                               selectedRecord.extent.temporal.interval,
@@ -479,18 +670,20 @@ const ResultsTable: React.FC<Props> = ({
 
                 {/* Providers */}
                 {selectedRecord.providers && (
-                  <div className="mb-3">
-                    <p className="font-semibold">Providers:</p>
-                    <div className="ml-3">
-                      {formatProviders(selectedRecord.providers)}
-                    </div>
+                  <div>
+                    <p className="text-xs font-semibold uppercase text-muted-foreground mb-2">
+                      Providers
+                    </p>
+                    <div>{formatProviders(selectedRecord.providers)}</div>
                   </div>
                 )}
 
                 {/* Description */}
                 {selectedRecord.description && (
-                  <div className="mb-3">
-                    <p className="font-semibold">Description:</p>
+                  <div>
+                    <p className="text-xs font-semibold uppercase text-muted-foreground mb-2">
+                      Description
+                    </p>
                     <div className="prose prose-sm dark:prose-invert max-w-none">
                       <ReactMarkdown
                         components={{
@@ -516,25 +709,41 @@ const ResultsTable: React.FC<Props> = ({
               <div className="border-t border-border" />
 
               {/* STAC Item Search Code Hints */}
-              <div>
-                <p className="font-semibold mb-2">
-                  STAC Item Search Code Hints:
+              <div className="overflow-x-hidden">
+                <p className="text-xs font-semibold uppercase text-muted-foreground mb-2">
+                  STAC Item Search Code Hints
                 </p>
                 <Tabs defaultValue="python">
                   <TabsList>
                     <TabsTrigger value="python">Python</TabsTrigger>
                     <TabsTrigger value="r">R</TabsTrigger>
                   </TabsList>
-                  <TabsContent value="python" className="mt-4">
-                    <SyntaxHighlighter language="python" style={hintStyle}>
+                  <TabsContent value="python" className="mt-4 overflow-x-auto">
+                    <SyntaxHighlighter
+                      language="python"
+                      style={hintStyle}
+                      customStyle={{
+                        fontSize: "12px",
+                        maxWidth: "100%",
+                        overflowX: "auto",
+                      }}
+                    >
                       {getPythonCodeHint(
                         extractCatalogUrl(selectedRecord),
                         selectedRecord.id || "collection-id",
                       )}
                     </SyntaxHighlighter>
                   </TabsContent>
-                  <TabsContent value="r" className="mt-4">
-                    <SyntaxHighlighter language="r" style={hintStyle}>
+                  <TabsContent value="r" className="mt-4 overflow-x-auto">
+                    <SyntaxHighlighter
+                      language="r"
+                      style={hintStyle}
+                      customStyle={{
+                        fontSize: "12px",
+                        maxWidth: "100%",
+                        overflowX: "auto",
+                      }}
+                    >
                       {getRCodeHint(
                         extractCatalogUrl(selectedRecord),
                         selectedRecord.id || "collection-id",
@@ -548,23 +757,39 @@ const ResultsTable: React.FC<Props> = ({
               {selectedRecord.links && Array.isArray(selectedRecord.links) && (
                 <Collapsible open={showLinks} onOpenChange={setShowLinks}>
                   <CollapsibleTrigger asChild>
-                    <Button variant="ghost" size="sm" className="w-full justify-between">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-between"
+                      aria-expanded={showLinks}
+                      aria-controls="links-content"
+                    >
                       <span>
                         {showLinks ? "Hide" : "Show"} Links (
                         {selectedRecord.links.length})
                       </span>
-                      {showLinks ? (
-                        <ChevronUp className="h-4 w-4" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4" />
-                      )}
+                      <ChevronDown
+                        className={cn(
+                          "h-4 w-4 transition-transform duration-200",
+                          showLinks && "rotate-180",
+                        )}
+                        aria-hidden="true"
+                      />
                     </Button>
                   </CollapsibleTrigger>
-                  <CollapsibleContent className="mt-2">
-                    <div className="rounded-md bg-muted p-3 space-y-2">
+                  <CollapsibleContent
+                    id="links-content"
+                    className="mt-2 transition-all duration-200"
+                  >
+                    <div
+                      className={cn(
+                        "rounded-md bg-muted p-3",
+                        stack({ gap: "sm" }),
+                      )}
+                    >
                       {selectedRecord.links.map((link: any, index: number) => (
                         <div key={index}>
-                          <div className="flex items-center gap-2 flex-wrap">
+                          <div className={hstack({ gap: "sm" })}>
                             <Badge variant="outline">
                               {link.rel || "unknown"}
                             </Badge>
@@ -574,6 +799,7 @@ const ResultsTable: React.FC<Props> = ({
                                 className="text-sm text-primary hover:underline break-all"
                                 target="_blank"
                                 rel="noopener noreferrer"
+                                aria-label={`${link.rel || "unknown"} link: ${link.title || link.href}`}
                               >
                                 {link.href}
                               </a>
@@ -594,20 +820,35 @@ const ResultsTable: React.FC<Props> = ({
               {/* Collapsible JSON Section */}
               <Collapsible open={showJSON} onOpenChange={setShowJSON}>
                 <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm" className="w-full justify-between">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-between"
+                    aria-expanded={showJSON}
+                    aria-controls="json-content"
+                  >
                     <span>{showJSON ? "Hide" : "Show"} Raw JSON</span>
-                    {showJSON ? (
-                      <ChevronUp className="h-4 w-4" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4" />
-                    )}
+                    <ChevronDown
+                      className={cn(
+                        "h-4 w-4 transition-transform duration-200",
+                        showJSON && "rotate-180",
+                      )}
+                      aria-hidden="true"
+                    />
                   </Button>
                 </CollapsibleTrigger>
-                <CollapsibleContent className="mt-2">
+                <CollapsibleContent
+                  id="json-content"
+                  className="mt-2 transition-all duration-200 overflow-x-auto"
+                >
                   <SyntaxHighlighter
                     language="json"
                     style={hintStyle}
-                    customStyle={{ fontSize: "12px" }}
+                    customStyle={{
+                      fontSize: "12px",
+                      maxWidth: "100%",
+                      overflowX: "auto",
+                    }}
                   >
                     {JSON.stringify(selectedRecord, null, 2)}
                   </SyntaxHighlighter>
@@ -615,7 +856,13 @@ const ResultsTable: React.FC<Props> = ({
               </Collapsible>
             </div>
             <DialogFooter>
-              <Button onClick={() => setIsOpen(false)}>Close</Button>
+              <Button
+                onClick={() => setIsOpen(false)}
+                className={touchTarget()}
+                aria-label="Close details dialog"
+              >
+                Close
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -631,11 +878,15 @@ interface MapDisplayProps {
 const MapDisplay: React.FC<MapDisplayProps> = ({ stacData }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<Map | null>(null);
+  const isDark = useDarkMode();
 
   useEffect(() => {
     if (mapRef.current && !mapInstanceRef.current) {
+      // Use dark basemap in dark mode
+      const tileSource = getBasemapSource(isDark);
+
       const background = new TileLayer({
-        source: new OSM(),
+        source: tileSource,
       });
 
       const layers: any[] = [background];
@@ -645,6 +896,7 @@ const MapDisplay: React.FC<MapDisplayProps> = ({ stacData }) => {
         stacLayer = new STAC({
           displayWebMapLink: true,
           data: stacData,
+          boundsStyle: getStacBoundsStyle(),
         });
         // Configure STAC layer properties for layer switcher
         stacLayer.set("title", stacData.title || stacData.id || "STAC Layer");
@@ -658,8 +910,9 @@ const MapDisplay: React.FC<MapDisplayProps> = ({ stacData }) => {
         view: new View({
           center: [0, 0],
           zoom: 0,
+          showFullExtent: true,
         }),
-        controls: defaultControls().extend([new FullScreen()]),
+        controls: [createAttributionControl(isDark), new FullScreen()],
       });
 
       if (stacLayer) {
@@ -671,32 +924,71 @@ const MapDisplay: React.FC<MapDisplayProps> = ({ stacData }) => {
         ) {
           const bbox = stacData.extent.spatial.bbox[0]; // Get first bbox
           if (bbox && bbox.length === 4) {
-            const [minX, minY, maxX, maxY] = bbox;
-            const extent4326 = [minX, minY, maxX, maxY];
-            const extent3857 = transformExtent(
-              extent4326,
-              "EPSG:4326",
-              "EPSG:3857",
-            );
-            console.log("Fitting to extent from STAC data (4326):", extent4326);
-            console.log("Transformed extent (3857):", extent3857);
-            map.getView().fit(extent3857, {
-              padding: [20, 20, 20, 20],
-              maxZoom: 18,
-            });
+            let [minX, minY, maxX, maxY] = bbox;
+
+            // Validate that all values are valid numbers
+            if (
+              [minX, minY, maxX, maxY].every(
+                (val) => typeof val === "number" && isFinite(val),
+              )
+            ) {
+              // Fix coordinate order if min/max are swapped
+              if (minX > maxX) [minX, maxX] = [maxX, minX];
+              if (minY > maxY) [minY, maxY] = [maxY, minY];
+
+              // Check that extent is not empty
+              if (minX !== maxX || minY !== maxY) {
+                const extent4326 = [minX, minY, maxX, maxY];
+                const extent3857 = transformExtent(
+                  extent4326,
+                  "EPSG:4326",
+                  "EPSG:3857",
+                );
+                console.log(
+                  "Fitting to extent from STAC data (4326):",
+                  extent4326,
+                );
+                console.log("Transformed extent (3857):", extent3857);
+                map.getView().fit(extent3857, {
+                  padding: [50, 50, 50, 50],
+                });
+              } else {
+                console.warn("Empty extent in STAC data:", bbox);
+              }
+            } else {
+              console.warn("Invalid extent values in STAC data:", bbox);
+            }
           }
         }
 
         // Also listen for ready event as fallback
         stacLayer.on("ready", () => {
           console.log("STAC layer ready event fired");
-          const extent = stacLayer.getExtent();
+          let extent = stacLayer.getExtent();
           console.log("STAC layer extent:", extent);
-          if (extent) {
-            map.getView().fit(extent, {
-              padding: [20, 20, 20, 20],
-              maxZoom: 18,
-            });
+
+          if (
+            extent &&
+            Array.isArray(extent) &&
+            extent.length === 4 &&
+            extent.every((val) => typeof val === "number" && isFinite(val))
+          ) {
+            // Fix coordinate order if min/max are swapped
+            let [minX, minY, maxX, maxY] = extent;
+            if (minX > maxX) [minX, maxX] = [maxX, minX];
+            if (minY > maxY) [minY, maxY] = [maxY, minY];
+
+            // Check that extent is not empty
+            if (minX !== maxX || minY !== maxY) {
+              map.getView().fit([minX, minY, maxX, maxY], {
+                padding: [20, 20, 20, 20],
+                maxZoom: 18,
+              });
+            } else {
+              console.warn("Empty extent from STAC layer:", extent);
+            }
+          } else {
+            console.warn("Invalid extent from STAC layer:", extent);
           }
         });
       }
@@ -711,7 +1003,14 @@ const MapDisplay: React.FC<MapDisplayProps> = ({ stacData }) => {
     };
   }, [stacData]);
 
-  return <div className="h-[500px]" ref={mapRef} />;
+  return (
+    <div
+      className="h-[500px]"
+      ref={mapRef}
+      role="img"
+      aria-label={`Map showing spatial extent for ${stacData?.title || "collection"}`}
+    />
+  );
 };
 
 export default ResultsTable;

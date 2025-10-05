@@ -78,7 +78,7 @@ export const DEFAULT_API_CONFIGURATIONS: ApiConfiguration[] = [
     // }
   },
   {
-    url: "https://staging.openveda.cloud/api/stac/",
+    url: "https://openveda.cloud/api/stac/",
     // Example filter: Only collections updated in the last year
     // filter: (collection) => {
     //   const updated = collection.updated || collection.datetime;
@@ -107,4 +107,3 @@ export const DEFAULT_API_CONFIGURATIONS: ApiConfiguration[] = [
     url: "https://cmr.earthdata.nasa.gov/stac/ALL",
   },
 ];
-
