@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+- Nothing
+
+### 2.0.0
+
 ### UI/UX Improvements
 
 - Migrated from Chakra UI to shadcn/ui + Tailwind CSS for improved aesthetics and
