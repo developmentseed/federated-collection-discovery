@@ -1,20 +1,17 @@
+import { useState, useEffect, lazy, Suspense } from "react";
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
-  Button,
-  Box,
-  useColorMode,
-} from "@chakra-ui/react";
-import SwaggerUI from "swagger-ui-react";
-import "swagger-ui-react/swagger-ui.css";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
-// Custom swagger style override for dark mode only
-import "../css/swagger-dark.css";
+const RedocStandalone = lazy(() =>
+  import("redoc").then((mod) => ({ default: mod.RedocStandalone }))
+);
 
 interface ApiDocModalProps {
   isOpen: boolean;
@@ -27,29 +24,65 @@ const ApiDocModal: React.FC<ApiDocModalProps> = ({
   onClose,
   apiDocs,
 }) => {
-  const { colorMode } = useColorMode();
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return document.documentElement.classList.contains("dark");
+  });
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains("dark"));
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="6xl">
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>API Documentation</ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>
-          <Box overflow="auto" maxHeight="70vh">
-            {/* Apply dark mode class conditionally */}
-            <div className={colorMode === "dark" ? "swagger-dark" : ""}>
-              <SwaggerUI spec={apiDocs} />
-            </div>
-          </Box>
-        </ModalBody>
-        <ModalFooter>
-          <Button colorScheme="blue" mr={3} onClick={onClose}>
-            Close
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-7xl max-h-[90vh]">
+        <DialogHeader>
+          <DialogTitle>API Documentation</DialogTitle>
+        </DialogHeader>
+        <div className="overflow-auto max-h-[70vh]">
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center py-12">
+                <LoadingSpinner size="lg" text="Loading documentation..." />
+              </div>
+            }
+          >
+            <RedocStandalone
+              spec={apiDocs}
+              options={{
+                theme: {
+                  colors: {
+                    primary: {
+                      main: isDark ? "#ffffff" : "#000000",
+                    },
+                  },
+                  typography: {
+                    fontSize: "14px",
+                    fontFamily: "inherit",
+                  },
+                },
+                scrollYOffset: 0,
+                hideDownloadButton: false,
+                disableSearch: false,
+                nativeScrollbars: true,
+              }}
+            />
+          </Suspense>
+        </div>
+        <DialogFooter>
+          <Button onClick={onClose}>Close</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 

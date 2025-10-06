@@ -1,30 +1,46 @@
-import * as React from "react"
-import {
-  useColorMode,
-  useColorModeValue,
-  IconButton,
-  IconButtonProps,
-} from "@chakra-ui/react"
-import { FaMoon, FaSun } from "react-icons/fa"
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Moon, Sun } from "lucide-react";
 
-type ColorModeSwitcherProps = Omit<IconButtonProps, "aria-label">
+interface ColorModeSwitcherProps {
+  className?: string;
+}
 
-export const ColorModeSwitcher: React.FC<ColorModeSwitcherProps> = (props) => {
-  const { toggleColorMode } = useColorMode()
-  const text = useColorModeValue("dark", "light")
-  const SwitchIcon = useColorModeValue(FaMoon, FaSun)
+export const ColorModeSwitcher: React.FC<ColorModeSwitcherProps> = ({
+  className,
+}) => {
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return (
+      localStorage.getItem("theme") === "dark" ||
+      (!localStorage.getItem("theme") &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches)
+    );
+  });
+
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  }, [isDark]);
+
+  const toggleColorMode = () => {
+    setIsDark(!isDark);
+  };
 
   return (
-    <IconButton
-      size="md"
-      fontSize="lg"
+    <Button
       variant="ghost"
-      color="current"
-      marginLeft="2"
+      size="icon"
       onClick={toggleColorMode}
-      icon={<SwitchIcon />}
-      aria-label={`Switch to ${text} mode`}
-      {...props}
-    />
-  )
-}
+      aria-label={`Switch to ${isDark ? "light" : "dark"} mode`}
+      className={`min-h-[44px] min-w-[44px] ${className || ""}`}
+    >
+      {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+    </Button>
+  );
+};

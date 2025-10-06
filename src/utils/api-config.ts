@@ -1,13 +1,11 @@
-import { ApiConfiguration } from '../config';
+import { ApiConfiguration, DEFAULT_API_CONFIGURATIONS } from "../config";
 
 export function getApiConfigurations(): ApiConfiguration[] {
-  // Import at runtime to avoid circular dependencies
-  const { DEFAULT_API_CONFIGURATIONS } = require('../config');
   return DEFAULT_API_CONFIGURATIONS;
 }
 
 export function getApiConfigurationByUrl(
-  url: string,
+  url: string
 ): ApiConfiguration | undefined {
   return getApiConfigurations().find((config) => config.url === url);
 }
@@ -18,7 +16,7 @@ export function hasCustomFilter(url: string): boolean {
 }
 
 export function getFilterInfo(
-  url: string,
+  url: string
 ): { description: string; code: string } | null {
   const config = getApiConfigurationByUrl(url);
 

@@ -3,7 +3,34 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 1.1.0
+## Unreleased
+
+### UI/UX Improvements
+
+- Migrated from Chakra UI to shadcn/ui + Tailwind CSS for improved aesthetics and
+  smaller bundle size
+- Migrated from Create React App to Vite for faster build times and better developer
+  experience
+- Implemented centralized responsive design utilities using class-variance-authority
+  (CVA)
+  - Created reusable utility functions for consistent spacing, sizing, and
+    layout patterns
+  - Standardized touch targets, dialogs, sidebars, and responsive breakpoint behavior
+  - All major components now use CVA utilities:
+    `stack()`, `hstack()`, `touchTarget()`, `dialog()`, `sidebar()`, etc.
+- Improved mobile responsiveness with side sheet drawer for search panel
+- Enhanced accessibility (WCAG AA compliant):
+  - Comprehensive ARIA labels on all interactive elements
+  - Full keyboard navigation support
+  - Visible focus indicators throughout
+  - Screen reader support with semantic HTML and skip links
+  - Prefers-reduced-motion support
+- Added dark mode theming with automatic system preference detection
+- Enhanced table design with sticky headers, zebra striping, and improved hover states
+- Improved form validation with inline error messages
+- Better touch-friendly buttons (44px minimum tap targets)
+
+### 1.1.0
 
 - Switch from leaflet to OpenLayers + ol-stac
 
@@ -98,8 +125,8 @@ All notable changes to this project will be documented in this file.
 
 - Make the client application responsive to window size
 - Implement free-text search as defined by
-[Free-Text STAC API extension](https://github.com/stac-api-extensions/freetext-search)
-([#14](https://github.com/developmentseed/federated-collection-discovery/pull/1))
+  [Free-Text STAC API extension](https://github.com/stac-api-extensions/freetext-search)
+  ([#14](https://github.com/developmentseed/federated-collection-discovery/pull/1))
 - Run `check_health` asynchronously
 
 ## 0.1.0

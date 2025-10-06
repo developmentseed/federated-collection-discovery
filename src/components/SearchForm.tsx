@@ -1,24 +1,12 @@
 import React, { useState } from "react";
-import {
-  Image,
-  Input,
-  Button,
-  Flex,
-  VStack,
-  HStack,
-  FormControl,
-  FormLabel,
-  FormErrorMessage,
-  useDisclosure,
-  Spacer,
-  Text,
-} from "@chakra-ui/react";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import MapModal from "./MapModal";
-import ApiDocModal from "./ApiDocModal"; // Import the new modal component
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { DatePicker } from "./ui/date-picker";
+import { cn } from "../utils/utils";
+import { stack, touchTarget, layout } from "../utils/responsive";
 
-import "../css/react-datepicker.css";
+const MapModal = React.lazy(() => import("./MapModal"));
 
 type FormData = {
   bbox: string;
@@ -28,8 +16,7 @@ type FormData = {
 
 interface Props {
   onSubmit: (data: FormData) => void;
-  apiDocs: any;
-  apiError?: string | null; // API-level errors
+  apiError?: string | null;
   isLoading?: boolean;
   conformanceCapabilities?: {
     hasCollectionSearch: boolean;
@@ -38,48 +25,53 @@ interface Props {
   conformanceLoading?: boolean;
 }
 
-const GitHubLogo = require("../assets/github-mark.svg").default;
+// Parse datetime interval from URL parameter
+const parseDatetimeInterval = (
+  datetime: string
+): { start: Date | null; end: Date | null } => {
+  if (!datetime) return { start: null, end: null };
+
+  const parts = datetime.split("/");
+  const start = parts[0] && parts[0] !== ".." ? new Date(parts[0]) : null;
+  const end = parts[1] && parts[1] !== ".." ? new Date(parts[1]) : null;
+
+  return { start, end };
+};
+
+// Initialize form data from URL parameters
+const getInitialFormData = () => {
+  const params = new URLSearchParams(window.location.search);
+  const datetime = params.get("datetime") || "";
+  const { start, end } = parseDatetimeInterval(datetime);
+
+  return {
+    bbox: params.get("bbox") || "",
+    startDatetime: start,
+    endDatetime: end,
+    q: params.get("q") || "",
+  };
+};
 
 const SearchForm: React.FC<Props> = ({
   onSubmit,
-  apiDocs,
   isLoading,
   conformanceCapabilities,
-  conformanceLoading
 }) => {
-  const {
-    isOpen: isMapOpen,
-    onOpen: onMapOpen,
-    onClose: onMapClose,
-  } = useDisclosure();
-  const {
-    isOpen: isDocOpen,
-    onOpen: onDocOpen,
-    onClose: onDocClose,
-  } = useDisclosure();
+  const [isMapOpen, setIsMapOpen] = useState(false);
+
   const [formData, setFormData] = useState<
     Omit<FormData, "datetime"> & {
       startDatetime: Date | null;
       endDatetime: Date | null;
     }
-  >({
-    bbox: "",
-    startDatetime: null,
-    endDatetime: null,
-    q: "",
-  });
+  >(getInitialFormData);
 
-  // Add state for validation error
   const [bboxError, setBboxError] = useState<string>("");
 
-  // Validation function for bounding box
   const validateBbox = (value: string): boolean => {
-    if (!value) return true; // Empty value is valid (optional field)
+    if (!value) return true;
 
-    // Remove multiple spaces and trim
     const cleanedValue = value.replace(/\s+/g, " ").trim();
-
-    // Split by comma or space
     const coordinates = cleanedValue.split(/[\s,]+/);
 
     if (coordinates.length !== 4) {
@@ -87,7 +79,6 @@ const SearchForm: React.FC<Props> = ({
       return false;
     }
 
-    // Check if all values are valid numbers
     const isValid = coordinates.every((coord) => {
       const num = Number(coord);
       return !isNaN(num) && isFinite(num);
@@ -98,13 +89,12 @@ const SearchForm: React.FC<Props> = ({
       return false;
     }
 
-    // Clear error if validation passes
     setBboxError("");
     return true;
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     if (name === "bbox") {
@@ -115,7 +105,7 @@ const SearchForm: React.FC<Props> = ({
 
   const handleDateChange = (
     date: Date | null,
-    field: "startDatetime" | "endDatetime",
+    field: "startDatetime" | "endDatetime"
   ) => {
     setFormData({ ...formData, [field]: date });
   };
@@ -125,36 +115,45 @@ const SearchForm: React.FC<Props> = ({
       if (!date) return "..";
       const formattedDate = new Date(date);
       if (isStart) {
-        formattedDate.setHours(0, 0, 0, 0); // Set time to 00:00:00
+        formattedDate.setHours(0, 0, 0, 0);
       } else {
-        formattedDate.setHours(23, 59, 59, 999); // Set time to 23:59:59
+        formattedDate.setHours(23, 59, 59, 999);
       }
       return (
         formattedDate.toISOString().replace(".999Z", "").replace(".000Z", "") +
         "Z"
       );
     };
-    if (!start && !end) return ""; // both dates are missing
+    if (!start && !end) return "";
     return `${dateFormatter(start)}/${dateFormatter(end, false)}`;
   };
 
   const handleSubmit = (event?: React.FormEvent) => {
     event?.preventDefault();
 
-    // Validate bbox before submission
     if (!validateBbox(formData.bbox)) {
-      return; // Prevent submission if validation fails
+      return;
     }
 
     const datetime = formatDateInterval(
       formData.startDatetime,
-      formData.endDatetime,
+      formData.endDatetime
     );
     const submitData = {
       bbox: formData.bbox,
       datetime,
       q: formData.q,
     };
+
+    // Update URL with search parameters
+    const params = new URLSearchParams();
+    if (submitData.q) params.set("q", submitData.q);
+    if (submitData.bbox) params.set("bbox", submitData.bbox);
+    if (submitData.datetime) params.set("datetime", submitData.datetime);
+
+    const newUrl = `${window.location.pathname}${params.toString() ? "?" + params.toString() : ""}`;
+    window.history.pushState({}, "", newUrl);
+
     onSubmit(submitData);
   };
 
@@ -166,104 +165,135 @@ const SearchForm: React.FC<Props> = ({
 
   const updateBoundingBox = (bbox: string) => {
     setFormData({ ...formData, bbox });
-    onMapClose();
+    setIsMapOpen(false);
   };
 
-  const today = new Date(); // Get today's date for maxDate
-
-  // Check if text search should be disabled - only disable when we have explicit conformance data showing no support
-  const isTextSearchDisabled = conformanceCapabilities ? !conformanceCapabilities.hasFreeText : false;
+  const today = new Date();
+  const isTextSearchDisabled = conformanceCapabilities
+    ? !conformanceCapabilities.hasFreeText
+    : false;
 
   return (
-    <form onKeyDown={handleKeyDown} onSubmit={handleSubmit}>
-      <VStack spacing={4} align="stretch">
-        <FormControl id="q">
-          <strong>text search</strong>
-          <Input
-            name="q"
-            value={formData.q}
-            onChange={handleChange}
-            placeholder={isTextSearchDisabled ? "Text search not available" : "Enter text"}
-            disabled={isTextSearchDisabled}
-          />
-          {isTextSearchDisabled && (
-            <Text fontSize="sm" color="gray.500" mt={1}>
-              Text search is disabled - no upstream APIs support free-text search
-            </Text>
-          )}
-        </FormControl>
-        <FormControl id="bbox" isInvalid={!!bboxError}>
-          <strong>bounding box</strong> (xmin, ymin , xmax, ymax; EPSG:4326)
-          <Input
-            name="bbox"
-            value={formData.bbox}
-            onChange={handleChange}
-            placeholder="Enter bounding box"
-          />
-          {bboxError && <FormErrorMessage>{bboxError}</FormErrorMessage>}
-          <Button onClick={onMapOpen} mt={2} colorScheme="teal">
-            Draw on Map
-          </Button>
-        </FormControl>
+    <form
+      onKeyDown={handleKeyDown}
+      onSubmit={handleSubmit}
+      className={stack({ gap: "md" })}
+      aria-label="Collection search form"
+    >
+      <div className={stack({ gap: "sm" })}>
+        <Label htmlFor="q" className="font-semibold">
+          text search
+        </Label>
+        <Input
+          id="q"
+          name="q"
+          value={formData.q}
+          onChange={handleChange}
+          placeholder={
+            isTextSearchDisabled ? "Text search not available" : "Enter text"
+          }
+          disabled={isTextSearchDisabled}
+          aria-describedby={isTextSearchDisabled ? "q-help" : undefined}
+        />
+        {isTextSearchDisabled && (
+          <p id="q-help" className="text-sm text-muted-foreground">
+            Text search is disabled - no upstream APIs support free-text search
+          </p>
+        )}
+      </div>
 
-        <FormControl>
-          <strong>temporal range</strong>
-          <Flex direction="row">
-            <FormControl id="startDatetime" maxWidth="45%">
-              <DatePicker
-                selected={formData.startDatetime}
-                onChange={(date) => handleDateChange(date, "startDatetime")}
-                maxDate={today} // Limiting date to today
-                placeholderText="start date"
-                className="customDatePickerWidth" // Applying custom CSS class
-              />
-            </FormControl>
-            <Spacer />
-            <FormControl id="endDatetime" maxWidth="45%">
-              <DatePicker
-                selected={formData.endDatetime}
-                onChange={(date) => handleDateChange(date, "endDatetime")}
-                maxDate={today} // Limiting date to today
-                placeholderText="end date"
-                className="customDatePickerWidth" // Applying custom CSS class
-              />
-            </FormControl>
-          </Flex>
-        </FormControl>
-        <HStack justify="space-between" width="100%" wrap="wrap" spacing={2}>
-          <Button onClick={onDocOpen} colorScheme="blue" size="sm">
-            API docs
-          </Button>
-          <Button
-            as="a"
-            href="https://github.com/developmentseed/federated-collection-discovery"
-            colorScheme="orange"
-            leftIcon={<Image src={GitHubLogo} boxSize="1.5em" alt="GitHub" />}
-            target="_blank"
-            rel="noopener noreferrer"
-            size="sm"
-          >
-            source
-          </Button>
-          <Button type="submit" colorScheme="teal" isLoading={isLoading} size="sm">
-            Search
-          </Button>
-        </HStack>
+      <div className={stack({ gap: "sm" })}>
+        <Label htmlFor="bbox" className="font-semibold">
+          bounding box{" "}
+          <span className="font-normal text-muted-foreground">
+            (xmin, ymin, xmax, ymax; EPSG:4326)
+          </span>
+        </Label>
+        <Input
+          id="bbox"
+          name="bbox"
+          value={formData.bbox}
+          onChange={handleChange}
+          placeholder="Enter bounding box"
+          className={cn(bboxError && "border-destructive")}
+          aria-invalid={!!bboxError}
+          aria-describedby={bboxError ? "bbox-error" : "bbox-help"}
+        />
+        <span id="bbox-help" className="sr-only">
+          Format: xmin, ymin, xmax, ymax in EPSG:4326
+        </span>
+        {bboxError && (
+          <p id="bbox-error" className="text-sm text-destructive" role="alert">
+            {bboxError}
+          </p>
+        )}
+        <Button
+          type="button"
+          onClick={() => setIsMapOpen(true)}
+          variant="outline"
+          size="sm"
+          className={touchTarget()}
+          aria-label="Open map to draw bounding box"
+        >
+          Draw on Map
+        </Button>
+      </div>
 
+      <fieldset className={stack({ gap: "sm" })}>
+        <legend className="font-semibold">temporal range</legend>
+        <div className={cn(layout.flexColSm, "gap-4")}>
+          <div className="flex-1">
+            <Label htmlFor="start-date" className="sr-only">
+              Start date
+            </Label>
+            <DatePicker
+              date={formData.startDatetime}
+              onSelect={(date) =>
+                handleDateChange(date || null, "startDatetime")
+              }
+              maxDate={today}
+              placeholder="start date"
+            />
+          </div>
+          <div className="flex-1">
+            <Label htmlFor="end-date" className="sr-only">
+              End date
+            </Label>
+            <DatePicker
+              date={formData.endDatetime}
+              onSelect={(date) => handleDateChange(date || null, "endDatetime")}
+              maxDate={today}
+              placeholder="end date"
+            />
+          </div>
+        </div>
+      </fieldset>
+
+      <div className="flex justify-end">
+        <Button
+          type="submit"
+          disabled={isLoading}
+          variant="outline"
+          size="sm"
+          className={cn(touchTarget(), "min-w-[100px]")}
+          aria-label={
+            isLoading ? "Searching collections" : "Search for collections"
+          }
+        >
+          {isLoading ? "Searching..." : "Search"}
+        </Button>
+      </div>
+
+      <React.Suspense fallback={null}>
         <MapModal
           isOpen={isMapOpen}
-          onClose={onMapClose}
+          onClose={() => setIsMapOpen(false)}
           onSubmit={(bbox) => {
             updateBoundingBox(bbox);
-            onMapClose();
+            setIsMapOpen(false);
           }}
         />
-        <ApiDocModal
-          isOpen={isDocOpen}
-          onClose={onDocClose}
-          apiDocs={apiDocs}
-        />
-      </VStack>
+      </React.Suspense>
     </form>
   );
 };

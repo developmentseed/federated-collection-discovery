@@ -16,8 +16,8 @@ __pycache__/
 # Distribution / packaging
 .Python
 build/
-develop-eggs/
 dist/
+develop-eggs/
 downloads/
 eggs/
 .eggs/
@@ -379,3 +379,4 @@ Temporary Items
 # End of https://www.toptal.com/developers/gitignore/api/linux
 
 .envrc
+MIGRATION_PLAN.md

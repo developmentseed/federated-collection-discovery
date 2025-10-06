@@ -1,41 +1,19 @@
 import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
-  Box,
-  Button,
-  Flex,
-  Text,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalCloseButton,
-  ModalFooter,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel,
-  VStack,
-  HStack,
-  Input,
-  IconButton,
-  Alert,
-  AlertIcon,
-  AlertDescription,
-  Divider,
-  Badge,
-  Spinner,
-  useDisclosure,
-  useColorMode,
-} from "@chakra-ui/react";
-import {
-  DeleteIcon,
-  AddIcon,
-  RepeatIcon,
-  SettingsIcon,
-  InfoIcon,
-} from "@chakra-ui/icons";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import {
   coldarkCold,
@@ -52,6 +30,19 @@ import {
   hasCustomFilter,
   getFilterInfo,
 } from "../utils/api-config";
+import {
+  Settings,
+  Trash2,
+  Plus,
+  RotateCcw,
+  Info,
+  Loader2,
+  Wrench,
+  Activity,
+} from "lucide-react";
+import { cn } from "@/utils/utils";
+import { stack, hstack, dialog } from "@/utils/responsive";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface HealthResponse {
   status: string;
@@ -72,19 +63,42 @@ interface ApiConfigPanelProps {
   onUpdate: (apis: string[]) => void;
 }
 
+// Custom hook for dark mode detection
+const useDarkMode = () => {
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return (
+      localStorage.getItem("theme") === "dark" ||
+      (!localStorage.getItem("theme") &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches)
+    );
+  });
+
+  React.useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains("dark"));
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  return isDark;
+};
+
 const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
   stacApis,
   onUpdate,
 }) => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const {
-    isOpen: isFilterInfoOpen,
-    onOpen: onFilterInfoOpen,
-    onClose: onFilterInfoClose,
-  } = useDisclosure();
-  const { colorMode } = useColorMode();
-  const [activeTab, setActiveTab] = useState(0);
-  const syntaxStyle = colorMode === "dark" ? coldarkDark : coldarkCold;
+  const [isOpen, setIsOpen] = useState(false);
+  const [isFilterInfoOpen, setIsFilterInfoOpen] = useState(false);
+  const isDark = useDarkMode();
+  const [activeTab, setActiveTab] = useState("configuration");
+  const syntaxStyle = isDark ? coldarkDark : coldarkCold;
   const [selectedFilterInfo, setSelectedFilterInfo] = useState<{
     url: string;
     description: string;
@@ -93,7 +107,7 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
 
   // Health status state
   const [healthData, setHealthData] = React.useState<HealthResponse | null>(
-    null,
+    null
   );
   const [healthLoading, setHealthLoading] = React.useState(true);
 
@@ -104,7 +118,7 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
 
   const defaultApis = React.useMemo(
     () => getApiConfigurations().map((config) => config.url),
-    [],
+    []
   );
 
   // Fetch health data when component mounts or APIs change
@@ -140,39 +154,69 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
   // Calculate overall status
   const getOverallStatus = () => {
     if (healthLoading) {
-      return { color: "gray", status: "Checking", isLoading: true, hasIssues: false };
+      return {
+        color: "gray",
+        status: "Checking",
+        isLoading: true,
+        hasIssues: false,
+      };
     }
 
     if (stacApis.length === 0) {
-      return { color: "gray", status: "Unknown", isLoading: false, hasIssues: false };
+      return {
+        color: "gray",
+        status: "Unknown",
+        isLoading: false,
+        hasIssues: false,
+      };
     }
 
     if (!healthData) {
-      return { color: "red", status: "Error", isLoading: false, hasIssues: true };
+      return {
+        color: "red",
+        status: "Error",
+        isLoading: false,
+        hasIssues: true,
+      };
     }
 
     const isHealthy = healthData.status === "UP";
     const apisLackingCollectionSearch = getApisLackingCapability(
       healthData,
-      "collection-search",
+      "collection-search"
     );
     const apisLackingFreeText = getApisLackingCapability(
       healthData,
-      "free-text",
+      "free-text"
     );
 
     if (!isHealthy || apisLackingCollectionSearch.length > 0) {
-      return { color: "red", status: "Issues", isLoading: false, hasIssues: true };
+      return {
+        color: "red",
+        status: "Issues",
+        isLoading: false,
+        hasIssues: true,
+      };
     }
 
     if (apisLackingFreeText.length > 0) {
-      return { color: "orange", status: "Limited", isLoading: false, hasIssues: true };
+      return {
+        color: "orange",
+        status: "Limited",
+        isLoading: false,
+        hasIssues: true,
+      };
     }
 
-    return { color: "green", status: "Healthy", isLoading: false, hasIssues: false };
+    return {
+      color: "green",
+      status: "Healthy",
+      isLoading: false,
+      hasIssues: false,
+    };
   };
 
-  const { color, status, isLoading, hasIssues } = getOverallStatus();
+  const { color, status, isLoading } = getOverallStatus();
 
   // API management functions
   const validateUrl = (url: string): boolean => {
@@ -216,10 +260,10 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
 
   const handleSave = () => {
     const validApis = editableApis.filter(
-      (api) => api.trim() !== "" && validateUrl(api),
+      (api) => api.trim() !== "" && validateUrl(api)
     );
     const invalidApis = editableApis.filter(
-      (api) => api.trim() !== "" && !validateUrl(api),
+      (api) => api.trim() !== "" && !validateUrl(api)
     );
 
     if (invalidApis.length > 0) {
@@ -228,7 +272,7 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
     }
 
     onUpdate(validApis);
-    onClose();
+    setIsOpen(false);
   };
 
   const handleResetToDefaults = () => {
@@ -261,440 +305,552 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
         description: filterInfo.description,
         code: filterInfo.code,
       });
-      onFilterInfoOpen();
+      setIsFilterInfoOpen(true);
     }
   };
 
   return (
     <>
-      <Flex
-        align="center"
-        gap={3}
-        p={3}
-        borderRadius="md"
-        border="1px solid"
-        borderColor="gray.200"
+      <div
+        className={cn(
+          "p-3 rounded-md border border-border",
+          hstack({ gap: "sm" })
+        )}
       >
         {isLoading ? (
-          <Spinner size="sm" color={`${color}.500`} />
+          <Loader2 className={`h-3 w-3 animate-spin text-${color}-500`} />
         ) : (
-          <Box
-            width="12px"
-            height="12px"
-            bg={`${color}.500`}
-            borderRadius="50%"
+          <div
+            className={`w-3 h-3 rounded-full bg-${color}-500`}
+            style={{
+              backgroundColor:
+                color === "green"
+                  ? "rgb(34 197 94)"
+                  : color === "orange"
+                    ? "rgb(249 115 22)"
+                    : color === "red"
+                      ? "rgb(239 68 68)"
+                      : "rgb(107 114 128)",
+            }}
           />
         )}
-        <Text fontWeight="medium" flex={1}>
+        <span className="font-medium flex-1">
           {stacApis.length} API{stacApis.length !== 1 ? "s" : ""} configured •{" "}
           {status}
-        </Text>
-        <Button
-          size="sm"
-          variant="outline"
-          leftIcon={<SettingsIcon />}
-          onClick={onOpen}
-        >
+        </span>
+        <Button size="sm" variant="outline" onClick={() => setIsOpen(true)}>
+          <Settings className="mr-2 h-4 w-4" />
           Settings
         </Button>
-      </Flex>
+      </div>
 
-      <Modal isOpen={isOpen} onClose={onClose} size="xl">
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>API Configuration & Diagnostics</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <Tabs index={activeTab} onChange={setActiveTab}>
-              <TabList>
-                <Tab>Configuration</Tab>
-                <Tab>Diagnostics</Tab>
-              </TabList>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className={cn(dialog({ size: "md" }), "p-4 sm:p-6")}>
+          <DialogHeader>
+            <DialogTitle className="text-lg sm:text-xl">
+              API Configuration & Diagnostics
+            </DialogTitle>
+          </DialogHeader>
+          <div>
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger
+                  value="configuration"
+                  className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3"
+                >
+                  <Wrench className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Configuration</span>
+                  <span className="sm:hidden">Config</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="diagnostics"
+                  className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3"
+                >
+                  <Activity className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Diagnostics</span>
+                  <span className="sm:hidden">Diag</span>
+                </TabsTrigger>
+              </TabsList>
 
-              <TabPanels>
-                {/* Configuration Tab */}
-                <TabPanel px={0}>
-                  <VStack spacing={4} align="stretch">
-                    <Text fontSize="sm" color="gray.600">
-                      Configure which STAC APIs to include in your search.
-                      Enable/disable default APIs or add custom endpoints.
-                    </Text>
+              <TabsContent
+                value="configuration"
+                className={cn(stack({ gap: "md" }), "mt-4")}
+              >
+                <p className="text-sm text-muted-foreground">
+                  Configure which STAC APIs to include in your search.
+                  Enable/disable default APIs or add custom endpoints.
+                </p>
 
-                    {errors.length > 0 && (
-                      <Alert status="error">
-                        <AlertIcon />
-                        <AlertDescription>
-                          {errors.map((error, index) => (
-                            <div key={index}>{error}</div>
-                          ))}
-                        </AlertDescription>
-                      </Alert>
-                    )}
+                {errors.length > 0 && (
+                  <Alert variant="destructive">
+                    <AlertDescription>
+                      {errors.map((error, index) => (
+                        <div key={index}>{error}</div>
+                      ))}
+                    </AlertDescription>
+                  </Alert>
+                )}
 
-                    <Box>
-                      <HStack justify="space-between" align="center" mb={2}>
-                        <Text fontWeight="bold">Default APIs:</Text>
-                        <Button
-                          size="xs"
-                          colorScheme="blue"
-                          variant="outline"
-                          leftIcon={<RepeatIcon />}
-                          onClick={handleResetToDefaults}
-                        >
+                <Card>
+                  <CardHeader className="pb-3">
+                    <div className="flex justify-between items-center gap-2">
+                      <CardTitle className="text-sm sm:text-base">
+                        Default APIs
+                      </CardTitle>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleResetToDefaults}
+                        className="text-xs sm:text-sm shrink-0"
+                      >
+                        <RotateCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                        <span className="hidden sm:inline">
                           Reset to Defaults
-                        </Button>
-                      </HStack>
-                      <VStack spacing={2} align="stretch">
-                        {defaultApis.map((api) => (
-                          <HStack key={api}>
-                            <Text fontSize="sm" flex="1" noOfLines={1}>
-                              {api}
-                            </Text>
-                            {hasCustomFilter(api) && (
-                              <>
-                                <Badge colorScheme="purple" fontSize="xs">
-                                  filtered
-                                </Badge>
-                                <IconButton
-                                  aria-label="View filter details"
-                                  icon={<InfoIcon />}
-                                  size="sm"
-                                  variant="ghost"
-                                  colorScheme="purple"
-                                  onClick={() => handleShowFilterInfo(api)}
-                                />
-                              </>
-                            )}
-                            <Button
-                              size="sm"
-                              colorScheme={
-                                editableApis.includes(api) ? "red" : "teal"
-                              }
-                              variant="outline"
-                              onClick={() =>
-                                handleToggleDefaultApi(
-                                  api,
-                                  !editableApis.includes(api),
-                                )
-                              }
+                        </span>
+                        <span className="sm:hidden">Reset</span>
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className={stack({ gap: "sm" })}>
+                    {defaultApis.map((api) => (
+                      <div
+                        key={api}
+                        className={cn(hstack({ gap: "sm" }), "py-1")}
+                      >
+                        <Switch
+                          id={`api-${api}`}
+                          checked={editableApis.includes(api)}
+                          onCheckedChange={(checked) =>
+                            handleToggleDefaultApi(api, checked)
+                          }
+                        />
+                        <Label
+                          htmlFor={`api-${api}`}
+                          className="text-xs sm:text-sm flex-1 truncate cursor-pointer"
+                        >
+                          {api}
+                        </Label>
+                        {hasCustomFilter(api) && (
+                          <>
+                            <Badge
+                              variant="secondary"
+                              className="bg-purple-100 dark:bg-purple-900 text-xs shrink-0"
                             >
-                              {editableApis.includes(api)
-                                ? "Disable"
-                                : "Enable"}
+                              filtered
+                            </Badge>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleShowFilterInfo(api)}
+                              className="h-8 w-8 p-0 shrink-0"
+                            >
+                              <Info className="h-3 w-3 sm:h-4 sm:w-4" />
                             </Button>
-                          </HStack>
-                        ))}
-                      </VStack>
-                    </Box>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
 
-                    <Divider />
-
-                    <Box>
-                      <Text fontWeight="bold" mb={2}>
-                        Custom APIs:
-                      </Text>
-                      <VStack spacing={2} align="stretch">
-                        {editableApis
-                          .filter((api) => !defaultApis.includes(api))
-                          .map((api, index) => {
-                            const actualIndex = editableApis.indexOf(api);
-                            return (
-                              <HStack key={actualIndex}>
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm sm:text-base">
+                      Custom APIs
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className={stack({ gap: "md" })}>
+                    <div className={stack({ gap: "sm" })}>
+                      {editableApis
+                        .filter((api) => !defaultApis.includes(api))
+                        .map((api, _) => {
+                          const actualIndex = editableApis.indexOf(api);
+                          const isValid = validateUrl(api);
+                          return (
+                            <div
+                              key={actualIndex}
+                              className={stack({ gap: "xs" })}
+                            >
+                              <div className={hstack({ gap: "sm" })}>
                                 <Input
                                   value={api}
                                   onChange={(e) =>
                                     handleUpdateApi(actualIndex, e.target.value)
                                   }
-                                  placeholder="API URL"
-                                  size="sm"
+                                  placeholder="https://example.com/stac"
+                                  className={`flex-1 text-xs sm:text-sm ${
+                                    !isValid ? "border-destructive" : ""
+                                  }`}
                                 />
-                                <IconButton
-                                  aria-label="Remove API"
-                                  icon={<DeleteIcon />}
-                                  size="sm"
-                                  colorScheme="red"
+                                <Button
                                   variant="outline"
+                                  size="sm"
                                   onClick={() => handleRemoveApi(actualIndex)}
-                                />
-                              </HStack>
-                            );
-                          })}
-                        {editableApis.filter(
-                          (api) => !defaultApis.includes(api),
-                        ).length === 0 && (
-                          <Text
-                            fontSize="sm"
-                            color="gray.500"
-                            textAlign="center"
-                            py={2}
-                          >
-                            No custom APIs added
-                          </Text>
-                        )}
-                      </VStack>
-                    </Box>
+                                  className="h-9 w-9 p-0 shrink-0"
+                                >
+                                  <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                                </Button>
+                              </div>
+                              {!isValid && (
+                                <p className="text-xs text-destructive ml-1">
+                                  Invalid URL format
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })}
+                      {editableApis.filter((api) => !defaultApis.includes(api))
+                        .length === 0 && (
+                        <div className="text-center py-4 sm:py-6 text-muted-foreground">
+                          <p className="text-xs sm:text-sm">
+                            No custom APIs added yet
+                          </p>
+                          <p className="text-xs mt-1">
+                            Add a custom STAC API endpoint below
+                          </p>
+                        </div>
+                      )}
+                    </div>
 
-                    <Divider />
-
-                    <Box>
-                      <Text fontWeight="bold" mb={2}>
-                        Add Custom API:
-                      </Text>
-                      <HStack>
-                        <Input
-                          placeholder="Enter STAC API URL"
-                          value={newApiUrl}
-                          onChange={(e) => setNewApiUrl(e.target.value)}
-                          onKeyDown={handleKeyDown}
-                        />
-                        <IconButton
-                          aria-label="Add API"
-                          icon={<AddIcon />}
-                          colorScheme="teal"
-                          onClick={handleAddApi}
-                        />
-                      </HStack>
-                    </Box>
-                  </VStack>
-                </TabPanel>
-
-                {/* Diagnostics Tab */}
-                <TabPanel px={0}>
-                  <VStack spacing={4} align="stretch">
-                    {healthLoading ? (
-                      <Spinner />
-                    ) : healthData ? (
-                      <>
-                        <Flex alignItems="center">
-                          <Box
-                            width="10px"
-                            height="10px"
-                            bg={healthData.status === "UP" ? "green" : "red"}
-                            borderRadius="50%"
-                            marginRight="8px"
+                    <div className="border-t border-border pt-4">
+                      <Label
+                        htmlFor="new-api-url"
+                        className="text-xs sm:text-sm font-medium mb-2 block"
+                      >
+                        Add Custom API
+                      </Label>
+                      <div className={stack({ gap: "sm" })}>
+                        <div className={hstack({ gap: "sm" })}>
+                          <Input
+                            id="new-api-url"
+                            placeholder="https://example.com/stac"
+                            value={newApiUrl}
+                            onChange={(e) => setNewApiUrl(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            className={`flex-1 text-xs sm:text-sm ${
+                              newApiUrl && !validateUrl(newApiUrl)
+                                ? "border-destructive focus-visible:ring-destructive"
+                                : ""
+                            }`}
                           />
-                          <Text fontWeight="semibold">
-                            Overall Status: {healthData.status}
-                          </Text>
-                        </Flex>
+                          <Button
+                            onClick={handleAddApi}
+                            variant="outline"
+                            size="sm"
+                            disabled={
+                              !newApiUrl ||
+                              !validateUrl(newApiUrl) ||
+                              editableApis.includes(newApiUrl.trim())
+                            }
+                            className="text-xs sm:text-sm shrink-0"
+                          >
+                            <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                            <span className="hidden sm:inline">Add</span>
+                            <span className="sm:hidden">+</span>
+                          </Button>
+                        </div>
+                        {newApiUrl && !validateUrl(newApiUrl) && (
+                          <p className="text-xs text-destructive">
+                            Please enter a valid URL
+                          </p>
+                        )}
+                        {newApiUrl &&
+                          validateUrl(newApiUrl) &&
+                          editableApis.includes(newApiUrl.trim()) && (
+                            <p className="text-xs text-destructive">
+                              This API is already in the list
+                            </p>
+                          )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-                        <Text fontWeight="medium">Upstream APIs:</Text>
-                        {Object.entries(healthData.upstream_apis).map(
-                          ([url, api]) => {
-                            const conformance =
-                              api.collection_search_conformance || [];
-                            const hasCollectionSearch =
-                              hasCollectionSearchSupport(conformance);
-                            const hasFreeText = hasFreeTextSupport(conformance);
+              <TabsContent
+                value="diagnostics"
+                className={cn(stack({ gap: "md" }), "mt-4")}
+              >
+                {healthLoading ? (
+                  <div className="py-8 sm:py-12">
+                    <LoadingSpinner size="md" text="Checking API health..." />
+                  </div>
+                ) : healthData ? (
+                  <>
+                    <Card>
+                      <CardContent className="pt-4 sm:pt-6">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <div
+                            className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shrink-0"
+                            style={{
+                              backgroundColor:
+                                healthData.status === "UP"
+                                  ? "rgb(34 197 94)"
+                                  : "rgb(239 68 68)",
+                            }}
+                          />
+                          <span className="font-semibold text-sm sm:text-base">
+                            Overall Status
+                          </span>
+                          <Badge
+                            variant={
+                              healthData.status === "UP"
+                                ? "default"
+                                : "destructive"
+                            }
+                            className="ml-auto text-xs"
+                          >
+                            {healthData.status}
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
 
-                            return (
-                              <Box
-                                key={url}
-                                marginLeft="16px"
-                                p={2}
-                                border="1px solid"
-                                borderColor="gray.200"
-                                borderRadius="md"
+                    <div className={stack({ gap: "sm" })}>
+                      <h3 className="font-semibold text-xs sm:text-sm">
+                        Upstream APIs
+                      </h3>
+                      {Object.entries(healthData.upstream_apis).map(
+                        ([url, api]) => {
+                          const conformance =
+                            api.collection_search_conformance || [];
+                          const hasCollectionSearch =
+                            hasCollectionSearchSupport(conformance);
+                          const hasFreeText = hasFreeTextSupport(conformance);
+
+                          return (
+                            <Card key={url}>
+                              <CardContent
+                                className={cn(
+                                  stack({ gap: "sm" }),
+                                  "pt-3 sm:pt-4"
+                                )}
                               >
-                                <Flex alignItems="center" marginBottom="4px">
-                                  <Box
-                                    width="10px"
-                                    height="10px"
-                                    bg={api.healthy ? "green" : "red"}
-                                    borderRadius="50%"
-                                    marginRight="8px"
+                                <div className={hstack({ gap: "sm" })}>
+                                  <div
+                                    className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full flex-shrink-0"
+                                    style={{
+                                      backgroundColor: api.healthy
+                                        ? "rgb(34 197 94)"
+                                        : "rgb(239 68 68)",
+                                    }}
                                   />
-                                  <Text fontSize="sm" fontWeight="semibold">
+                                  <span className="text-xs sm:text-sm font-medium break-all">
                                     {url}
-                                  </Text>
-                                </Flex>
+                                  </span>
+                                </div>
 
-                                <Flex gap={2} marginLeft="18px" flexWrap="wrap">
+                                <div
+                                  className={cn(
+                                    hstack({ gap: "xs" }),
+                                    "flex-wrap"
+                                  )}
+                                >
                                   <Badge
-                                    colorScheme={
-                                      hasCollectionSearch ? "green" : "red"
+                                    variant={
+                                      hasCollectionSearch
+                                        ? "default"
+                                        : "destructive"
                                     }
-                                    size="sm"
+                                    className="text-[10px] sm:text-xs"
                                   >
                                     {hasCollectionSearch
                                       ? "Collection Search ✓"
                                       : "No Collection Search"}
                                   </Badge>
                                   <Badge
-                                    colorScheme={
-                                      hasFreeText ? "green" : "orange"
+                                    variant={
+                                      hasFreeText ? "default" : "secondary"
                                     }
-                                    size="sm"
+                                    className={`text-[10px] sm:text-xs ${
+                                      !hasFreeText
+                                        ? "bg-orange-100 dark:bg-orange-900"
+                                        : ""
+                                    }`}
                                   >
                                     {hasFreeText
                                       ? "Free Text ✓"
                                       : "No Free Text"}
                                   </Badge>
-                                </Flex>
+                                </div>
 
                                 {conformance.length > 0 && (
-                                  <Text
-                                    fontSize="xs"
-                                    color="gray.600"
-                                    marginLeft="18px"
-                                    marginTop="2px"
-                                  >
-                                    Conformance: {conformance.join(", ")}
-                                  </Text>
+                                  <p className="text-[10px] sm:text-xs text-muted-foreground">
+                                    <span className="font-medium">
+                                      Conformance:
+                                    </span>{" "}
+                                    {conformance.join(", ")}
+                                  </p>
                                 )}
-                              </Box>
-                            );
-                          },
-                        )}
-
-                        <Divider />
-
-                        {/* Summary of limitations */}
-                        {(() => {
-                          const apisLackingCollectionSearch =
-                            getApisLackingCapability(
-                              healthData,
-                              "collection-search",
-                            );
-                          const apisLackingFreeText = getApisLackingCapability(
-                            healthData,
-                            "free-text",
+                              </CardContent>
+                            </Card>
                           );
+                        }
+                      )}
+                    </div>
 
-                          return (
-                            <>
-                              {apisLackingCollectionSearch.length > 0 && (
-                                <Box>
-                                  <Text
-                                    fontSize="sm"
-                                    fontWeight="medium"
-                                    color="red.600"
-                                  >
+                    {/* Summary of limitations */}
+                    {(() => {
+                      const apisLackingCollectionSearch =
+                        getApisLackingCapability(
+                          healthData,
+                          "collection-search"
+                        );
+                      const apisLackingFreeText = getApisLackingCapability(
+                        healthData,
+                        "free-text"
+                      );
+
+                      return (
+                        <Card>
+                          <CardHeader className="pb-3">
+                            <CardTitle className="text-sm sm:text-base">
+                              Summary
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className={stack({ gap: "sm" })}>
+                            {apisLackingCollectionSearch.length > 0 && (
+                              <Alert variant="destructive">
+                                <AlertDescription>
+                                  <p className="text-xs sm:text-sm font-medium mb-1">
                                     APIs lacking collection search support:
-                                  </Text>
-                                  <Text
-                                    fontSize="xs"
-                                    color="gray.600"
-                                    marginLeft="16px"
-                                  >
+                                  </p>
+                                  <p className="text-[10px] sm:text-xs break-all">
                                     {apisLackingCollectionSearch.join(", ")}
-                                  </Text>
-                                </Box>
-                              )}
+                                  </p>
+                                </AlertDescription>
+                              </Alert>
+                            )}
 
-                              {apisLackingFreeText.length > 0 && (
-                                <Box>
-                                  <Text
-                                    fontSize="sm"
-                                    fontWeight="medium"
-                                    color="orange.600"
-                                  >
+                            {apisLackingFreeText.length > 0 && (
+                              <Alert className="border-orange-200 dark:border-orange-800">
+                                <AlertDescription>
+                                  <p className="text-xs sm:text-sm font-medium text-orange-600 dark:text-orange-400 mb-1">
                                     APIs lacking free-text search support:
-                                  </Text>
-                                  <Text
-                                    fontSize="xs"
-                                    color="gray.600"
-                                    marginLeft="16px"
-                                  >
+                                  </p>
+                                  <p className="text-[10px] sm:text-xs text-muted-foreground break-all">
                                     {apisLackingFreeText.join(", ")}
-                                  </Text>
-                                </Box>
-                              )}
+                                  </p>
+                                </AlertDescription>
+                              </Alert>
+                            )}
 
-                              {apisLackingCollectionSearch.length === 0 &&
-                                apisLackingFreeText.length === 0 && (
-                                  <Text
-                                    fontSize="sm"
-                                    color="green.600"
-                                    fontWeight="medium"
-                                  >
+                            {apisLackingCollectionSearch.length === 0 &&
+                              apisLackingFreeText.length === 0 && (
+                                <Alert className="border-green-200 dark:border-green-800">
+                                  <AlertDescription className="text-xs sm:text-sm text-green-600 dark:text-green-400 font-medium">
                                     All configured APIs support collection
                                     search and free-text search! ✓
-                                  </Text>
-                                )}
-                            </>
-                          );
-                        })()}
-                      </>
-                    ) : (
-                      <Text>No health data available.</Text>
-                    )}
-                  </VStack>
-                </TabPanel>
-              </TabPanels>
+                                  </AlertDescription>
+                                </Alert>
+                              )}
+                          </CardContent>
+                        </Card>
+                      );
+                    })()}
+                  </>
+                ) : (
+                  <Card>
+                    <CardContent className="pt-4 sm:pt-6">
+                      <div className="text-center py-6 sm:py-8 text-muted-foreground">
+                        <Activity className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-2 sm:mb-3 opacity-50" />
+                        <p className="text-xs sm:text-sm font-medium">
+                          No health data available
+                        </p>
+                        <p className="text-[10px] sm:text-xs mt-1">
+                          {stacApis.length === 0
+                            ? "Configure APIs in the Configuration tab to see diagnostics"
+                            : "Unable to fetch API health information"}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
             </Tabs>
-          </ModalBody>
+          </div>
 
-          <ModalFooter>
-            {activeTab === 0 && (
+          <DialogFooter className={hstack({ gap: "sm" })}>
+            {activeTab === "configuration" && (
               <>
-                <Button variant="ghost" mr={3} onClick={onClose}>
+                <Button
+                  variant="ghost"
+                  onClick={() => setIsOpen(false)}
+                  className="text-xs sm:text-sm"
+                >
                   Cancel
                 </Button>
-                <Button colorScheme="teal" onClick={handleSave}>
+                <Button onClick={handleSave} className="text-xs sm:text-sm">
                   Save Changes
                 </Button>
               </>
             )}
-            {activeTab === 1 && (
-              <Button colorScheme="blue" onClick={onClose}>
+            {activeTab === "diagnostics" && (
+              <Button
+                onClick={() => setIsOpen(false)}
+                className="text-xs sm:text-sm"
+              >
                 Close
               </Button>
             )}
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Filter Info Modal */}
-      <Modal isOpen={isFilterInfoOpen} onClose={onFilterInfoClose} size="lg">
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Filter Details</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            {selectedFilterInfo && (
-              <VStack spacing={4} align="stretch">
-                <Box>
-                  <Text fontWeight="bold" mb={2}>
-                    API URL:
-                  </Text>
-                  <Text fontSize="sm" color="gray.600">
-                    {selectedFilterInfo.url}
-                  </Text>
-                </Box>
+      <Dialog open={isFilterInfoOpen} onOpenChange={setIsFilterInfoOpen}>
+        <DialogContent className={cn(dialog({ size: "md" }), "p-4 sm:p-6")}>
+          <DialogHeader>
+            <DialogTitle className="text-lg sm:text-xl">
+              Filter Details
+            </DialogTitle>
+          </DialogHeader>
+          {selectedFilterInfo && (
+            <div className={stack({ gap: "sm" })}>
+              <div>
+                <p className="font-bold mb-1 sm:mb-2 text-xs sm:text-sm">
+                  API URL:
+                </p>
+                <p className="text-xs sm:text-sm text-muted-foreground break-all">
+                  {selectedFilterInfo.url}
+                </p>
+              </div>
 
-                <Box>
-                  <Text fontWeight="bold" mb={2}>
-                    Filter Description:
-                  </Text>
-                  <Text fontSize="sm">{selectedFilterInfo.description}</Text>
-                </Box>
+              <div>
+                <p className="font-bold mb-1 sm:mb-2 text-xs sm:text-sm">
+                  Filter Description:
+                </p>
+                <p className="text-xs sm:text-sm">
+                  {selectedFilterInfo.description}
+                </p>
+              </div>
 
-                <Box>
-                  <Text fontWeight="bold" mb={2}>
-                    Filter Code:
-                  </Text>
-                  <SyntaxHighlighter
-                    language="javascript"
-                    style={syntaxStyle}
-                    customStyle={{ fontSize: "12px", borderRadius: "6px" }}
-                  >
-                    {selectedFilterInfo.code}
-                  </SyntaxHighlighter>
-                </Box>
-              </VStack>
-            )}
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="blue" onClick={onFilterInfoClose}>
+              <div>
+                <p className="font-bold mb-1 sm:mb-2 text-xs sm:text-sm">
+                  Filter Code:
+                </p>
+                <SyntaxHighlighter
+                  language="javascript"
+                  style={syntaxStyle}
+                  customStyle={{ fontSize: "11px", borderRadius: "6px" }}
+                >
+                  {selectedFilterInfo.code}
+                </SyntaxHighlighter>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              onClick={() => setIsFilterInfoOpen(false)}
+              className="text-xs sm:text-sm"
+            >
               Close
             </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
 
 export default ApiConfigPanel;
-
