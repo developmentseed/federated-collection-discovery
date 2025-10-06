@@ -112,7 +112,7 @@ uv run uvicorn stac_fastapi.collection_discovery.app:app \
 1. Start the React development server:
 
 ```bash
-yarn start
+yarn dev
 ```
 
 Access:

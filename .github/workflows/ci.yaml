@@ -43,14 +43,6 @@ jobs:
         with:
           node-version: 22
 
-      - name: Cache Node.js dependencies
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: node-modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            node-modules-${{ runner.os }}-
-
       - name: Cache Yarn dependencies
         uses: actions/cache@v4
         with:
