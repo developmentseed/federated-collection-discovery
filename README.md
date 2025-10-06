@@ -7,16 +7,17 @@
     width="200"
 />
 
-A React application for discovering and searching geospatial
-collections using a [STAC FastAPI Collection Discovery API](http://developmentseed.org/stac-fastapi-collection-discovery/)
-that provides federated search across multiple STAC API endpoints.
-This tool allows you to configure which STAC APIs the backend searches,
-view comprehensive collection metadata, and get item-search code hints.
+A React application for searching multiple STAC APIs simultaneously.
+Built with [STAC FastAPI Collection Discovery API](http://developmentseed.org/stac-fastapi-collection-discovery/),
+this tool performs federated collection searches across multiple STAC API
+endpoints at once.
+Configure which STAC APIs to query, view comprehensive collection metadata,
+and get item-search code hints—all from a single unified interface.
 
 ## Features
 
-- **Federated Search**: Configure which STAC APIs the backend searches
-  across for comprehensive results
+- **Simultaneous Multi-API Search**: Search multiple STAC APIs at once
+  for comprehensive results across all configured endpoints
 - **Interactive Collection Details**: Comprehensive modal with collection
   metadata, spatial/temporal extents, providers, and links
 - **Code Generation**: Client-generated STAC item search examples in Python and
@@ -123,7 +124,8 @@ Access:
 
 ### API Configuration
 
-The application can be configured to work with any STAC API endpoints:
+The application searches multiple STAC API endpoints simultaneously.
+Configure which STAC APIs to query:
 
 #### Environment Variables
 
@@ -133,9 +135,9 @@ The application can be configured to work with any STAC API endpoints:
 
 Use the **Settings** button in the API Configuration panel to:
 
-- **Add/Remove APIs**: Configure which STAC API endpoints the backend searches
+- **Add/Remove APIs**: Configure which STAC API endpoints to search simultaneously
 - **Health Monitoring**: View real-time health status and conformance
-  information
+  information for each API
 - **Capability Detection**: See which APIs support collection search and
   free-text search
 - **Default APIs**: Reset to the APIs configured in config.ts
@@ -191,7 +193,7 @@ Available filter examples:
 2. **View Results**: Collections appear in the right panel table with:
    - Sortable columns (title, ID, API source)
    - Click "Details" button for comprehensive collection information
-   - Results from all backend-configured APIs are displayed
+   - Results from all configured STAC APIs are aggregated and displayed together
 
 ### Collection Details Modal
 

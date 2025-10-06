@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import {
   Dialog,
   DialogContent,
@@ -7,11 +7,11 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import SwaggerUI from "swagger-ui-react";
-import "swagger-ui-react/swagger-ui.css";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
-// Custom swagger style override for dark mode only
-import "../css/swagger-dark.css";
+const RedocStandalone = lazy(() =>
+  import("redoc").then((mod) => ({ default: mod.RedocStandalone }))
+);
 
 interface ApiDocModalProps {
   isOpen: boolean;
@@ -49,10 +49,34 @@ const ApiDocModal: React.FC<ApiDocModalProps> = ({
           <DialogTitle>API Documentation</DialogTitle>
         </DialogHeader>
         <div className="overflow-auto max-h-[70vh]">
-          {/* Apply dark mode class conditionally */}
-          <div className={isDark ? "swagger-dark" : ""}>
-            <SwaggerUI spec={apiDocs} />
-          </div>
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center py-12">
+                <LoadingSpinner size="lg" text="Loading documentation..." />
+              </div>
+            }
+          >
+            <RedocStandalone
+              spec={apiDocs}
+              options={{
+                theme: {
+                  colors: {
+                    primary: {
+                      main: isDark ? "#ffffff" : "#000000",
+                    },
+                  },
+                  typography: {
+                    fontSize: "14px",
+                    fontFamily: "inherit",
+                  },
+                },
+                scrollYOffset: 0,
+                hideDownloadButton: false,
+                disableSearch: false,
+                nativeScrollbars: true,
+              }}
+            />
+          </Suspense>
         </div>
         <DialogFooter>
           <Button onClick={onClose}>Close</Button>

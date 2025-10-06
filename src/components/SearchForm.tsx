@@ -3,9 +3,10 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { DatePicker } from "./ui/date-picker";
-import MapModal from "./MapModal";
 import { cn } from "../lib/utils";
 import { stack, touchTarget, layout } from "../lib/responsive";
+
+const MapModal = React.lazy(() => import("./MapModal"));
 
 type FormData = {
   bbox: string;
@@ -283,14 +284,16 @@ const SearchForm: React.FC<Props> = ({
         </Button>
       </div>
 
-      <MapModal
-        isOpen={isMapOpen}
-        onClose={() => setIsMapOpen(false)}
-        onSubmit={(bbox) => {
-          updateBoundingBox(bbox);
-          setIsMapOpen(false);
-        }}
-      />
+      <React.Suspense fallback={null}>
+        <MapModal
+          isOpen={isMapOpen}
+          onClose={() => setIsMapOpen(false)}
+          onSubmit={(bbox) => {
+            updateBoundingBox(bbox);
+            setIsMapOpen(false);
+          }}
+        />
+      </React.Suspense>
     </form>
   );
 };

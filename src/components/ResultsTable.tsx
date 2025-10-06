@@ -31,7 +31,6 @@ import Map from "ol/Map";
 import FullScreen from "ol/control/FullScreen.js";
 import View from "ol/View";
 import TileLayer from "ol/layer/Tile";
-import { defaults as defaultControls } from "ol/control";
 import STAC from "ol-stac";
 import proj4 from "proj4";
 import { register } from "ol/proj/proj4";
