@@ -8,7 +8,7 @@
     "@chakra-ui/react": "^2.10.9",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
-    "eslint": "^9.36.0",
+    "eslint": "^9.37.0",
     "eslint-plugin-react": "^7.37.5",
     "framer-motion": "^12.23.22",
     "ol": "10.6.1",
@@ -25,8 +25,8 @@
     "react-scripts": "5.0.1",
     "react-syntax-highlighter": "^15.6.6",
     "source-map-explorer": "^2.5.3",
-    "swagger-ui-react": "^5.29.1",
-    "typescript": "^5.9.2"
+    "swagger-ui-react": "^5.29.3",
+    "typescript": "^5.9.3"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -38,7 +38,7 @@
   "devDependencies": {
     "@babel/core": "^7.28.4",
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
