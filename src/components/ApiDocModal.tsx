@@ -89,7 +89,6 @@ const ApiDocModal: React.FC<ApiDocModalProps> = ({
               hideModels: false,
               content: apiDocs,
               customCss: customScalarCss,
-              router: "hash",
             }}
           />
         </div>
