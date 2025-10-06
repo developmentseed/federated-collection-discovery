@@ -5,7 +5,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-- Nothing
+### Fixed
+
+- Switch to scalar for API docs modal
+- Make logo link back to the home page
 
 ### 2.0.0
 
