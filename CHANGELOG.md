@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+- Nothing
+
+## 2.0.1
+
 ### Fixed
 
 - Switch to scalar for API docs modal
