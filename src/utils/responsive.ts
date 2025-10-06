@@ -1,4 +1,4 @@
-import { cva } from "class-variance-authority"
+import { cva } from "class-variance-authority";
 
 /**
  * Responsive spacing utilities for consistent gaps and padding
@@ -16,7 +16,7 @@ export const stack = cva("flex flex-col", {
   defaultVariants: {
     gap: "md",
   },
-})
+});
 
 export const hstack = cva("flex flex-row items-center", {
   variants: {
@@ -30,7 +30,7 @@ export const hstack = cva("flex flex-row items-center", {
   defaultVariants: {
     gap: "md",
   },
-})
+});
 
 /**
  * Responsive text size utilities
@@ -51,7 +51,7 @@ export const text = cva("", {
   defaultVariants: {
     size: "base",
   },
-})
+});
 
 /**
  * Touch-friendly button/interactive element sizes
@@ -69,7 +69,7 @@ export const touchTarget = cva("", {
   defaultVariants: {
     size: "default",
   },
-})
+});
 
 /**
  * Icon size utilities
@@ -87,7 +87,7 @@ export const icon = cva("", {
   defaultVariants: {
     size: "md",
   },
-})
+});
 
 /**
  * Container/panel padding utilities
@@ -117,7 +117,7 @@ export const container = cva("w-full", {
     padding: "md",
     maxWidth: "full",
   },
-})
+});
 
 /**
  * Responsive modal/dialog widths
@@ -139,7 +139,7 @@ export const dialog = cva("", {
     size: "md",
     height: "constrained",
   },
-})
+});
 
 /**
  * Sidebar/panel widths
@@ -155,7 +155,7 @@ export const sidebar = cva("w-full flex-shrink-0", {
   defaultVariants: {
     size: "md",
   },
-})
+});
 
 /**
  * Sheet/drawer widths for mobile
@@ -171,7 +171,7 @@ export const sheet = cva("", {
   defaultVariants: {
     size: "md",
   },
-})
+});
 
 /**
  * Responsive visibility utilities
@@ -182,7 +182,7 @@ export const visibility = {
   tablet: "hidden sm:block lg:hidden",
   desktopInline: "hidden lg:inline",
   mobileInline: "sm:hidden",
-}
+};
 
 /**
  * Common layout patterns
@@ -193,4 +193,4 @@ export const layout = {
   flexColSm: "flex flex-col sm:flex-row",
   grid2: "grid grid-cols-1 sm:grid-cols-2 gap-4",
   grid3: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4",
-}
+};
