@@ -57,9 +57,9 @@ jobs:
           path: |
             node_modules
             .yarn
-          key: yarn-cache-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          key: yarn-cache-v2-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
           restore-keys: |
-            yarn-cache-${{ runner.os }}-
+            yarn-cache-v2-${{ runner.os }}-
 
       - name: Install dependencies
         run: yarn install
