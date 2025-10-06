@@ -98,7 +98,7 @@ export const DEFAULT_API_CONFIGURATIONS: ApiConfiguration[] = [
         (provider) =>
           provider.name === "CMR" &&
           Array.isArray(provider.roles) &&
-          provider.roles.includes("producer"),
+          provider.roles.includes("producer")
       );
     },
     filterDescription: "Exclude collections from NASA CMR",

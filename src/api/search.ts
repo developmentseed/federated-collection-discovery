@@ -18,7 +18,7 @@ export function hasFreeTextSupport(conformance: string[]): boolean {
 
 export function getApisLackingCapability(
   healthData: any,
-  capability: "collection-search" | "free-text",
+  capability: "collection-search" | "free-text"
 ): string[] {
   if (!healthData?.upstream_apis) return [];
 
@@ -36,7 +36,7 @@ export function getApisLackingCapability(
       if (!hasCapability) {
         lackingApis.push(url);
       }
-    },
+    }
   );
 
   return lackingApis;
@@ -59,7 +59,7 @@ function applyApiFilters(searchResponse: SearchResponse): SearchResponse {
     let sourceApi = null;
     if (collection.links && Array.isArray(collection.links)) {
       const rootLink = collection.links.find(
-        (link: any) => link.rel === "root",
+        (link: any) => link.rel === "root"
       );
       if (rootLink && rootLink.href) {
         sourceApi = rootLink.href;
@@ -70,7 +70,7 @@ function applyApiFilters(searchResponse: SearchResponse): SearchResponse {
       "Collection source API:",
       sourceApi,
       "for collection:",
-      collection.id,
+      collection.id
     );
     if (!sourceApi) return;
 
@@ -82,18 +82,18 @@ function applyApiFilters(searchResponse: SearchResponse): SearchResponse {
 
   console.log(
     "Grouped collections by API:",
-    Array.from(groupedCollections.keys()),
+    Array.from(groupedCollections.keys())
   );
 
   const filteredCollections: any[] = [];
 
   groupedCollections.forEach((collections, sourceApi) => {
     console.log(
-      `Applying filter for ${sourceApi}: ${collections.length} collections`,
+      `Applying filter for ${sourceApi}: ${collections.length} collections`
     );
     const filtered = applyFilterForApi(sourceApi, collections);
     console.log(
-      `After filtering ${sourceApi}: ${filtered.length} collections remaining`,
+      `After filtering ${sourceApi}: ${filtered.length} collections remaining`
     );
     filteredCollections.push(...filtered);
   });
@@ -108,9 +108,7 @@ function applyApiFilters(searchResponse: SearchResponse): SearchResponse {
 
 function buildQuery(params: SearchParams, stacApis?: string[]): string {
   const filteredParams = Object.fromEntries(
-    Object.entries(params).filter(
-      ([_, value]) => value != null && value !== "",
-    ),
+    Object.entries(params).filter(([_, value]) => value != null && value !== "")
   );
 
   if (filteredParams.q) {
@@ -146,7 +144,7 @@ type SearchResponse = {
 
 export async function searchApi(
   params: SearchParams,
-  stacApis?: string[],
+  stacApis?: string[]
 ): Promise<SearchResponse> {
   console.log(`${params.datetime}`);
   const queryString = buildQuery(params, stacApis);
@@ -166,7 +164,7 @@ export async function searchApi(
       // Handle API-level errors (400/500)
       throw new Error(
         data?.detail ||
-          `Search failed with status ${response.status}: ${response.statusText}`,
+          `Search failed with status ${response.status}: ${response.statusText}`
       );
     }
 
@@ -191,7 +189,7 @@ export async function fetchNextPage(nextUrl: string): Promise<SearchResponse> {
     if (!response.ok) {
       throw new Error(
         data?.detail ||
-          `Failed to fetch next page with status ${response.status}: ${response.statusText}`,
+          `Failed to fetch next page with status ${response.status}: ${response.statusText}`
       );
     }
 
@@ -255,7 +253,7 @@ export async function getApiDocs() {
 }
 
 export async function getApiConformance(
-  stacApis?: string[],
+  stacApis?: string[]
 ): Promise<ConformanceResponse> {
   let url = `${API_URL}/conformance`;
 

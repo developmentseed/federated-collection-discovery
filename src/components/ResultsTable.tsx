@@ -299,7 +299,7 @@ const ResultsTable: React.FC<Props> = ({
   const renderCell = (
     header: string,
     value: any,
-    row?: Record<string, any>,
+    row?: Record<string, any>
   ) => {
     if (header === "catalog_url" && row) {
       return extractCatalogUrl(row);
@@ -392,7 +392,7 @@ const ResultsTable: React.FC<Props> = ({
             className={cn(
               "border border-border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors duration-150 w-full text-left",
               stack({ gap: "sm" }),
-              touchTarget(),
+              touchTarget()
             )}
             role="listitem"
             aria-label={`View details for ${row.title || "Untitled"}`}
@@ -532,7 +532,7 @@ const ResultsTable: React.FC<Props> = ({
                   }}
                   className={cn(
                     "cursor-pointer hover:bg-muted/50 transition-colors duration-150",
-                    rowIndex % 2 === 1 && "bg-muted/20",
+                    rowIndex % 2 === 1 && "bg-muted/20"
                   )}
                   role="button"
                   tabIndex={0}
@@ -658,7 +658,7 @@ const ResultsTable: React.FC<Props> = ({
                           </p>
                           <p className="text-sm">
                             {formatTemporalRange(
-                              selectedRecord.extent.temporal.interval,
+                              selectedRecord.extent.temporal.interval
                             )}
                           </p>
                         </div>
@@ -729,7 +729,7 @@ const ResultsTable: React.FC<Props> = ({
                     >
                       {getPythonCodeHint(
                         extractCatalogUrl(selectedRecord),
-                        selectedRecord.id || "collection-id",
+                        selectedRecord.id || "collection-id"
                       )}
                     </SyntaxHighlighter>
                   </TabsContent>
@@ -745,7 +745,7 @@ const ResultsTable: React.FC<Props> = ({
                     >
                       {getRCodeHint(
                         extractCatalogUrl(selectedRecord),
-                        selectedRecord.id || "collection-id",
+                        selectedRecord.id || "collection-id"
                       )}
                     </SyntaxHighlighter>
                   </TabsContent>
@@ -770,7 +770,7 @@ const ResultsTable: React.FC<Props> = ({
                       <ChevronDown
                         className={cn(
                           "h-4 w-4 transition-transform duration-200",
-                          showLinks && "rotate-180",
+                          showLinks && "rotate-180"
                         )}
                         aria-hidden="true"
                       />
@@ -783,7 +783,7 @@ const ResultsTable: React.FC<Props> = ({
                     <div
                       className={cn(
                         "rounded-md bg-muted p-3",
-                        stack({ gap: "sm" }),
+                        stack({ gap: "sm" })
                       )}
                     >
                       {selectedRecord.links.map((link: any, index: number) => (
@@ -830,7 +830,7 @@ const ResultsTable: React.FC<Props> = ({
                     <ChevronDown
                       className={cn(
                         "h-4 w-4 transition-transform duration-200",
-                        showJSON && "rotate-180",
+                        showJSON && "rotate-180"
                       )}
                       aria-hidden="true"
                     />
@@ -928,7 +928,7 @@ const MapDisplay: React.FC<MapDisplayProps> = ({ stacData }) => {
             // Validate that all values are valid numbers
             if (
               [minX, minY, maxX, maxY].every(
-                (val) => typeof val === "number" && isFinite(val),
+                (val) => typeof val === "number" && isFinite(val)
               )
             ) {
               // Fix coordinate order if min/max are swapped
@@ -941,11 +941,11 @@ const MapDisplay: React.FC<MapDisplayProps> = ({ stacData }) => {
                 const extent3857 = transformExtent(
                   extent4326,
                   "EPSG:4326",
-                  "EPSG:3857",
+                  "EPSG:3857"
                 );
                 console.log(
                   "Fitting to extent from STAC data (4326):",
-                  extent4326,
+                  extent4326
                 );
                 console.log("Transformed extent (3857):", extent3857);
                 map.getView().fit(extent3857, {

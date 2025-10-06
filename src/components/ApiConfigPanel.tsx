@@ -107,7 +107,7 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
 
   // Health status state
   const [healthData, setHealthData] = React.useState<HealthResponse | null>(
-    null,
+    null
   );
   const [healthLoading, setHealthLoading] = React.useState(true);
 
@@ -118,7 +118,7 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
 
   const defaultApis = React.useMemo(
     () => getApiConfigurations().map((config) => config.url),
-    [],
+    []
   );
 
   // Fetch health data when component mounts or APIs change
@@ -183,11 +183,11 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
     const isHealthy = healthData.status === "UP";
     const apisLackingCollectionSearch = getApisLackingCapability(
       healthData,
-      "collection-search",
+      "collection-search"
     );
     const apisLackingFreeText = getApisLackingCapability(
       healthData,
-      "free-text",
+      "free-text"
     );
 
     if (!isHealthy || apisLackingCollectionSearch.length > 0) {
@@ -260,10 +260,10 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
 
   const handleSave = () => {
     const validApis = editableApis.filter(
-      (api) => api.trim() !== "" && validateUrl(api),
+      (api) => api.trim() !== "" && validateUrl(api)
     );
     const invalidApis = editableApis.filter(
-      (api) => api.trim() !== "" && !validateUrl(api),
+      (api) => api.trim() !== "" && !validateUrl(api)
     );
 
     if (invalidApis.length > 0) {
@@ -314,7 +314,7 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
       <div
         className={cn(
           "p-3 rounded-md border border-border",
-          hstack({ gap: "sm" }),
+          hstack({ gap: "sm" })
         )}
       >
         {isLoading ? (
@@ -623,7 +623,7 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
                               <CardContent
                                 className={cn(
                                   stack({ gap: "sm" }),
-                                  "pt-3 sm:pt-4",
+                                  "pt-3 sm:pt-4"
                                 )}
                               >
                                 <div className={hstack({ gap: "sm" })}>
@@ -643,7 +643,7 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
                                 <div
                                   className={cn(
                                     hstack({ gap: "xs" }),
-                                    "flex-wrap",
+                                    "flex-wrap"
                                   )}
                                 >
                                   <Badge
@@ -685,7 +685,7 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
                               </CardContent>
                             </Card>
                           );
-                        },
+                        }
                       )}
                     </div>
 
@@ -694,11 +694,11 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
                       const apisLackingCollectionSearch =
                         getApisLackingCapability(
                           healthData,
-                          "collection-search",
+                          "collection-search"
                         );
                       const apisLackingFreeText = getApisLackingCapability(
                         healthData,
-                        "free-text",
+                        "free-text"
                       );
 
                       return (

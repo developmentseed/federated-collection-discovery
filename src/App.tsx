@@ -73,7 +73,7 @@ export const App = () => {
   const [conformanceData, setConformanceData] =
     React.useState<ConformanceResponse | null>(null);
   const [conformanceError, setConformanceError] = React.useState<string | null>(
-    null,
+    null
   );
 
   // Initialize STAC APIs from config (session-based, no localStorage)
@@ -92,7 +92,7 @@ export const App = () => {
       } catch (err) {
         console.error("Failed to fetch API documentation", err);
         setDocsError(
-          "Failed to load API documentation. Please try refreshing the page.",
+          "Failed to load API documentation. Please try refreshing the page."
         );
       } finally {
         setDocsLoading(false);
@@ -117,7 +117,7 @@ export const App = () => {
         setConformanceData(conformance);
       } catch (err) {
         setConformanceError(
-          "Failed to load API conformance. Collection search features may not work as expected.",
+          "Failed to load API conformance. Collection search features may not work as expected."
         );
       } finally {
         setConformanceLoading(false);
@@ -148,7 +148,7 @@ export const App = () => {
     } catch (error) {
       console.error("Search error:", error);
       setApiError(
-        error instanceof Error ? error.message : "An unexpected error occurred",
+        error instanceof Error ? error.message : "An unexpected error occurred"
       );
       setHasSearched(true);
     } finally {
@@ -176,7 +176,7 @@ export const App = () => {
       setApiError(
         error instanceof Error
           ? error.message
-          : "An unexpected error occurred while loading more results",
+          : "An unexpected error occurred while loading more results"
       );
     } finally {
       setLoadingMore(false);
@@ -212,7 +212,7 @@ export const App = () => {
 
     return {
       hasCollectionSearch: hasCollectionSearchSupport(
-        conformanceData.conformsTo,
+        conformanceData.conformsTo
       ),
       hasFreeText: hasFreeTextSupport(conformanceData.conformsTo),
     };
@@ -361,7 +361,7 @@ export const App = () => {
           layout.flexColSm,
           "lg:flex-row gap-6 p-4 lg:p-6",
           container({ maxWidth: "custom" }),
-          "mx-auto",
+          "mx-auto"
         )}
       >
         {/* Left sidebar - Desktop only */}
@@ -402,7 +402,7 @@ export const App = () => {
             layout.flexColSm,
             "items-stretch sm:items-center justify-between gap-2 p-2 sm:p-3",
             container({ maxWidth: "custom" }),
-            "mx-auto",
+            "mx-auto"
           )}
           aria-label="Footer navigation"
         >

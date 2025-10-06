@@ -156,8 +156,8 @@ export const DEFAULT_API_CONFIGURATIONS: ApiConfiguration[] = [
     // Optional: Filter collections by license
     filter: (collection) => {
       const license = collection.license;
-      return license && license.toLowerCase().includes('cc');
-    }
+      return license && license.toLowerCase().includes("cc");
+    },
   },
 ];
 ```

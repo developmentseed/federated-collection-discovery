@@ -28,7 +28,7 @@ export function createAttributionControl(isDark: boolean) {
     // We'll need to style it after it's added to the map
     setTimeout(() => {
       const attributionElement = document.querySelector(
-        ".ol-attribution",
+        ".ol-attribution"
       ) as HTMLElement;
       if (attributionElement) {
         attributionElement.style.color = "white";

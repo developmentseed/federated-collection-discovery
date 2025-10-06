@@ -125,8 +125,8 @@ All notable changes to this project will be documented in this file.
 
 - Make the client application responsive to window size
 - Implement free-text search as defined by
-[Free-Text STAC API extension](https://github.com/stac-api-extensions/freetext-search)
-([#14](https://github.com/developmentseed/federated-collection-discovery/pull/1))
+  [Free-Text STAC API extension](https://github.com/stac-api-extensions/freetext-search)
+  ([#14](https://github.com/developmentseed/federated-collection-discovery/pull/1))
 - Run `check_health` asynchronously
 
 ## 0.1.0

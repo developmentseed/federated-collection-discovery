@@ -5,7 +5,7 @@ export function getApiConfigurations(): ApiConfiguration[] {
 }
 
 export function getApiConfigurationByUrl(
-  url: string,
+  url: string
 ): ApiConfiguration | undefined {
   return getApiConfigurations().find((config) => config.url === url);
 }
@@ -16,7 +16,7 @@ export function hasCustomFilter(url: string): boolean {
 }
 
 export function getFilterInfo(
-  url: string,
+  url: string
 ): { description: string; code: string } | null {
   const config = getApiConfigurationByUrl(url);
 
@@ -40,4 +40,3 @@ export function applyFilterForApi(url: string, collections: any[]): any[] {
 
   return collections.filter(config.filter);
 }
-

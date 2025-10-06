@@ -27,7 +27,7 @@ interface Props {
 
 // Parse datetime interval from URL parameter
 const parseDatetimeInterval = (
-  datetime: string,
+  datetime: string
 ): { start: Date | null; end: Date | null } => {
   if (!datetime) return { start: null, end: null };
 
@@ -94,7 +94,7 @@ const SearchForm: React.FC<Props> = ({
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     if (name === "bbox") {
@@ -105,7 +105,7 @@ const SearchForm: React.FC<Props> = ({
 
   const handleDateChange = (
     date: Date | null,
-    field: "startDatetime" | "endDatetime",
+    field: "startDatetime" | "endDatetime"
   ) => {
     setFormData({ ...formData, [field]: date });
   };
@@ -137,7 +137,7 @@ const SearchForm: React.FC<Props> = ({
 
     const datetime = formatDateInterval(
       formData.startDatetime,
-      formData.endDatetime,
+      formData.endDatetime
     );
     const submitData = {
       bbox: formData.bbox,
