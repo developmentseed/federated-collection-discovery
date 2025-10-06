@@ -222,11 +222,17 @@ export const App = () => {
   const SearchPanelContent = () => (
     <div className={stack({ gap: "lg" })}>
       <div className={stack({ gap: "md" })}>
-        <img
-          src={Logo}
-          alt="Federated Collection Discovery"
-          className="h-32 w-auto"
-        />
+        <button
+          onClick={() => (window.location.href = "/")}
+          className="cursor-pointer hover:opacity-80 transition-opacity"
+          aria-label="Return to home page"
+        >
+          <img
+            src={Logo}
+            alt="STAC Collection Discovery"
+            className="h-32 w-auto"
+          />
+        </button>
 
         {docsError && (
           <Alert variant="destructive">
@@ -319,11 +325,17 @@ export const App = () => {
       {/* Mobile search button - only visible on small screens */}
       <header className="lg:hidden sticky top-0 z-50 bg-background border-b">
         <div className="flex items-center justify-between p-3">
-          <img
-            src={Logo}
-            alt="Federated Collection Discovery"
-            className="h-10 w-auto"
-          />
+          <button
+            onClick={() => (window.location.href = "/")}
+            className="cursor-pointer hover:opacity-80 transition-opacity"
+            aria-label="Return to home page"
+          >
+            <img
+              src={Logo}
+              alt="STAC Collection Discovery"
+              className="h-10 w-auto"
+            />
+          </button>
           <Sheet open={isSearchSheetOpen} onOpenChange={setIsSearchSheetOpen}>
             <SheetTrigger asChild>
               <Button
