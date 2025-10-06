@@ -40,8 +40,8 @@ import {
   Wrench,
   Activity,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { stack, hstack, dialog } from "@/lib/responsive";
+import { cn } from "@/utils/utils";
+import { stack, hstack, dialog } from "@/utils/responsive";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface HealthResponse {

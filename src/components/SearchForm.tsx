@@ -3,8 +3,8 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { DatePicker } from "./ui/date-picker";
-import { cn } from "../lib/utils";
-import { stack, touchTarget, layout } from "../lib/responsive";
+import { cn } from "../utils/utils";
+import { stack, touchTarget, layout } from "../utils/responsive";
 
 const MapModal = React.lazy(() => import("./MapModal"));
 

@@ -13,7 +13,7 @@ import {
 import { AlertCircle, Search } from "lucide-react";
 import GitHubLogo from "./assets/github-mark.svg";
 import Logo from "./assets/logo-text.svg";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/utils";
 import {
   stack,
   hstack,
@@ -21,7 +21,7 @@ import {
   container,
   layout,
   sidebar,
-} from "@/lib/responsive";
+} from "@/utils/responsive";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 import { ColorModeSwitcher } from "./ColorModeSwitcher";

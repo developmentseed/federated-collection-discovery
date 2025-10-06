@@ -39,8 +39,8 @@ import "ol/ol.css";
 import "ol-layerswitcher/dist/ol-layerswitcher.css";
 import ReactMarkdown from "react-markdown";
 import { ChevronDown, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { stack, hstack, touchTarget, dialog } from "@/lib/responsive";
+import { cn } from "@/utils/utils";
+import { stack, hstack, touchTarget, dialog } from "@/utils/responsive";
 import { useDarkMode } from "@/utils/hooks";
 import {
   getBasemapSource,
