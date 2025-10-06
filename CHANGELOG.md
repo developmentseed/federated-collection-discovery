@@ -3,7 +3,7 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 1.1.0
+## Unreleased
 
 ### UI/UX Improvements
 
@@ -30,7 +30,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Improved form validation with inline error messages
 - Better touch-friendly buttons (44px minimum tap targets)
 
-### Technical Changes
+### 1.1.0
 
 - Switch from leaflet to OpenLayers + ol-stac
 
