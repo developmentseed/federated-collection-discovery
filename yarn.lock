@@ -1752,12 +1752,12 @@
   dependencies:
     undici-types "~6.21.0"
 
-"@types/node@^24.6.1":
-  version "24.6.1"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-24.6.1.tgz#29cd365beb4419b3b8271c7464f1a563446d7481"
-  integrity sha512-ljvjjs3DNXummeIaooB4cLBKg2U6SPI6Hjra/9rRIy7CpM0HpLtG9HptkMKAb4HYWy5S7HUvJEuWgr/y0U8SHw==
+"@types/node@^24.7.0":
+  version "24.7.0"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-24.7.0.tgz#a34c9f0d3401db396782e440317dd5d8373c286f"
+  integrity sha512-IbKooQVqUBrlzWTi79E8Fw78l8k1RNtlDDNWsFZs7XonuQSJ8oNYfEeclhprUldXISRMLzBpILuKgPlIxm+/Yw==
   dependencies:
-    undici-types "~7.13.0"
+    undici-types "~7.14.0"
 
 "@types/parse-json@^4.0.0":
   version "4.0.2"
@@ -3668,10 +3668,10 @@ lru-cache@^5.1.1:
   dependencies:
     yallist "^3.0.2"
 
-lucide-react@^0.544.0:
-  version "0.544.0"
-  resolved "https://registry.yarnpkg.com/lucide-react/-/lucide-react-0.544.0.tgz#4719953c10fd53a64dd8343bb0ed16ec79f3eeef"
-  integrity sha512-t5tS44bqd825zAW45UQxpG2CvcC4urOwn2TrwSH8u+MjeE+1NnWl6QqeQ/6NdjMqdOygyiT9p3Ev0p1NJykxjw==
+lucide-react@^0.545.0:
+  version "0.545.0"
+  resolved "https://registry.yarnpkg.com/lucide-react/-/lucide-react-0.545.0.tgz#82affd1b581d358356578dd033e11dd17e6493a0"
+  integrity sha512-7r1/yUuflQDSt4f1bpn5ZAocyIxcTyVyBBChSVtBKn5M+392cPmI5YJMWOJKk/HUWGm5wg83chlAZtCcGbEZtw==
 
 magic-string@^0.30.10:
   version "0.30.11"
@@ -4434,7 +4434,7 @@ pbf@4.0.1:
   dependencies:
     resolve-protobuf-schema "^2.1.0"
 
-picocolors@^1.0.1, picocolors@^1.1.1:
+picocolors@^1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/picocolors/-/picocolors-1.1.1.tgz#3d321af3eab939b083c8f929a1d12cda81c26b6b"
   integrity sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==
@@ -4487,16 +4487,7 @@ postcss@8.4.49:
     picocolors "^1.1.1"
     source-map-js "^1.2.1"
 
-postcss@^8.4.40:
-  version "8.4.41"
-  resolved "https://registry.yarnpkg.com/postcss/-/postcss-8.4.41.tgz#d6104d3ba272d882fe18fc07d15dc2da62fa2681"
-  integrity sha512-TesUflQ0WKZqAvg52PWL6kHgLKP6xB6heTOdoYM0Wt2UHyxNa4K25EZZMgKns3BH1RLVbZCREPpLY0rhnNoHVQ==
-  dependencies:
-    nanoid "^3.3.7"
-    picocolors "^1.0.1"
-    source-map-js "^1.2.0"
-
-postcss@^8.4.41, postcss@^8.5.6:
+postcss@^8.4.40, postcss@^8.4.41, postcss@^8.5.6:
   version "8.5.6"
   resolved "https://registry.yarnpkg.com/postcss/-/postcss-8.5.6.tgz#2825006615a619b4f62a9e7426cc120b349a8f3c"
   integrity sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==
@@ -5184,10 +5175,10 @@ type-fest@4.41.0, type-fest@^4.41.0:
   resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-4.41.0.tgz#6ae1c8e5731273c2bf1f58ad39cbae2c91a46c58"
   integrity sha512-TeTSQ6H5YHvpqVwBRcnLDCBnDOHWYu7IvGbHT6N8AOymcr9PJGjc1GTtiWZTYg0NCgYwvnYWEkVChQAr9bjfwA==
 
-typescript@^5.9.2:
-  version "5.9.2"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.9.2.tgz#d93450cddec5154a2d5cabe3b8102b83316fb2a6"
-  integrity sha512-CWBzXQrc/qOkhidw1OzBTQuYRbfyxDXJMVJ1XNwUHGROVmuaeiEm3OslpZ1RV96d7SKKjZKrSJu3+t/xlw3R9A==
+typescript@^5.9.3:
+  version "5.9.3"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.9.3.tgz#5b4f59e15310ab17a216f5d6cf53ee476ede670f"
+  integrity sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==
 
 uint8arrays@^2.0.5:
   version "2.1.10"
@@ -5201,10 +5192,10 @@ undici-types@~6.21.0:
   resolved "https://registry.yarnpkg.com/undici-types/-/undici-types-6.21.0.tgz#691d00af3909be93a7faa13be61b3a5b50ef12cb"
   integrity sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==
 
-undici-types@~7.13.0:
-  version "7.13.0"
-  resolved "https://registry.yarnpkg.com/undici-types/-/undici-types-7.13.0.tgz#a20ba7c0a2be0c97bd55c308069d29d167466bff"
-  integrity sha512-Ov2Rr9Sx+fRgagJ5AX0qvItZG/JKKoBRAVITs1zk7IqZGTJUwgUr7qoYBpWwakpWilTZFM98rG/AFRocu10iIQ==
+undici-types@~7.14.0:
+  version "7.14.0"
+  resolved "https://registry.yarnpkg.com/undici-types/-/undici-types-7.14.0.tgz#4c037b32ca4d7d62fae042174604341588bc0840"
+  integrity sha512-QQiYxHuyZ9gQUIrmPo3IA+hUl4KYk8uSA7cHrcKd/l3p1OTpZcM0Tbp9x7FAtXdAYhlasd60ncPpgu6ihG6TOA==
 
 unhead@1.11.20:
   version "1.11.20"
@@ -5366,10 +5357,10 @@ vite-tsconfig-paths@^5.1.4:
     globrex "^0.1.2"
     tsconfck "^3.0.3"
 
-vite@^7.1.8:
-  version "7.1.8"
-  resolved "https://registry.yarnpkg.com/vite/-/vite-7.1.8.tgz#ff208eee01658c5b407b6a1afa9b92b25750832e"
-  integrity sha512-oBXvfSHEOL8jF+R9Am7h59Up07kVVGH1NrFGFoEG6bPDZP3tGpQhvkBpy5x7U6+E6wZCu9OihsWgJqDbQIm8LQ==
+vite@^7.1.9:
+  version "7.1.9"
+  resolved "https://registry.yarnpkg.com/vite/-/vite-7.1.9.tgz#ba844410e5d0c0f2a4eaf17a52af60ebea322cbf"
+  integrity sha512-4nVGliEpxmhCL8DslSAUdxlB6+SMrhB0a1v5ijlh1xB1nEPuy1mxaHxysVucLHuWryAxLWg6a5ei+U4TLn/rFg==
   dependencies:
     esbuild "^0.25.0"
     fdir "^6.5.0"
