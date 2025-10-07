@@ -71,7 +71,7 @@ docker compose up --build
 This will start:
 
 - **Client application**: `http://localhost:3000`
-- **Backend service** (optional): `http://localhost:8000`
+- **Backend service (STAC API)**: `http://localhost:8000`
 
 Stop the services:
 
@@ -81,20 +81,20 @@ docker compose down
 
 ## Running in local environment
 
-### Option 1: Client-Only (Recommended)
+### Option 1: Client-Only
 
-Start the React development server:
+Start the development server (pointed at a deployed backend API):
 
 ```bash
 yarn install
-yarn start
+VITE_API_URL=https://discover-api.dit.maap-project.org yarn dev
 ```
 
 Access the application at `http://localhost:3000`
 
 ### Option 2: With Optional Backend Service
 
-If you need the optional backend service for development:
+If you want to run the STAC Collection Discovery API locally during development:
 
 1. Install Python dependencies:
 
@@ -129,7 +129,7 @@ Configure which STAC APIs to query:
 
 #### Environment Variables
 
-- `REACT_APP_API_URL`: URL to the STAC FastAPI Collection Discovery API
+- `VITE_API_URL`: URL to the STAC FastAPI Collection Discovery API
 
 #### Runtime Configuration
 
