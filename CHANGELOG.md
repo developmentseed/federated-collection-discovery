@@ -5,7 +5,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-- Nothing
+- upgrade to tailwind v4
 
 ## 2.0.1
 
