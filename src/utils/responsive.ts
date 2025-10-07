@@ -144,7 +144,7 @@ export const dialog = cva("", {
 /**
  * Sidebar/panel widths
  */
-export const sidebar = cva("w-full flex-shrink-0", {
+export const sidebar = cva("w-full shrink-0", {
   variants: {
     size: {
       sm: "lg:w-[320px] xl:w-[360px]",

@@ -628,7 +628,7 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
                               >
                                 <div className={hstack({ gap: "sm" })}>
                                   <div
-                                    className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full flex-shrink-0"
+                                    className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full shrink-0"
                                     style={{
                                       backgroundColor: api.healthy
                                         ? "rgb(34 197 94)"
