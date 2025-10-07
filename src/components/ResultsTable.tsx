@@ -22,11 +22,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import {
-  coldarkCold,
-  coldarkDark,
-} from "react-syntax-highlighter/dist/cjs/styles/prism";
 import Map from "ol/Map";
 import FullScreen from "ol/control/FullScreen.js";
 import View from "ol/View";
@@ -256,13 +251,11 @@ const ResultsTable: React.FC<Props> = ({
   hasSearched = false,
   stacApis = [],
 }) => {
-  const isDark = useDarkMode();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<Record<
     string,
     any | HintFormat
   > | null>(null);
-  const hintStyle = isDark ? coldarkDark : coldarkCold;
   const { columns, isMobile } = useBreakpoint();
 
   // State for collapsible sections
@@ -718,36 +711,24 @@ const ResultsTable: React.FC<Props> = ({
                     <TabsTrigger value="r">R</TabsTrigger>
                   </TabsList>
                   <TabsContent value="python" className="mt-4 overflow-x-auto">
-                    <SyntaxHighlighter
-                      language="python"
-                      style={hintStyle}
-                      customStyle={{
-                        fontSize: "12px",
-                        maxWidth: "100%",
-                        overflowX: "auto",
-                      }}
-                    >
-                      {getPythonCodeHint(
-                        extractCatalogUrl(selectedRecord),
-                        selectedRecord.id || "collection-id"
-                      )}
-                    </SyntaxHighlighter>
+                    <pre className="rounded-md bg-muted p-4 text-xs overflow-x-auto">
+                      <code className="font-mono">
+                        {getPythonCodeHint(
+                          extractCatalogUrl(selectedRecord),
+                          selectedRecord.id || "collection-id"
+                        )}
+                      </code>
+                    </pre>
                   </TabsContent>
                   <TabsContent value="r" className="mt-4 overflow-x-auto">
-                    <SyntaxHighlighter
-                      language="r"
-                      style={hintStyle}
-                      customStyle={{
-                        fontSize: "12px",
-                        maxWidth: "100%",
-                        overflowX: "auto",
-                      }}
-                    >
-                      {getRCodeHint(
-                        extractCatalogUrl(selectedRecord),
-                        selectedRecord.id || "collection-id"
-                      )}
-                    </SyntaxHighlighter>
+                    <pre className="rounded-md bg-muted p-4 text-xs overflow-x-auto">
+                      <code className="font-mono">
+                        {getRCodeHint(
+                          extractCatalogUrl(selectedRecord),
+                          selectedRecord.id || "collection-id"
+                        )}
+                      </code>
+                    </pre>
                   </TabsContent>
                 </Tabs>
               </div>
@@ -840,17 +821,11 @@ const ResultsTable: React.FC<Props> = ({
                   id="json-content"
                   className="mt-2 transition-all duration-200 overflow-x-auto"
                 >
-                  <SyntaxHighlighter
-                    language="json"
-                    style={hintStyle}
-                    customStyle={{
-                      fontSize: "12px",
-                      maxWidth: "100%",
-                      overflowX: "auto",
-                    }}
-                  >
-                    {JSON.stringify(selectedRecord, null, 2)}
-                  </SyntaxHighlighter>
+                  <pre className="rounded-md bg-muted p-4 text-xs overflow-x-auto">
+                    <code className="font-mono">
+                      {JSON.stringify(selectedRecord, null, 2)}
+                    </code>
+                  </pre>
                 </CollapsibleContent>
               </Collapsible>
             </div>

@@ -5,7 +5,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### Dependencies
+
 - upgrade to tailwind v4
+- remove react-syntax-highlighting
 
 ## 2.0.1
 

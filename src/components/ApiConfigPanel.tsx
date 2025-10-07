@@ -14,11 +14,6 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import {
-  coldarkCold,
-  coldarkDark,
-} from "react-syntax-highlighter/dist/cjs/styles/prism";
 import {
   getApiHealth,
   getApisLackingCapability,
@@ -63,42 +58,13 @@ interface ApiConfigPanelProps {
   onUpdate: (apis: string[]) => void;
 }
 
-// Custom hook for dark mode detection
-const useDarkMode = () => {
-  const [isDark, setIsDark] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return (
-      localStorage.getItem("theme") === "dark" ||
-      (!localStorage.getItem("theme") &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches)
-    );
-  });
-
-  React.useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setIsDark(document.documentElement.classList.contains("dark"));
-    });
-
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"],
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
-  return isDark;
-};
-
 const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
   stacApis,
   onUpdate,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isFilterInfoOpen, setIsFilterInfoOpen] = useState(false);
-  const isDark = useDarkMode();
   const [activeTab, setActiveTab] = useState("configuration");
-  const syntaxStyle = isDark ? coldarkDark : coldarkCold;
   const [selectedFilterInfo, setSelectedFilterInfo] = useState<{
     url: string;
     description: string;
@@ -829,13 +795,9 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
                 <p className="font-bold mb-1 sm:mb-2 text-xs sm:text-sm">
                   Filter Code:
                 </p>
-                <SyntaxHighlighter
-                  language="javascript"
-                  style={syntaxStyle}
-                  customStyle={{ fontSize: "11px", borderRadius: "6px" }}
-                >
-                  {selectedFilterInfo.code}
-                </SyntaxHighlighter>
+                <pre className="rounded-md bg-muted p-3 text-[11px] overflow-x-auto">
+                  <code className="font-mono">{selectedFilterInfo.code}</code>
+                </pre>
               </div>
             </div>
           )}
