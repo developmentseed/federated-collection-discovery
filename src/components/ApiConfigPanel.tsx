@@ -56,13 +56,24 @@ interface HealthResponse {
 interface ApiConfigPanelProps {
   stacApis: string[];
   onUpdate: (apis: string[]) => void;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
   stacApis,
   onUpdate,
+  isOpen: controlledIsOpen,
+  onOpenChange: controlledOnOpenChange,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  // Use internal state if not controlled from parent
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+  const isOpen =
+    controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
+  const setIsOpen =
+    controlledOnOpenChange !== undefined
+      ? controlledOnOpenChange
+      : setInternalIsOpen;
   const [isFilterInfoOpen, setIsFilterInfoOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("configuration");
   const [selectedFilterInfo, setSelectedFilterInfo] = useState<{
@@ -78,14 +89,39 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
   const [healthLoading, setHealthLoading] = React.useState(true);
 
   // API management state
-  const [editableApis, setEditableApis] = useState<string[]>(stacApis);
   const [newApiUrl, setNewApiUrl] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
+  const [isValidating, setIsValidating] = useState(false);
 
   const defaultApis = React.useMemo(
     () => getApiConfigurations().map((config) => config.url),
     []
   );
+
+  // Track all available APIs (both enabled and disabled)
+  // This ensures toggled-off APIs remain visible in the list
+  const [availableApis, setAvailableApis] = React.useState<string[]>([]);
+
+  // Initialize availableApis when modal opens
+  // Use a ref to track initialization to prevent re-running on stacApis changes
+  const isInitialized = React.useRef(false);
+
+  React.useEffect(() => {
+    if (isOpen && !isInitialized.current) {
+      // Merge default APIs with current stacApis to include any custom APIs
+      const allApis = [...defaultApis];
+      stacApis.forEach((api) => {
+        if (!allApis.includes(api)) {
+          allApis.push(api);
+        }
+      });
+      setAvailableApis(allApis);
+      isInitialized.current = true;
+    } else if (!isOpen) {
+      // Reset initialization flag when modal closes
+      isInitialized.current = false;
+    }
+  }, [isOpen, defaultApis]); // Removed stacApis from dependencies to prevent re-initialization
 
   // Fetch health data when component mounts or APIs change
   React.useEffect(() => {
@@ -111,11 +147,10 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
   // Reset API management state when modal opens
   React.useEffect(() => {
     if (isOpen) {
-      setEditableApis([...stacApis]);
       setNewApiUrl("");
       setErrors([]);
     }
-  }, [isOpen, stacApis]);
+  }, [isOpen]);
 
   // Calculate overall status
   const getOverallStatus = () => {
@@ -194,7 +229,65 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
     }
   };
 
-  const handleAddApi = () => {
+  const validateStacApi = async (
+    url: string
+  ): Promise<{ valid: boolean; error?: string }> => {
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        return {
+          valid: false,
+          error: `API returned status ${response.status}`,
+        };
+      }
+
+      const data = await response.json();
+
+      // Check if it's a valid STAC Catalog with conformsTo array
+      if (data.type !== "Catalog" || !Array.isArray(data.conformsTo)) {
+        return {
+          valid: false,
+          error:
+            "URL does not appear to be a valid STAC API (missing type='Catalog' or conformsTo array)",
+        };
+      }
+
+      // Check for collection-search and collection-search#free-text conformance
+      const hasCollectionSearch = hasCollectionSearchSupport(data.conformsTo);
+      const hasFreeText = hasFreeTextSupport(data.conformsTo);
+
+      if (!hasCollectionSearch) {
+        return {
+          valid: false,
+          error:
+            "This STAC API does not support collection search. Required conformance classes: 'collection-search' and 'collection-search#free-text'",
+        };
+      }
+
+      if (!hasFreeText) {
+        return {
+          valid: false,
+          error:
+            "This STAC API does not support free-text collection search. Required conformance class: 'collection-search#free-text'",
+        };
+      }
+
+      return { valid: true };
+    } catch (error) {
+      return {
+        valid: false,
+        error: `Unable to connect to API: ${error instanceof Error ? error.message : "Unknown error"}`,
+      };
+    }
+  };
+
+  const handleAddApi = async () => {
     const trimmedUrl = newApiUrl.trim();
     if (!trimmedUrl) return;
 
@@ -203,57 +296,36 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
       return;
     }
 
-    if (editableApis.includes(trimmedUrl)) {
+    if (availableApis.includes(trimmedUrl)) {
       setErrors(["This API URL is already in the list"]);
       return;
     }
 
-    setEditableApis([...editableApis, trimmedUrl]);
+    // Validate that it's a STAC API
+    setIsValidating(true);
+    setErrors([]);
+
+    const validation = await validateStacApi(trimmedUrl);
+    setIsValidating(false);
+
+    if (!validation.valid) {
+      setErrors([validation.error || "Invalid STAC API"]);
+      return;
+    }
+
+    // Add to available APIs list
+    setAvailableApis([...availableApis, trimmedUrl]);
+    // Immediately update the parent component with the new API (enabled by default)
+    onUpdate([...stacApis, trimmedUrl]);
     setNewApiUrl("");
     setErrors([]);
   };
 
-  const handleRemoveApi = (index: number) => {
-    setEditableApis(editableApis.filter((_, i) => i !== index));
-    setErrors([]);
-  };
-
-  const handleUpdateApi = (index: number, newUrl: string) => {
-    const updatedApis = [...editableApis];
-    updatedApis[index] = newUrl;
-    setEditableApis(updatedApis);
-  };
-
-  const handleSave = () => {
-    const validApis = editableApis.filter(
-      (api) => api.trim() !== "" && validateUrl(api)
-    );
-    const invalidApis = editableApis.filter(
-      (api) => api.trim() !== "" && !validateUrl(api)
-    );
-
-    if (invalidApis.length > 0) {
-      setErrors([`Invalid URLs: ${invalidApis.join(", ")}`]);
-      return;
-    }
-
-    onUpdate(validApis);
-    setIsOpen(false);
-  };
-
   const handleResetToDefaults = () => {
-    setEditableApis([...defaultApis]);
-    setErrors([]);
-  };
-
-  const handleToggleDefaultApi = (apiUrl: string, enabled: boolean) => {
-    if (enabled) {
-      if (!editableApis.includes(apiUrl)) {
-        setEditableApis([...editableApis, apiUrl]);
-      }
-    } else {
-      setEditableApis(editableApis.filter((api) => api !== apiUrl));
-    }
+    // Reset available APIs to only defaults
+    setAvailableApis([...defaultApis]);
+    // Immediately update the parent component with default APIs (all enabled)
+    onUpdate([...defaultApis]);
     setErrors([]);
   };
 
@@ -347,21 +419,11 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
                   Enable/disable default APIs or add custom endpoints.
                 </p>
 
-                {errors.length > 0 && (
-                  <Alert variant="destructive">
-                    <AlertDescription>
-                      {errors.map((error, index) => (
-                        <div key={index}>{error}</div>
-                      ))}
-                    </AlertDescription>
-                  </Alert>
-                )}
-
                 <Card>
                   <CardHeader className="pb-3">
                     <div className="flex justify-between items-center gap-2">
                       <CardTitle className="text-sm sm:text-base">
-                        Default APIs
+                        STAC APIs
                       </CardTitle>
                       <Button
                         size="sm"
@@ -377,102 +439,83 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
                       </Button>
                     </div>
                   </CardHeader>
-                  <CardContent className={stack({ gap: "sm" })}>
-                    {defaultApis.map((api) => (
-                      <div
-                        key={api}
-                        className={cn(hstack({ gap: "sm" }), "py-1")}
-                      >
-                        <Switch
-                          id={`api-${api}`}
-                          checked={editableApis.includes(api)}
-                          onCheckedChange={(checked) =>
-                            handleToggleDefaultApi(api, checked)
-                          }
-                        />
-                        <Label
-                          htmlFor={`api-${api}`}
-                          className="text-xs sm:text-sm flex-1 truncate cursor-pointer"
-                        >
-                          {api}
-                        </Label>
-                        {hasCustomFilter(api) && (
-                          <>
-                            <Badge
-                              variant="secondary"
-                              className="bg-purple-100 dark:bg-purple-900 text-xs shrink-0"
-                            >
-                              filtered
-                            </Badge>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleShowFilterInfo(api)}
-                              className="h-8 w-8 p-0 shrink-0"
-                            >
-                              <Info className="h-3 w-3 sm:h-4 sm:w-4" />
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm sm:text-base">
-                      Custom APIs
-                    </CardTitle>
-                  </CardHeader>
                   <CardContent className={stack({ gap: "md" })}>
                     <div className={stack({ gap: "sm" })}>
-                      {editableApis
-                        .filter((api) => !defaultApis.includes(api))
-                        .map((api, _) => {
-                          const actualIndex = editableApis.indexOf(api);
-                          const isValid = validateUrl(api);
-                          return (
-                            <div
-                              key={actualIndex}
-                              className={stack({ gap: "xs" })}
+                      {/* Unified list of all APIs */}
+                      {availableApis.map((api) => {
+                        const isDefault = defaultApis.includes(api);
+                        const isEnabled = stacApis.includes(api);
+                        return (
+                          <div
+                            key={api}
+                            className={cn(hstack({ gap: "sm" }), "py-1")}
+                          >
+                            <Switch
+                              id={`api-${api}`}
+                              checked={isEnabled}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  // Enable the API - add it to the enabled list
+                                  onUpdate([...stacApis, api]);
+                                } else {
+                                  // Disable the API - remove it from the enabled list
+                                  onUpdate(stacApis.filter((a) => a !== api));
+                                }
+                              }}
+                            />
+                            <Label
+                              htmlFor={`api-${api}`}
+                              className="text-xs sm:text-sm flex-1 truncate cursor-pointer"
                             >
-                              <div className={hstack({ gap: "sm" })}>
-                                <Input
-                                  value={api}
-                                  onChange={(e) =>
-                                    handleUpdateApi(actualIndex, e.target.value)
-                                  }
-                                  placeholder="https://example.com/stac"
-                                  className={`flex-1 text-xs sm:text-sm ${
-                                    !isValid ? "border-destructive" : ""
-                                  }`}
-                                />
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleRemoveApi(actualIndex)}
-                                  className="h-9 w-9 p-0 shrink-0"
+                              {api}
+                            </Label>
+                            {hasCustomFilter(api) && (
+                              <>
+                                <Badge
+                                  variant="secondary"
+                                  className="bg-purple-100 dark:bg-purple-900 text-xs shrink-0"
                                 >
-                                  <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                                  filtered
+                                </Badge>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleShowFilterInfo(api)}
+                                  className="h-8 w-8 p-0 shrink-0"
+                                >
+                                  <Info className="h-3 w-3 sm:h-4 sm:w-4" />
                                 </Button>
-                              </div>
-                              {!isValid && (
-                                <p className="text-xs text-destructive ml-1">
-                                  Invalid URL format
-                                </p>
-                              )}
-                            </div>
-                          );
-                        })}
-                      {editableApis.filter((api) => !defaultApis.includes(api))
-                        .length === 0 && (
+                              </>
+                            )}
+                            {!isDefault && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  // Remove custom API completely from available list
+                                  setAvailableApis(
+                                    availableApis.filter((a) => a !== api)
+                                  );
+                                  // Also remove from enabled list if it's enabled
+                                  if (isEnabled) {
+                                    onUpdate(stacApis.filter((a) => a !== api));
+                                  }
+                                }}
+                                className="h-8 w-8 p-0 shrink-0"
+                              >
+                                <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        );
+                      })}
+                      {availableApis.length === 0 && (
                         <div className="text-center py-4 sm:py-6 text-muted-foreground">
                           <p className="text-xs sm:text-sm">
-                            No custom APIs added yet
+                            No APIs configured
                           </p>
                           <p className="text-xs mt-1">
-                            Add a custom STAC API endpoint below
+                            Add a STAC API endpoint below
                           </p>
                         </div>
                       )}
@@ -493,6 +536,7 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
                             value={newApiUrl}
                             onChange={(e) => setNewApiUrl(e.target.value)}
                             onKeyDown={handleKeyDown}
+                            disabled={isValidating}
                             className={`flex-1 text-xs sm:text-sm ${
                               newApiUrl && !validateUrl(newApiUrl)
                                 ? "border-destructive focus-visible:ring-destructive"
@@ -506,13 +550,22 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
                             disabled={
                               !newApiUrl ||
                               !validateUrl(newApiUrl) ||
-                              editableApis.includes(newApiUrl.trim())
+                              availableApis.includes(newApiUrl.trim()) ||
+                              isValidating
                             }
                             className="text-xs sm:text-sm shrink-0"
                           >
-                            <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                            <span className="hidden sm:inline">Add</span>
-                            <span className="sm:hidden">+</span>
+                            {isValidating ? (
+                              <Loader2 className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                            ) : (
+                              <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                            )}
+                            <span className="hidden sm:inline">
+                              {isValidating ? "Validating..." : "Add"}
+                            </span>
+                            <span className="sm:hidden">
+                              {isValidating ? "..." : "+"}
+                            </span>
                           </Button>
                         </div>
                         {newApiUrl && !validateUrl(newApiUrl) && (
@@ -522,7 +575,7 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
                         )}
                         {newApiUrl &&
                           validateUrl(newApiUrl) &&
-                          editableApis.includes(newApiUrl.trim()) && (
+                          availableApis.includes(newApiUrl.trim()) && (
                             <p className="text-xs text-destructive">
                               This API is already in the list
                             </p>
@@ -531,6 +584,16 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
                     </div>
                   </CardContent>
                 </Card>
+
+                {errors.length > 0 && (
+                  <Alert variant="destructive">
+                    <AlertDescription className="text-sm">
+                      {errors.map((error, index) => (
+                        <div key={index}>{error}</div>
+                      ))}
+                    </AlertDescription>
+                  </Alert>
+                )}
               </TabsContent>
 
               <TabsContent
@@ -737,28 +800,12 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
           </div>
 
           <DialogFooter className={hstack({ gap: "sm" })}>
-            {activeTab === "configuration" && (
-              <>
-                <Button
-                  variant="ghost"
-                  onClick={() => setIsOpen(false)}
-                  className="text-xs sm:text-sm"
-                >
-                  Cancel
-                </Button>
-                <Button onClick={handleSave} className="text-xs sm:text-sm">
-                  Save Changes
-                </Button>
-              </>
-            )}
-            {activeTab === "diagnostics" && (
-              <Button
-                onClick={() => setIsOpen(false)}
-                className="text-xs sm:text-sm"
-              >
-                Close
-              </Button>
-            )}
+            <Button
+              onClick={() => setIsOpen(false)}
+              className="text-xs sm:text-sm"
+            >
+              Close
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

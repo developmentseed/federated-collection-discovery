@@ -62,6 +62,9 @@ export const App = () => {
   // API docs modal state
   const [isDocOpen, setIsDocOpen] = React.useState(false);
 
+  // API config modal state - hoisted to prevent loss when stacApis changes
+  const [isApiConfigOpen, setIsApiConfigOpen] = React.useState(false);
+
   // Mobile search sheet state - open by default on mobile only
   const [isSearchSheetOpen, setIsSearchSheetOpen] = React.useState(() => {
     // Only open by default if we're on mobile (< 1024px, where lg breakpoint hides desktop sidebar)
@@ -183,9 +186,9 @@ export const App = () => {
     }
   };
 
-  const handleUpdateStacApis = (newApis: string[]) => {
+  const handleUpdateStacApis = React.useCallback((newApis: string[]) => {
     setStacApis(newApis);
-  };
+  }, []);
 
   // Trigger search on mount if URL has search parameters
   React.useEffect(() => {
@@ -262,7 +265,12 @@ export const App = () => {
       <div className={stack({ gap: "sm" })}>
         <h2 className="text-lg font-semibold">API Configuration</h2>
         <React.Suspense fallback={<LoadingSpinner size="sm" />}>
-          <ApiConfigPanel stacApis={stacApis} onUpdate={handleUpdateStacApis} />
+          <ApiConfigPanel
+            stacApis={stacApis}
+            onUpdate={handleUpdateStacApis}
+            isOpen={isApiConfigOpen}
+            onOpenChange={setIsApiConfigOpen}
+          />
         </React.Suspense>
       </div>
 
