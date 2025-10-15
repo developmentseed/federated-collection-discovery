@@ -5,6 +5,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+- feat: usability improvements to API config panel
+  - validation checks for user-provided STAC APIs
+  - simpler interface
+
+## 2.0.2
+
 ### Dependencies
 
 - upgrade to tailwind v4
