@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+- Nothing
+
+## 2.1.0
+
 - feat: usability improvements to API config panel
   - validation checks for user-provided STAC APIs
   - simpler interface
