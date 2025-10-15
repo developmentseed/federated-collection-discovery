@@ -13,7 +13,7 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-    open: true,
+    open: !process.env.DOCKER_CONTAINER,
   },
   build: {
     outDir: "build",
