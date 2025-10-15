@@ -1,19 +1,18 @@
-# Step 1: Build the React application
-FROM node:18 AS build
+# Development image for React application
+FROM node:20
 
 # Set the working directory.
 WORKDIR /app
 
-# Install the dependencies.
-COPY package*.json yarn.lock  tsconfig.json ./
+# Copy package files first for better layer caching
+COPY package*.json yarn.lock ./
+
+# Install dependencies
 RUN yarn install && yarn cache clean
 
-# Copy the entire project.
-COPY ./public ./public
-COPY ./src ./src
+# Copy the entire project (filtered by .dockerignore)
+COPY . .
 
-# Inform Docker that the container's web server will be on port 3000.
 EXPOSE 3000
 
-# Start the application in development mode.
-CMD ["yarn", "start"]
+CMD ["yarn", "dev", "--host", "0.0.0.0"]
