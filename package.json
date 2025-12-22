@@ -12,18 +12,18 @@
     "@radix-ui/react-switch": "^1.2.6",
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
-    "@scalar/api-reference": "^1.40.1",
-    "@scalar/api-reference-react": "^0.8.7",
+    "@scalar/api-reference": "^1.40.9",
+    "@scalar/api-reference-react": "^0.8.15",
     "class-variance-authority": "^0.7.1",
     "date-fns": "^4.1.0",
-    "lucide-react": "^0.556.0",
+    "lucide-react": "^0.562.0",
     "mobx": "^6.15.0",
     "ol": "10.7.0",
     "ol-layerswitcher": "^4.1.2",
     "ol-stac": "^1.1.0",
     "proj4": "^2.20.2",
     "react": "^18.0.0",
-    "react-day-picker": "^9.12.0",
+    "react-day-picker": "^9.13.0",
     "react-dom": "^18.0.0",
     "react-markdown": "^10.1.0",
     "source-map-explorer": "^2.5.3",
@@ -39,8 +39,8 @@
     "prepare": "husky install"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.17",
-    "@types/node": "^24.10.1",
+    "@tailwindcss/postcss": "^4.1.18",
+    "@types/node": "^25.0.3",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
     "@vitejs/plugin-react": "^5.1.2",
@@ -50,8 +50,8 @@
     "postcss": "^8.5.6",
     "prettier": "^3.7.4",
     "tailwindcss": "^4.1.14",
-    "vite": "^7.2.7",
-    "vite-tsconfig-paths": "^5.1.4"
+    "vite": "^7.3.0",
+    "vite-tsconfig-paths": "^6.0.3"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,css,md,json}": "prettier --write"
