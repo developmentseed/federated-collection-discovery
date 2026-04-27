@@ -12,11 +12,11 @@
     "@radix-ui/react-switch": "^1.2.6",
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
-    "@scalar/api-reference": "^1.52.3",
-    "@scalar/api-reference-react": "^0.9.24",
+    "@scalar/api-reference": "^1.53.0",
+    "@scalar/api-reference-react": "^0.9.28",
     "class-variance-authority": "^0.7.1",
     "date-fns": "^4.1.0",
-    "lucide-react": "^1.8.0",
+    "lucide-react": "^1.11.0",
     "mobx": "^6.15.0",
     "ol": "10.9.0",
     "ol-layerswitcher": "^4.1.2",
@@ -27,7 +27,7 @@
     "react-dom": "^18.0.0",
     "react-markdown": "^10.1.0",
     "source-map-explorer": "^2.5.3",
-    "styled-components": "^6.4.0",
+    "styled-components": "^6.4.1",
     "tailwind-merge": "^3.5.0",
     "typescript": "^5.9.3"
   },
@@ -39,7 +39,7 @@
     "prepare": "husky install"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.2.2",
+    "@tailwindcss/postcss": "^4.2.4",
     "@types/node": "^25.6.0",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
@@ -47,10 +47,10 @@
     "depcheck": "^1.4.7",
     "husky": ">=6",
     "lint-staged": ">=16",
-    "postcss": "^8.5.10",
+    "postcss": "^8.5.12",
     "prettier": "^3.8.3",
     "tailwindcss": "^4.1.14",
-    "vite": "^8.0.9",
+    "vite": "^8.0.10",
     "vite-tsconfig-paths": "^6.1.1"
   },
   "lint-staged": {
