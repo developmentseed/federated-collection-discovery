@@ -33,7 +33,8 @@ import { transformExtent } from "ol/proj";
 import "ol/ol.css";
 import "ol-layerswitcher/dist/ol-layerswitcher.css";
 import ReactMarkdown from "react-markdown";
-import { ChevronDown, Loader2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ChevronDown, Loader2, AlertCircle } from "lucide-react";
 import { cn } from "@/utils/utils";
 import { stack, hstack, touchTarget, dialog } from "@/utils/responsive";
 import { useDarkMode } from "@/utils/hooks";
@@ -186,6 +187,7 @@ interface Props {
   isLoadingMore?: boolean;
   onLoadMore?: () => void;
   hasSearched?: boolean;
+  failedApis?: string[];
   stacApis?: string[];
 }
 
@@ -249,6 +251,7 @@ const ResultsTable: React.FC<Props> = ({
   isLoadingMore = false,
   onLoadMore,
   hasSearched = false,
+  failedApis = [],
   stacApis = [],
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -421,6 +424,22 @@ const ResultsTable: React.FC<Props> = ({
   return (
     <>
       <div className="overflow-auto max-h-full">
+        {failedApis.length > 0 && (
+          <Alert className="m-4" variant="default">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              The following API{failedApis.length > 1 ? "s" : ""} did not
+              respond and results may be incomplete:
+              <ul className="mt-1 list-disc list-inside">
+                {failedApis.map((api) => (
+                  <li key={api} className="break-all">
+                    {api}
+                  </li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </Alert>
+        )}
         {isMobile ? (
           <MobileCardView />
         ) : data.length === 0 ? (
