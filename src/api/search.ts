@@ -142,10 +142,24 @@ type SearchResponse = {
   links: any[];
 };
 
+export interface SearchResult {
+  data: SearchResponse;
+  failedApis: string[];
+}
+
+function parseFailedApis(response: Response): string[] {
+  const header = response.headers.get("X-Failed-Upstream-Apis");
+  if (!header) return [];
+  return header
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}
+
 export async function searchApi(
   params: SearchParams,
   stacApis?: string[]
-): Promise<SearchResponse> {
+): Promise<SearchResult> {
   console.log(`${params.datetime}`);
   const queryString = buildQuery(params, stacApis);
   const url = `${API_URL}/collections?${queryString}`;
@@ -159,6 +173,7 @@ export async function searchApi(
     });
 
     const data = await response.json();
+    const failedApis = parseFailedApis(response);
 
     if (!response.ok) {
       // Handle API-level errors (400/500)
@@ -168,14 +183,14 @@ export async function searchApi(
       );
     }
 
-    return applyApiFilters(data);
+    return { data: applyApiFilters(data), failedApis };
   } catch (error) {
     console.error("Error encountered while performing search:", error);
     throw error;
   }
 }
 
-export async function fetchNextPage(nextUrl: string): Promise<SearchResponse> {
+export async function fetchNextPage(nextUrl: string): Promise<SearchResult> {
   try {
     const response = await fetch(nextUrl, {
       method: "GET",
@@ -185,6 +200,7 @@ export async function fetchNextPage(nextUrl: string): Promise<SearchResponse> {
     });
 
     const data = await response.json();
+    const failedApis = parseFailedApis(response);
 
     if (!response.ok) {
       throw new Error(
@@ -193,7 +209,7 @@ export async function fetchNextPage(nextUrl: string): Promise<SearchResponse> {
       );
     }
 
-    return applyApiFilters(data);
+    return { data: applyApiFilters(data), failedApis };
   } catch (error) {
     console.error("Error encountered while fetching next page:", error);
     throw error;

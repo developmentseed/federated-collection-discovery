@@ -48,6 +48,7 @@ export const App = () => {
   const [loading, setLoading] = React.useState<boolean>(false);
   const [loadingMore, setLoadingMore] = React.useState<boolean>(false);
   const [apiError, setApiError] = React.useState<ApiError>(null); // For 400/500 errors
+  const [failedApis, setFailedApis] = React.useState<string[]>([]);
   const [nextPageUrl, setNextPageUrl] = React.useState<string | null>(null);
   const [hasSearched, setHasSearched] = React.useState<boolean>(false);
   const hasRunInitialSearch = React.useRef(false);
@@ -138,15 +139,22 @@ export const App = () => {
     setLoading(true);
     setApiError(null);
     setResults([]);
+    setFailedApis([]);
     setIsSearchSheetOpen(false); // Close mobile sheet after search
 
     try {
-      const data = await searchApi(formData, stacApis);
-      setResults(data.collections);
+      const { data: searchData, failedApis: failures } = await searchApi(
+        formData,
+        stacApis
+      );
+      setResults(searchData.collections);
+      setFailedApis(failures);
       setHasSearched(true);
 
       // Extract next page URL from links
-      const nextLink = data.links?.find((link: any) => link.rel === "next");
+      const nextLink = searchData.links?.find(
+        (link: any) => link.rel === "next"
+      );
       setNextPageUrl(nextLink?.href || null);
     } catch (error) {
       console.error("Search error:", error);
@@ -166,13 +174,15 @@ export const App = () => {
     setApiError(null);
 
     try {
-      const data = await fetchNextPage(nextPageUrl);
+      const { data: pageData, failedApis: failures } =
+        await fetchNextPage(nextPageUrl);
 
       // Append new results to existing ones
-      setResults((prevResults) => [...prevResults, ...data.collections]);
+      setResults((prevResults) => [...prevResults, ...pageData.collections]);
+      setFailedApis((prev) => [...new Set([...prev, ...failures])]);
 
       // Update next page URL for potential further pagination
-      const nextLink = data.links?.find((link: any) => link.rel === "next");
+      const nextLink = pageData.links?.find((link: any) => link.rel === "next");
       setNextPageUrl(nextLink?.href || null);
     } catch (error) {
       console.error("Load more error:", error);
@@ -270,6 +280,7 @@ export const App = () => {
             onUpdate={handleUpdateStacApis}
             isOpen={isApiConfigOpen}
             onOpenChange={setIsApiConfigOpen}
+            failedApis={failedApis}
           />
         </React.Suspense>
       </div>
@@ -407,6 +418,7 @@ export const App = () => {
                   isLoadingMore={loadingMore}
                   onLoadMore={handleLoadMore}
                   hasSearched={hasSearched}
+                  failedApis={failedApis}
                   stacApis={stacApis}
                 />
               </div>

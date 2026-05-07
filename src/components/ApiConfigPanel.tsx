@@ -58,6 +58,7 @@ interface ApiConfigPanelProps {
   onUpdate: (apis: string[]) => void;
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
+  failedApis?: string[];
 }
 
 const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
@@ -65,6 +66,7 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
   onUpdate,
   isOpen: controlledIsOpen,
   onOpenChange: controlledOnOpenChange,
+  failedApis = [],
 }) => {
   // Use internal state if not controlled from parent
   const [internalIsOpen, setInternalIsOpen] = useState(false);
@@ -204,6 +206,17 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
       return {
         color: "orange",
         status: "Limited",
+        isLoading: false,
+        hasIssues: true,
+      };
+    }
+
+    const hasRuntimeFailures = stacApis.some((api) => failedApis.includes(api));
+
+    if (hasRuntimeFailures) {
+      return {
+        color: "amber",
+        status: "Degraded",
         isLoading: false,
         hasIssues: true,
       };
@@ -366,9 +379,11 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
                   ? "rgb(34 197 94)"
                   : color === "orange"
                     ? "rgb(249 115 22)"
-                    : color === "red"
-                      ? "rgb(239 68 68)"
-                      : "rgb(107 114 128)",
+                    : color === "amber"
+                      ? "rgb(234 179 8)"
+                      : color === "red"
+                        ? "rgb(239 68 68)"
+                        : "rgb(107 114 128)",
             }}
           />
         )}
@@ -613,9 +628,13 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
                             className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shrink-0"
                             style={{
                               backgroundColor:
-                                healthData.status === "UP"
+                                color === "green"
                                   ? "rgb(34 197 94)"
-                                  : "rgb(239 68 68)",
+                                  : color === "amber"
+                                    ? "rgb(234 179 8)"
+                                    : color === "orange"
+                                      ? "rgb(249 115 22)"
+                                      : "rgb(239 68 68)",
                             }}
                           />
                           <span className="font-semibold text-sm sm:text-base">
@@ -623,13 +642,19 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
                           </span>
                           <Badge
                             variant={
-                              healthData.status === "UP"
-                                ? "default"
-                                : "destructive"
+                              color === "red"
+                                ? "destructive"
+                                : color === "amber"
+                                  ? "outline"
+                                  : "default"
                             }
-                            className="ml-auto text-xs"
+                            className={cn(
+                              "ml-auto text-xs",
+                              color === "amber" &&
+                                "border-amber-400 text-amber-700 dark:text-amber-400"
+                            )}
                           >
-                            {healthData.status}
+                            {status}
                           </Badge>
                         </div>
                       </CardContent>
@@ -646,6 +671,8 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
                           const hasCollectionSearch =
                             hasCollectionSearchSupport(conformance);
                           const hasFreeText = hasFreeTextSupport(conformance);
+                          const isRuntimeFailed =
+                            failedApis?.includes(url) ?? false;
 
                           return (
                             <Card key={url}>
@@ -659,14 +686,25 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
                                   <div
                                     className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full shrink-0"
                                     style={{
-                                      backgroundColor: api.healthy
-                                        ? "rgb(34 197 94)"
-                                        : "rgb(239 68 68)",
+                                      backgroundColor:
+                                        api.healthy && !isRuntimeFailed
+                                          ? "rgb(34 197 94)"
+                                          : isRuntimeFailed
+                                            ? "rgb(234 179 8)"
+                                            : "rgb(239 68 68)",
                                     }}
                                   />
                                   <span className="text-xs sm:text-sm font-medium break-all">
                                     {url}
                                   </span>
+                                  {isRuntimeFailed && (
+                                    <Badge
+                                      variant="outline"
+                                      className="text-[10px] sm:text-xs border-amber-400 text-amber-600 dark:text-amber-400 shrink-0"
+                                    >
+                                      Degraded
+                                    </Badge>
+                                  )}
                                 </div>
 
                                 <div
@@ -710,6 +748,21 @@ const ApiConfigPanel: React.FC<ApiConfigPanelProps> = ({
                                     </span>{" "}
                                     {conformance.join(", ")}
                                   </p>
+                                )}
+
+                                {isRuntimeFailed && (
+                                  <Alert className="border-amber-200 dark:border-amber-800 py-2">
+                                    <AlertDescription className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-400">
+                                      <p className="font-medium mb-1">
+                                        Degraded during most recent search
+                                      </p>
+                                      <p>
+                                        This API responded to the health check
+                                        but failed during the most recent
+                                        search. Results may be incomplete.
+                                      </p>
+                                    </AlertDescription>
+                                  </Alert>
                                 )}
                               </CardContent>
                             </Card>
