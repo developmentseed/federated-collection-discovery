@@ -61,7 +61,7 @@
     "jsdom": "^29.1.1",
     "lint-staged": ">=17",
     "msw": "^2.14.6",
-    "postcss": "^8.5.16",
+    "postcss": "^8.5.23",
     "prettier": "^3.9.4",
     "tailwindcss": "^4.1.14",
     "vite": "^8.1.2",
